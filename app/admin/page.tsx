@@ -27,9 +27,11 @@ export default function AdminPage() {
       try {
         const response = await fetch('/api/admin/users')
         const data = await response.json()
-        setUsers(data)
+        console.log('Admin users response:', data)
+        setUsers(Array.isArray(data) ? data : [])
       } catch (error) {
         console.error('Error fetching users:', error)
+        setUsers([])
       } finally {
         setLoading(false)
       }
