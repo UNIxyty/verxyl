@@ -15,7 +15,14 @@ export async function sendWebhook(payload: WebhookPayload): Promise<{ success: b
     // Get webhook URL from environment variable only
     const webhookUrl = process.env.WEBHOOK_URL
     
+    console.log('=== WEBHOOK DEBUG ===')
     console.log('Webhook URL from environment:', webhookUrl ? '[CONFIGURED]' : '[NOT SET]')
+    console.log('Environment check:', {
+      hasWebhookUrl: !!process.env.WEBHOOK_URL,
+      webhookUrlLength: process.env.WEBHOOK_URL?.length || 0,
+      allEnvKeys: Object.keys(process.env).filter(key => key.includes('WEBHOOK') || key.includes('SUPABASE'))
+    })
+    console.log('===================')
 
     if (!webhookUrl || !isValidUrl(webhookUrl)) {
       console.log('No valid webhook URL configured')
