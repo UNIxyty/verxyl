@@ -9,6 +9,11 @@ CREATE TABLE IF NOT EXISTS users (
   username TEXT,
   telegram_username TEXT,
   telegram_id TEXT,
+  approval_status TEXT CHECK (approval_status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending',
+  role TEXT CHECK (role IN ('user', 'admin')) DEFAULT 'user',
+  approved_by UUID REFERENCES users(id),
+  approved_at TIMESTAMP WITH TIME ZONE,
+  rejection_reason TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -55,6 +60,46 @@ BEGIN
     END IF;
 END $$;
 
+-- Add admin authentication columns if they don't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'approval_status') THEN
+        ALTER TABLE users ADD COLUMN approval_status TEXT CHECK (approval_status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending';
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'role') THEN
+        ALTER TABLE users ADD COLUMN role TEXT CHECK (role IN ('user', 'admin')) DEFAULT 'user';
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'approved_by') THEN
+        ALTER TABLE users ADD COLUMN approved_by UUID REFERENCES users(id);
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'approved_at') THEN
+        ALTER TABLE users ADD COLUMN approved_at TIMESTAMP WITH TIME ZONE;
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'rejection_reason') THEN
+        ALTER TABLE users ADD COLUMN rejection_reason TEXT;
+    END IF;
+END $$;
+
+-- Update existing users to have default values
+UPDATE users SET approval_status = 'pending' WHERE approval_status IS NULL;
+UPDATE users SET role = 'user' WHERE role IS NULL;
+
 -- AI Prompt Backups table
 CREATE TABLE IF NOT EXISTS ai_prompt_backups (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -86,20 +131,39 @@ ALTER TABLE tickets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ai_prompt_backups ENABLE ROW LEVEL SECURITY;
 ALTER TABLE n8n_project_backups ENABLE ROW LEVEL SECURITY;
 
--- Users policies
+-- Create a function to check if current user is admin (avoids infinite recursion)
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM users 
+    WHERE id = auth.uid() 
+    AND role = 'admin' 
+    AND approval_status = 'approved'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Users policies (fixed to avoid infinite recursion)
 DO $$ 
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can view all users' AND tablename = 'users') THEN
-        CREATE POLICY "Users can view all users" ON users FOR SELECT USING (true);
-    END IF;
+    -- Drop existing policies first to avoid conflicts
+    DROP POLICY IF EXISTS "Users can view all users" ON users;
+    DROP POLICY IF EXISTS "Users can update their own profile" ON users;
+    DROP POLICY IF EXISTS "Users can insert their own profile" ON users;
+    DROP POLICY IF EXISTS "Users can view their own data" ON users;
+    DROP POLICY IF EXISTS "Users can update their own basic info" ON users;
+    DROP POLICY IF EXISTS "Admins can update user approval status" ON users;
     
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can update their own profile' AND tablename = 'users') THEN
-        CREATE POLICY "Users can update their own profile" ON users FOR UPDATE USING (auth.uid() = id);
-    END IF;
-    
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can insert their own profile' AND tablename = 'users') THEN
-        CREATE POLICY "Users can insert their own profile" ON users FOR INSERT WITH CHECK (auth.uid() = id);
-    END IF;
+    -- Create new policies
+    CREATE POLICY "Users can view their own data" ON users FOR SELECT USING (auth.uid() = id);
+    CREATE POLICY "Users can view all users" ON users FOR SELECT USING (true);
+    CREATE POLICY "Users can insert their own profile" ON users FOR INSERT WITH CHECK (auth.uid() = id);
+    CREATE POLICY "Users can update their own basic info" ON users FOR UPDATE USING (
+      auth.uid() = id AND 
+      approval_status = 'approved'
+    );
+    CREATE POLICY "Admins can update user approval status" ON users FOR UPDATE USING (is_admin());
 END $$;
 
 -- Tickets policies
@@ -197,3 +261,4 @@ CREATE INDEX IF NOT EXISTS idx_tickets_created_by ON tickets(created_by);
 CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);
 CREATE INDEX IF NOT EXISTS idx_ai_prompt_backups_user_id ON ai_prompt_backups(user_id);
 CREATE INDEX IF NOT EXISTS idx_n8n_project_backups_user_id ON n8n_project_backups(user_id);
+CREATE INDEX IF NOT EXISTS idx_users_role_approval ON users(role, approval_status);

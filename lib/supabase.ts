@@ -27,6 +27,12 @@ export type Database = {
           avatar_url: string | null
           username: string | null
           telegram_username: string | null
+          telegram_id: string | null
+          approval_status: 'pending' | 'approved' | 'rejected'
+          role: 'user' | 'admin'
+          approved_by: string | null
+          approved_at: string | null
+          rejection_reason: string | null
           created_at: string
           updated_at: string
         }
@@ -37,6 +43,12 @@ export type Database = {
           avatar_url?: string | null
           username?: string | null
           telegram_username?: string | null
+          telegram_id?: string | null
+          approval_status?: 'pending' | 'approved' | 'rejected'
+          role?: 'user' | 'admin'
+          approved_by?: string | null
+          approved_at?: string | null
+          rejection_reason?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -47,6 +59,12 @@ export type Database = {
           avatar_url?: string | null
           username?: string | null
           telegram_username?: string | null
+          telegram_id?: string | null
+          approval_status?: 'pending' | 'approved' | 'rejected'
+          role?: 'user' | 'admin'
+          approved_by?: string | null
+          approved_at?: string | null
+          rejection_reason?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -64,6 +82,8 @@ export type Database = {
           solution_type: 'prompt' | 'n8n_workflow' | 'other' | null
           solution_data: any | null
           output_result: any | null
+          edited: boolean
+          user_notified: boolean
           created_at: string
           updated_at: string
         }
@@ -79,6 +99,8 @@ export type Database = {
           solution_type?: 'prompt' | 'n8n_workflow' | 'other' | null
           solution_data?: any | null
           output_result?: any | null
+          edited?: boolean
+          user_notified?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -94,6 +116,8 @@ export type Database = {
           solution_type?: 'prompt' | 'n8n_workflow' | 'other' | null
           solution_data?: any | null
           output_result?: any | null
+          edited?: boolean
+          user_notified?: boolean
           created_at?: string
           updated_at?: string
         }
