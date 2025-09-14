@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase'
 import { sendWebhook, extractDateTime, getUserFullName, getUserEmail } from '@/lib/webhook'
 
 export async function DELETE(
@@ -20,7 +20,7 @@ export async function DELETE(
     console.log('Deleting ticket:', id)
     
     // First get ticket data for webhook
-    const { data: ticketData, error: fetchError } = await supabase
+    const { data: ticketData, error: fetchError } = await supabaseAdmin
       .from('tickets')
       .select(`
         *,
@@ -41,7 +41,7 @@ export async function DELETE(
     console.log('Ticket data fetched successfully:', ticketData)
     
     // Delete the ticket
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('tickets')
       .delete()
       .eq('id', id)

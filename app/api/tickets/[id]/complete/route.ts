@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase'
 import { sendWebhook, extractDateTime, getUserFullName, getUserEmail } from '@/lib/webhook'
 
 export async function PATCH(
@@ -27,7 +27,7 @@ export async function PATCH(
       output_result: solutionData.outputResult
     }
     
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('tickets')
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', id)

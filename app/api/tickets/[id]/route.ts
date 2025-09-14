@@ -1,6 +1,5 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase'
 import { sendWebhook, extractDateTime, getUserFullName, getUserEmail } from '@/lib/webhook'
 
 export async function PATCH(
@@ -8,32 +7,22 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const cookieStore = cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value
-          },
-        },
-      }
-    )
-
-    const { data: { user }, error } = await supabase.auth.getUser()
+    console.log('=== UPDATE TICKET API ===')
     
-    if (error || !user) {
-      console.error('Auth error:', error)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json({
+        error: 'Supabase not configured'
+      }, { status: 500 })
     }
 
     const { id } = params
     const updateData = await request.json()
+    
+    console.log('Updating ticket:', id, 'with data:', updateData)
 
-    const { data: ticket, error: updateError } = await supabase
+    const { data: ticket, error: updateError } = await supabaseAdmin
       .from('tickets')
-      .update(updateData)
+      .update({ ...updateData, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select(`
         *,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase'
 import { sendWebhook, extractDateTime, getUserFullName, getUserEmail } from '@/lib/webhook'
 
 export async function PATCH(
@@ -21,7 +21,7 @@ export async function PATCH(
     console.log('Editing ticket:', id, 'with data:', updateData)
     
     // First check if ticket has already been edited
-    const { data: existingTicket, error: fetchError } = await supabase
+    const { data: existingTicket, error: fetchError } = await supabaseAdmin
       .from('tickets')
       .select('edited')
       .eq('id', id)
@@ -41,7 +41,7 @@ export async function PATCH(
     }
     
     // Update the ticket
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('tickets')
       .update({ 
         ...updateData, 

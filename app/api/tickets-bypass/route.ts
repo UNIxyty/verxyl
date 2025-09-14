@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase'
 import { sendWebhook, extractDateTime, getUserFullName, getUserEmail } from '@/lib/webhook'
 
 export async function POST(request: NextRequest) {
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     console.log('Inserting ticket with service role (bypassing RLS):', ticketData)
     
     // Insert ticket with service role (bypasses RLS)
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('tickets')
       .insert(ticketData)
       .select(`
