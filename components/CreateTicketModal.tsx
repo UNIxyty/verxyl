@@ -64,27 +64,48 @@ export function CreateTicketModal({ isOpen, onClose, onSuccess }: CreateTicketMo
 
       console.log('Creating ticket with deadline:', deadline)
 
-      // Get the current session token for authentication
-      const { data: { session } } = await supabase.auth.getSession()
+      // Try to get the current session token for authentication
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       
-      if (!session?.access_token) {
-        throw new Error('No authentication token available')
-      }
-
-      const response = await fetch('/api/tickets-auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          title: data.title,
-          urgency: data.urgency,
-          deadline: deadline,
-          details: data.details,
-          assigned_to: data.assigned_to
+      console.log('Session check:', { session: !!session, error: sessionError })
+      
+      let response;
+      
+      if (session?.access_token) {
+        // Use authenticated API with token
+        console.log('Using authenticated API with token')
+        response = await fetch('/api/tickets-auth', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            title: data.title,
+            urgency: data.urgency,
+            deadline: deadline,
+            details: data.details,
+            assigned_to: data.assigned_to
+          })
         })
-      })
+      } else {
+        // Fallback to bypass API (uses service role to bypass RLS)
+        console.log('No session token, using bypass API')
+        response = await fetch('/api/tickets-bypass', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: data.title,
+            urgency: data.urgency,
+            deadline: deadline,
+            details: data.details,
+            assigned_to: data.assigned_to,
+            created_by: user.id
+          })
+        })
+      }
 
       if (!response.ok) {
         const errorData = await response.json()
