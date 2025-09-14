@@ -19,6 +19,8 @@ export async function GET(request: NextRequest) {
 
     const { data: { user }, error } = await supabase.auth.getUser()
     
+    console.log('My tickets API - auth result:', { user: user?.id, error })
+    
     if (error || !user) {
       console.error('Auth error:', error)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
