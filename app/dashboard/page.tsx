@@ -42,8 +42,9 @@ export default function DashboardPage() {
         allTicketsResponse.json()
       ])
       
-      setMyTickets(myTicketsData.slice(0, 5)) // Show only 5 most recent
-      setAllTickets(allTicketsData.slice(0, 10)) // Show only 10 most recent
+      // Ensure data is an array before calling slice
+      setMyTickets(Array.isArray(myTicketsData) ? myTicketsData.slice(0, 5) : [])
+      setAllTickets(Array.isArray(allTicketsData) ? allTicketsData.slice(0, 10) : [])
     } catch (error) {
       console.error('Error loading dashboard data:', error)
     } finally {
