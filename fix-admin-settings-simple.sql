@@ -1,27 +1,13 @@
--- Fix admin_settings table policies
--- This script handles existing policies gracefully
+-- Simple fix for admin_settings table
+-- This script works with existing table structure
 
--- First, drop existing policies if they exist
+-- Drop existing policies if they exist
 DROP POLICY IF EXISTS "Admin can manage settings" ON admin_settings;
 DROP POLICY IF EXISTS "Admin can view settings" ON admin_settings;
 
--- Create the admin_settings table if it doesn't exist
-CREATE TABLE IF NOT EXISTS admin_settings (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    setting_key TEXT NOT NULL UNIQUE,
-    setting_value TEXT,
-    description TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Add description column if it doesn't exist
+-- Add missing columns if they don't exist
 ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS description TEXT;
-
--- Add created_at column if it doesn't exist
 ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
-
--- Add updated_at column if it doesn't exist
 ALTER TABLE admin_settings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
 
 -- Enable RLS on the table
@@ -55,7 +41,7 @@ VALUES (
 )
 ON CONFLICT (setting_key) DO NOTHING;
 
--- Create updated_at trigger
+-- Create updated_at trigger function if it doesn't exist
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
