@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { sendWebhook, extractDateTime, getUserFullName, getUserEmail } from '@/lib/webhook'
 
 export async function PATCH(
   request: NextRequest,
@@ -34,12 +35,40 @@ export async function PATCH(
       .from('tickets')
       .update(updateData)
       .eq('id', id)
-      .select()
+      .select(`
+        *,
+        assigned_user:users!assigned_to(*),
+        created_by_user:users!created_by(*)
+      `)
       .single()
 
     if (updateError) {
       console.error('Error updating ticket:', updateError)
       return NextResponse.json({ error: 'Failed to update ticket' }, { status: 500 })
+    }
+
+    // Send webhook for ticket update
+    if (ticket) {
+      try {
+        const { dateTicket, timeTicket } = extractDateTime(ticket.deadline)
+        
+        console.log('Sending webhook for ticket update via API')
+        const webhookResult = await sendWebhook({
+          ticketAction: 'updated',
+          ticket_id: ticket.id,
+          urgency: ticket.urgency,
+          dateTicket,
+          timeTicket,
+          creatorName: getUserFullName(ticket.created_by_user),
+          workerName: getUserFullName(ticket.assigned_user),
+          creatorEmail: getUserEmail(ticket.created_by_user),
+          workerEmail: getUserEmail(ticket.assigned_user)
+        })
+
+        console.log('Webhook result:', webhookResult)
+      } catch (webhookError) {
+        console.error('Webhook error (non-critical):', webhookError)
+      }
     }
 
     return NextResponse.json(ticket)
