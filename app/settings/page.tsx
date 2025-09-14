@@ -2,10 +2,12 @@
 
 import { DashboardLayout } from '@/components/DashboardLayout'
 import { ThemePicker } from '@/components/ThemePicker'
+import { LanguageSelector } from '@/components/LanguageSelector'
 import { useTheme } from '@/components/ThemeProvider'
 import { useAuth } from '@/components/AuthProvider'
+import { useLanguage } from '@/lib/language-context'
 import { useEffect, useState } from 'react'
-import { Cog6ToothIcon, LinkIcon, PaintBrushIcon } from '@heroicons/react/24/outline'
+import { Cog6ToothIcon, LinkIcon, PaintBrushIcon, GlobeAltIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
 interface Settings {
@@ -15,6 +17,7 @@ interface Settings {
 export default function SettingsPage() {
   const { user } = useAuth()
   const { theme, setTheme } = useTheme()
+  const { t } = useLanguage()
   const [settings, setSettings] = useState<Settings>({
     webhookUrl: ''
   })
@@ -120,7 +123,7 @@ export default function SettingsPage() {
     <DashboardLayout>
       <div className="max-w-4xl mx-auto p-6">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">{t('settingsTitle')}</h1>
           <p className="text-gray-400">
             Customize your Verxyl Ticket Management experience
           </p>
@@ -183,14 +186,29 @@ export default function SettingsPage() {
             </div>
           </div>
 
+          {/* Language Settings */}
+          <div className="card">
+            <div className="flex items-center mb-6">
+              <GlobeAltIcon className="h-6 w-6 text-primary-400 mr-3" />
+              <div>
+                <h2 className="text-xl font-semibold text-white">{t('language')}</h2>
+                <p className="text-gray-400 text-sm">
+                  {t('languageDescription')}
+                </p>
+              </div>
+            </div>
+
+            <LanguageSelector />
+          </div>
+
           {/* Theme Settings */}
           <div className="card">
             <div className="flex items-center mb-6">
               <PaintBrushIcon className="h-6 w-6 text-primary-400 mr-3" />
               <div>
-                <h2 className="text-xl font-semibold text-white">Theme Settings</h2>
+                <h2 className="text-xl font-semibold text-white">{t('theme')}</h2>
                 <p className="text-gray-400 text-sm">
-                  Choose your preferred color theme for the application
+                  {t('themeDescription')}
                 </p>
               </div>
             </div>
