@@ -88,6 +88,8 @@ export default function SentTicketsPage() {
     if (!ticketToDelete) return
 
     console.log('Proceeding with deletion...')
+    console.log('Ticket to delete:', ticketToDelete)
+    console.log('Ticket ID:', ticketToDelete.id)
     setIsDeleting(true)
     
     try {
