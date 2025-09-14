@@ -12,33 +12,10 @@ interface WebhookPayload {
 
 export async function sendWebhook(payload: WebhookPayload): Promise<{ success: boolean; userNotified?: boolean }> {
   try {
-    // Get webhook URL from environment variable or database
-    let webhookUrl = process.env.WEBHOOK_URL
+    // Get webhook URL from environment variable only
+    const webhookUrl = process.env.WEBHOOK_URL
     
-    // If no environment variable, try to get from database (admin settings)
-    if (!webhookUrl) {
-      try {
-        console.log('Attempting to fetch webhook URL from database...')
-        const { supabase } = await import('./supabase')
-        
-        const { data: settings, error } = await supabase
-          .from('admin_settings')
-          .select('setting_value')
-          .eq('setting_key', 'webhook_url')
-          .single()
-        
-        console.log('Database query result:', { data: settings, error })
-        
-        if (error) {
-          console.error('Database query error:', error)
-        } else {
-          webhookUrl = settings?.setting_value
-          console.log('Webhook URL from database:', webhookUrl)
-        }
-      } catch (error) {
-        console.error('Could not fetch webhook URL from database:', error)
-      }
-    }
+    console.log('Webhook URL from environment:', webhookUrl ? '[CONFIGURED]' : '[NOT SET]')
 
     if (!webhookUrl || !isValidUrl(webhookUrl)) {
       console.log('No valid webhook URL configured')
