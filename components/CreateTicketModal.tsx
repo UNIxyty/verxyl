@@ -7,7 +7,6 @@ import { DatePicker } from './DatePicker'
 import { TimePicker } from './TimePicker'
 import { UrgencyPicker } from './UrgencyPicker'
 import { UserPicker } from './UserPicker'
-import { createTicket } from '@/lib/database'
 import { useAuth } from './AuthProvider'
 import toast from 'react-hot-toast'
 
@@ -64,15 +63,29 @@ export function CreateTicketModal({ isOpen, onClose, onSuccess }: CreateTicketMo
 
       console.log('Creating ticket with deadline:', deadline)
 
-      await createTicket({
-        title: data.title,
-        urgency: data.urgency,
-        deadline: deadline,
-        details: data.details,
-        assigned_to: data.assigned_to,
-        created_by: user.id,
-        status: 'new'
+      const response = await fetch('/api/tickets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: data.title,
+          urgency: data.urgency,
+          deadline: deadline,
+          details: data.details,
+          assigned_to: data.assigned_to,
+          created_by: user.id,
+          status: 'new'
+        })
       })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create ticket')
+      }
+
+      const ticket = await response.json()
+      console.log('Ticket created successfully:', ticket)
 
       toast.success('Ticket created successfully!')
       reset()

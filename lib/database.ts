@@ -91,6 +91,12 @@ export const getAllUsers = async (): Promise<User[]> => {
 export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | null> => {
   console.log('Creating ticket with data:', ticketData)
   
+  // Check if Supabase is configured
+  if (!isSupabaseConfigured()) {
+    console.error('Supabase is not configured. Please check your environment variables.')
+    throw new Error('Database not configured')
+  }
+  
   // Validate deadline format if provided
   if (ticketData.deadline) {
     try {
@@ -106,6 +112,7 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
     }
   }
   
+  console.log('Inserting ticket into database...')
   const { data, error } = await supabase
     .from('tickets')
     .insert(ticketData)
@@ -118,7 +125,13 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
 
   if (error) {
     console.error('Error creating ticket:', error)
-    return null
+    console.error('Error details:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code
+    })
+    throw new Error(`Database error: ${error.message}`)
   }
 
   console.log('Ticket created successfully:', data)
