@@ -29,6 +29,24 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
     
+    // Validate UUID format for user IDs
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!uuidRegex.test(body.assigned_to)) {
+      console.error('Invalid assigned_to UUID format:', body.assigned_to)
+      return NextResponse.json({
+        error: 'Invalid assigned_to user ID format',
+        details: 'Expected valid UUID format'
+      }, { status: 400 })
+    }
+    
+    if (!uuidRegex.test(body.created_by)) {
+      console.error('Invalid created_by UUID format:', body.created_by)
+      return NextResponse.json({
+        error: 'Invalid created_by user ID format',
+        details: 'Expected valid UUID format'
+      }, { status: 400 })
+    }
+    
     // Prepare ticket data
     const ticketData = {
       title: body.title,

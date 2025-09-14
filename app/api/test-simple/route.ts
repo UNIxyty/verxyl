@@ -21,12 +21,13 @@ export async function POST() {
     console.log('Supabase is configured, testing simple insert...')
     
     // Test simple insert without joins
+    // Using valid UUID format for testing
     const testData = {
       title: 'Test Ticket',
       urgency: 'low' as const,
       details: 'This is a test ticket',
-      assigned_to: 'test-user-id',
-      created_by: 'test-creator-id',
+      assigned_to: '00000000-0000-0000-0000-000000000001',
+      created_by: '00000000-0000-0000-0000-000000000002',
       status: 'new' as const
     }
     
