@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from './AuthProvider'
+import { useLanguage } from '@/lib/language-context'
 import { useRouter, usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { 
@@ -17,24 +18,25 @@ import {
   ShieldCheckIcon
 } from '@heroicons/react/24/outline'
 
-const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'Create Ticket', href: '/create-ticket', icon: PlusIcon },
-  { name: 'My Tickets', href: '/my-tickets', icon: TicketIcon },
-  { name: 'Sent Tickets', href: '/sent-tickets', icon: PaperAirplaneIcon },
-  { name: 'Completed', href: '/completed', icon: CheckCircleIcon },
-  { name: 'AI Prompts', href: '/ai-backups', icon: LightBulbIcon },
-  { name: 'N8N Projects', href: '/n8n-backups', icon: CogIcon },
-  { name: 'Admin', href: '/admin', icon: ShieldCheckIcon },
-  { name: 'Profile', href: '/profile', icon: UserIcon },
-  { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
-]
-
 export function Navigation() {
   const { user, signOut } = useAuth()
+  const { t } = useLanguage()
   const router = useRouter()
   const pathname = usePathname()
   const [userRole, setUserRole] = useState<string | null>(null)
+
+  const navigation = [
+    { name: t('dashboard'), href: '/dashboard', icon: HomeIcon },
+    { name: t('createTicket'), href: '/create-ticket', icon: PlusIcon },
+    { name: t('myTickets'), href: '/my-tickets', icon: TicketIcon },
+    { name: t('sentTickets'), href: '/sent-tickets', icon: PaperAirplaneIcon },
+    { name: t('completedTickets'), href: '/completed', icon: CheckCircleIcon },
+    { name: t('aiPrompts'), href: '/ai-backups', icon: LightBulbIcon },
+    { name: t('n8nProjects'), href: '/n8n-backups', icon: CogIcon },
+    { name: t('admin'), href: '/admin', icon: ShieldCheckIcon },
+    { name: t('profile'), href: '/profile', icon: UserIcon },
+    { name: t('settings'), href: '/settings', icon: Cog6ToothIcon },
+  ]
 
   useEffect(() => {
     const checkUserRole = async () => {

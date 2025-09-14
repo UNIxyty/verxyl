@@ -6,7 +6,7 @@ export interface Translations {
   createTicket: string
   myTickets: string
   sentTickets: string
-  completed: string
+  completedTickets: string
   aiPrompts: string
   n8nProjects: string
   admin: string
@@ -101,7 +101,7 @@ export const translations: Record<Language, Translations> = {
     createTicket: 'Create Ticket',
     myTickets: 'My Tickets',
     sentTickets: 'Sent Tickets',
-    completed: 'Completed',
+    completedTickets: 'Completed',
     aiPrompts: 'AI Prompts',
     n8nProjects: 'N8N Projects',
     admin: 'Admin',
@@ -195,7 +195,7 @@ export const translations: Record<Language, Translations> = {
     createTicket: 'Создать тикет',
     myTickets: 'Мои тикеты',
     sentTickets: 'Отправленные тикеты',
-    completed: 'Завершенные',
+    completedTickets: 'Завершенные',
     aiPrompts: 'AI Промпты',
     n8nProjects: 'N8N Проекты',
     admin: 'Админ',
