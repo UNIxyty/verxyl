@@ -5,7 +5,7 @@ export async function GET() {
   try {
     console.log('=== DEBUG ADMIN SETTINGS ===')
     
-    const debug = {
+    const debug: any = {
       timestamp: new Date().toISOString(),
       supabaseConfigured: isSupabaseConfigured(),
       tests: []
