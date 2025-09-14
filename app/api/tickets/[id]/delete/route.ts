@@ -53,17 +53,32 @@ export async function DELETE(
     console.log('Ticket data fetched successfully:', ticketData)
     
     // Delete the ticket
-    const { error } = await supabaseAdmin
+    console.log('Attempting to delete ticket with ID:', id)
+    const { data: deleteResult, error } = await supabaseAdmin
       .from('tickets')
       .delete()
       .eq('id', id)
+      .select('id')
+    
+    console.log('Delete result:', deleteResult)
+    console.log('Delete error:', error)
     
     if (error) {
       console.error('Error deleting ticket:', error)
       return NextResponse.json({
         error: 'Failed to delete ticket',
-        details: error.message
+        details: error.message,
+        code: error.code,
+        hint: error.hint
       }, { status: 500 })
+    }
+    
+    if (!deleteResult || deleteResult.length === 0) {
+      console.error('No rows were deleted - ticket might not exist or already deleted')
+      return NextResponse.json({
+        error: 'Ticket not found or already deleted',
+        details: 'No rows were affected by the delete operation'
+      }, { status: 404 })
     }
     
     console.log('Ticket deleted successfully')

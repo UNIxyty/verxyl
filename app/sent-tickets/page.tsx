@@ -97,6 +97,7 @@ export default function SentTicketsPage() {
 
       if (!response.ok) {
         const errorData = await response.json()
+        console.error('Delete API error response:', errorData)
         throw new Error(errorData.error || 'Failed to delete ticket')
       }
 
