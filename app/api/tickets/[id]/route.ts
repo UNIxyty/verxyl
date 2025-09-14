@@ -56,6 +56,7 @@ export async function PATCH(
         const webhookResult = await sendWebhook({
           ticketAction: 'updated',
           ticket_id: ticket.id,
+          ticket_title: ticket.title,
           urgency: ticket.urgency,
           dateTicket,
           timeTicket,
