@@ -102,6 +102,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${requestUrl.origin}/dashboard`)
   } catch (error) {
     console.error('Unexpected error in auth callback:', error)
+    const requestUrl = new URL(request.url)
     return NextResponse.redirect(`${requestUrl.origin}/login?error=unexpected`)
   }
 }
