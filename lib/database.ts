@@ -202,9 +202,17 @@ export const updateTicket = async (id: string, updates: TicketUpdate): Promise<T
     try {
       const { dateTicket, timeTicket } = extractDateTime(data.deadline)
       
-      console.log('Sending webhook for ticket update')
+      // Determine webhook action based on what was updated
+      let webhookAction: 'updated' | 'in_work' = 'updated'
+      if (updates.status === 'in_progress') {
+        webhookAction = 'in_work'
+        console.log('Sending webhook for ticket work started')
+      } else {
+        console.log('Sending webhook for ticket update')
+      }
+      
       const webhookResult = await sendWebhook({
-        ticketAction: 'updated',
+        ticketAction: webhookAction,
         ticket_id: data.id,
         ticket_title: data.title,
         urgency: data.urgency,

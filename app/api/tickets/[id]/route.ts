@@ -52,9 +52,17 @@ export async function PATCH(
       try {
         const { dateTicket, timeTicket } = extractDateTime(ticket.deadline)
         
-        console.log('Sending webhook for ticket update via API')
+        // Determine webhook action based on what was updated
+        let webhookAction: 'updated' | 'in_work' = 'updated'
+        if (updateData.status === 'in_progress') {
+          webhookAction = 'in_work'
+          console.log('Sending webhook for ticket work started via API')
+        } else {
+          console.log('Sending webhook for ticket update via API')
+        }
+        
         const webhookResult = await sendWebhook({
-          ticketAction: 'updated',
+          ticketAction: webhookAction,
           ticket_id: ticket.id,
           ticket_title: ticket.title,
           urgency: ticket.urgency,

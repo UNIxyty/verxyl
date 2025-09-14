@@ -7,9 +7,9 @@ export async function POST() {
     
     // Test webhook with sample data
     const testData = {
-      ticketAction: 'created' as const,
+      ticketAction: 'in_work' as const,
       ticket_id: 'test-ticket-123',
-      ticket_title: 'Test Ticket - Webhook Functionality',
+      ticket_title: 'Test Ticket - Start Work Webhook',
       urgency: 'medium' as const,
       dateTicket: '2025-01-17',
       timeTicket: '12:00',
