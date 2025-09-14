@@ -8,6 +8,7 @@ import { TimePicker } from './TimePicker'
 import { UrgencyPicker } from './UrgencyPicker'
 import { UserPicker } from './UserPicker'
 import { useAuth } from './AuthProvider'
+import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 
 interface CreateTicketModalProps {
@@ -63,19 +64,25 @@ export function CreateTicketModal({ isOpen, onClose, onSuccess }: CreateTicketMo
 
       console.log('Creating ticket with deadline:', deadline)
 
-      const response = await fetch('/api/tickets-simple', {
+      // Get the current session token for authentication
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        throw new Error('No authentication token available')
+      }
+
+      const response = await fetch('/api/tickets-auth', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
           title: data.title,
           urgency: data.urgency,
           deadline: deadline,
           details: data.details,
-          assigned_to: data.assigned_to,
-          created_by: user.id,
-          status: 'new'
+          assigned_to: data.assigned_to
         })
       })
 
