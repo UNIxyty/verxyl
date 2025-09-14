@@ -136,7 +136,9 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
 
   console.log('Ticket created successfully:', data)
 
-  // Send webhook for ticket creation
+  // Temporarily disable webhook to debug the issue
+  // TODO: Re-enable webhook after fixing the main issue
+  /*
   if (data) {
     const { dateTicket, timeTicket } = extractDateTime(data.deadline)
     
@@ -162,6 +164,7 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
         .eq('id', data.id)
     }
   }
+  */
 
   return data as Ticket
 }
