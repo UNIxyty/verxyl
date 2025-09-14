@@ -3,7 +3,6 @@
 import { DashboardLayout } from '@/components/DashboardLayout'
 import { useAuth } from '@/components/AuthProvider'
 import { useEffect, useState } from 'react'
-import { getTicketsByAssignedUser, getAllTickets } from '@/lib/database'
 import { TicketIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
 
 interface Ticket {
@@ -33,9 +32,14 @@ export default function DashboardPage() {
     if (!user) return
     
     try {
+      const [myTicketsResponse, allTicketsResponse] = await Promise.all([
+        fetch('/api/tickets/my-tickets'),
+        fetch('/api/tickets/all')
+      ])
+      
       const [myTicketsData, allTicketsData] = await Promise.all([
-        getTicketsByAssignedUser(user.id),
-        getAllTickets()
+        myTicketsResponse.json(),
+        allTicketsResponse.json()
       ])
       
       setMyTickets(myTicketsData.slice(0, 5)) // Show only 5 most recent

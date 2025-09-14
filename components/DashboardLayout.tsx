@@ -4,7 +4,6 @@ import { useAuth } from './AuthProvider'
 import { Navigation } from './Navigation'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createOrUpdateUser } from '@/lib/database'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -20,17 +19,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [user, loading, router])
 
-  useEffect(() => {
-    if (user) {
-      // Create or update user in database
-      createOrUpdateUser({
-        id: user.id,
-        email: user.email || '',
-        full_name: user.user_metadata?.full_name || null,
-        avatar_url: user.user_metadata?.avatar_url || null,
-      })
-    }
-  }, [user])
 
   if (loading) {
     return (

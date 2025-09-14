@@ -5,7 +5,6 @@ import { CompleteTicketModal } from '@/components/CompleteTicketModal'
 import { TicketViewModal } from '@/components/TicketViewModal'
 import { useAuth } from '@/components/AuthProvider'
 import { useEffect, useState } from 'react'
-import { getTicketsByAssignedUser, updateTicket } from '@/lib/database'
 import { PlayIcon, CheckCircleIcon, EyeIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
@@ -52,7 +51,8 @@ export default function MyTicketsPage() {
     if (!user) return
 
     try {
-      const ticketsData = await getTicketsByAssignedUser(user.id)
+      const response = await fetch('/api/tickets/my-tickets')
+      const ticketsData = await response.json()
       setTickets(ticketsData)
     } catch (error) {
       console.error('Error loading tickets:', error)
@@ -64,7 +64,16 @@ export default function MyTicketsPage() {
 
   const handleStartWork = async (ticketId: string) => {
     try {
-      await updateTicket(ticketId, { status: 'in_progress' })
+      const response = await fetch(`/api/tickets/${ticketId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'in_progress' })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to update ticket')
+      }
+      
       toast.success('Ticket started!')
       loadTickets()
     } catch (error) {
