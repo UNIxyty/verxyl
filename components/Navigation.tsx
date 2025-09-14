@@ -40,8 +40,10 @@ export function Navigation() {
     const checkUserRole = async () => {
       if (user) {
         try {
+          console.log('Checking user role for:', user.id)
           const response = await fetch('/api/user-status')
           const data = await response.json()
+          console.log('User status response:', data)
           setUserRole(data.role)
         } catch (error) {
           console.error('Error checking user role:', error)
