@@ -25,7 +25,23 @@ export async function GET(request: NextRequest) {
         },
       }
     )
+    
     await supabase.auth.exchangeCodeForSession(code)
+    
+    // Check user approval status
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (user) {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('approval_status')
+        .eq('id', user.id)
+        .single()
+
+      if (userData?.approval_status === 'pending' || userData?.approval_status === 'rejected') {
+        return NextResponse.redirect(`${requestUrl.origin}/pending-approval`)
+      }
+    }
   }
 
   // URL to redirect to after sign in process completes

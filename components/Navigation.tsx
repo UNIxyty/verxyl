@@ -12,7 +12,8 @@ import {
   ArrowRightOnRectangleIcon,
   Cog6ToothIcon,
   PaperAirplaneIcon,
-  HomeIcon
+  HomeIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline'
 
 const navigation = [
@@ -23,6 +24,7 @@ const navigation = [
   { name: 'Completed', href: '/completed', icon: CheckCircleIcon },
   { name: 'AI Prompts', href: '/ai-backups', icon: LightBulbIcon },
   { name: 'N8N Projects', href: '/n8n-backups', icon: CogIcon },
+  { name: 'Admin', href: '/admin', icon: ShieldCheckIcon },
   { name: 'Profile', href: '/profile', icon: UserIcon },
   { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
 ]
