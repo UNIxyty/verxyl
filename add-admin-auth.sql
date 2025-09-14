@@ -40,15 +40,23 @@ BEGIN
     END IF;
 END $$;
 
--- Update RLS policies for admin access
+-- Update existing users to have default values
+UPDATE users SET approval_status = 'pending' WHERE approval_status IS NULL;
+UPDATE users SET role = 'user' WHERE role IS NULL;
+
+-- Drop existing policies first
 DROP POLICY IF EXISTS "Admins can view all users" ON users;
+DROP POLICY IF EXISTS "Admins can update user approval status" ON users;
+DROP POLICY IF EXISTS "Users can view their own data" ON users;
+DROP POLICY IF EXISTS "Users can update their own basic info" ON users;
+
+-- Create new RLS policies for admin access
 CREATE POLICY "Admins can view all users" ON users FOR SELECT USING (
   auth.uid() IN (
     SELECT id FROM users WHERE role = 'admin' AND approval_status = 'approved'
   )
 );
 
-DROP POLICY IF EXISTS "Admins can update user approval status" ON users;
 CREATE POLICY "Admins can update user approval status" ON users FOR UPDATE USING (
   auth.uid() IN (
     SELECT id FROM users WHERE role = 'admin' AND approval_status = 'approved'
@@ -56,15 +64,10 @@ CREATE POLICY "Admins can update user approval status" ON users FOR UPDATE USING
 );
 
 -- Allow users to view their own data
-DROP POLICY IF EXISTS "Users can view their own data" ON users;
 CREATE POLICY "Users can view their own data" ON users FOR SELECT USING (auth.uid() = id);
 
 -- Allow users to update their own basic info (but not approval status or role)
-DROP POLICY IF EXISTS "Users can update their own basic info" ON users;
 CREATE POLICY "Users can update their own basic info" ON users FOR UPDATE USING (
   auth.uid() = id AND 
-  approval_status = 'approved' AND
-  -- Prevent users from changing their own role or approval status
-  (OLD.role = NEW.role OR OLD.role IS NULL) AND
-  (OLD.approval_status = NEW.approval_status OR OLD.approval_status IS NULL)
+  approval_status = 'approved'
 );
