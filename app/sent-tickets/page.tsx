@@ -6,7 +6,7 @@ import { EditTicketModal } from '@/components/EditTicketModal'
 import { DeleteConfirmModal } from '@/components/DeleteConfirmModal'
 import { useAuth } from '@/components/AuthProvider'
 import { useEffect, useState } from 'react'
-import { getTicketsByCreator, deleteTicket } from '@/lib/database'
+import { getTicketsByCreator } from '@/lib/database'
 import { EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
@@ -91,20 +91,22 @@ export default function SentTicketsPage() {
     setIsDeleting(true)
     
     try {
-      const result = await deleteTicket(ticketToDelete.id)
-      console.log('Delete ticket result:', result)
-      
-      if (result) {
-        toast.success('Ticket deleted successfully!')
-        loadTickets()
-        setIsDeleteModalOpen(false)
-        setTicketToDelete(null)
-      } else {
-        toast.error('Failed to delete ticket')
+      const response = await fetch(`/api/tickets/${ticketToDelete.id}/delete`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete ticket')
       }
-    } catch (error) {
+
+      toast.success('Ticket deleted successfully!')
+      loadTickets()
+      setIsDeleteModalOpen(false)
+      setTicketToDelete(null)
+    } catch (error: any) {
       console.error('Error deleting ticket:', error)
-      toast.error('Failed to delete ticket')
+      toast.error(error.message || 'Failed to delete ticket')
     } finally {
       setIsDeleting(false)
     }

@@ -7,7 +7,7 @@ import { DatePicker } from './DatePicker'
 import { TimePicker } from './TimePicker'
 import { UrgencyPicker } from './UrgencyPicker'
 import { UserPicker } from './UserPicker'
-import { editTicket, getAllUsers } from '@/lib/database'
+import { getAllUsers } from '@/lib/database'
 import { useAuth } from './AuthProvider'
 import toast from 'react-hot-toast'
 
@@ -132,13 +132,24 @@ export function EditTicketModal({ isOpen, onClose, ticket, onSuccess }: EditTick
 
       console.log('Editing ticket with deadline:', deadline)
 
-      await editTicket(ticket.id, {
-        title: data.title,
-        urgency: data.urgency,
-        deadline: deadline,
-        details: data.details,
-        assigned_to: data.assigned_to
+      const response = await fetch(`/api/tickets/${ticket.id}/edit`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: data.title,
+          urgency: data.urgency,
+          deadline: deadline,
+          details: data.details,
+          assigned_to: data.assigned_to
+        })
       })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update ticket')
+      }
 
       toast.success('Ticket updated successfully!')
       onSuccess()

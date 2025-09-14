@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Modal } from './Modal'
 import { FilePicker } from './FilePicker'
-import { completeTicket } from '@/lib/database'
+// import { completeTicket } from '@/lib/database' // Using API route instead
 import toast from 'react-hot-toast'
 import Editor from '@monaco-editor/react'
 
@@ -75,11 +75,22 @@ export function CompleteTicketModal({ isOpen, onClose, ticketId, onSuccess }: Co
           break
       }
 
-      await completeTicket(ticketId, {
-        solutionType: solutionType!,
-        solutionData: solutionData,
-        outputResult: finalOutputResult
+      const response = await fetch(`/api/tickets/${ticketId}/complete`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          solutionType: solutionType!,
+          solutionData: solutionData,
+          outputResult: finalOutputResult
+        })
       })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to complete ticket')
+      }
 
       toast.success('Ticket completed successfully!')
       reset()
