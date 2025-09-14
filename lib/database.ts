@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase, isSupabaseConfigured } from './supabase'
 import type { Database } from './supabase'
 import { sendWebhook, extractDateTime, getUserFullName, getUserEmail } from './webhook'
 
@@ -18,6 +18,11 @@ type N8NProjectBackupInsert = Database['public']['Tables']['n8n_project_backups'
 
 // User operations
 export const createOrUpdateUser = async (userData: UserInsert): Promise<User | null> => {
+  if (!isSupabaseConfigured()) {
+    console.error('Supabase is not configured. Please check your environment variables.')
+    return null
+  }
+
   const { data, error } = await supabase
     .from('users')
     .upsert(userData, { onConflict: 'id' })
@@ -33,6 +38,11 @@ export const createOrUpdateUser = async (userData: UserInsert): Promise<User | n
 }
 
 export const getUserById = async (id: string): Promise<User | null> => {
+  if (!isSupabaseConfigured()) {
+    console.error('Supabase is not configured. Please check your environment variables.')
+    return null
+  }
+
   const { data, error } = await supabase
     .from('users')
     .select('*')
