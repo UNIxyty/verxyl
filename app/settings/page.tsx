@@ -7,7 +7,7 @@ import { useTheme } from '@/components/ThemeProvider'
 import { useAuth } from '@/components/AuthProvider'
 import { useLanguage } from '@/lib/language-context'
 import { useEffect, useState } from 'react'
-import { Cog6ToothIcon, LinkIcon, PaintBrushIcon, GlobeAltIcon } from '@heroicons/react/24/outline'
+import { Cog6ToothIcon, LinkIcon, PaintBrushIcon, GlobeAltIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
 interface Settings {
@@ -23,12 +23,24 @@ export default function SettingsPage() {
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [userRole, setUserRole] = useState<string | null>(null)
 
   useEffect(() => {
     if (user) {
       loadSettings()
+      checkUserRole()
     }
   }, [user])
+
+  const checkUserRole = async () => {
+    try {
+      const response = await fetch('/api/user-status')
+      const data = await response.json()
+      setUserRole(data.role)
+    } catch (error) {
+      console.error('Error checking user role:', error)
+    }
+  }
 
   const loadSettings = async () => {
     try {
@@ -90,13 +102,13 @@ export default function SettingsPage() {
       })
 
       if (response.ok) {
-        toast.success('Webhook test successful!')
+        toast.success(t('webhookTestSuccess'))
       } else {
-        toast.error('Webhook test failed. Check your URL and try again.')
+        toast.error(t('webhookTestFailed'))
       }
     } catch (error) {
       console.error('Webhook test error:', error)
-      toast.error('Webhook test failed. Check your URL and try again.')
+      toast.error(t('webhookTestFailed'))
     }
   }
 
@@ -130,61 +142,62 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-8">
-          {/* Webhook Settings */}
-          <div className="card">
-            <div className="flex items-center mb-6">
-              <LinkIcon className="h-6 w-6 text-primary-400 mr-3" />
-              <div>
-                <h2 className="text-xl font-semibold text-white">Webhook Configuration</h2>
-                <p className="text-gray-400 text-sm">
-                  Configure webhook URLs for ticket notifications and automation
-                </p>
+          {/* Webhook Settings - Admin Only */}
+          {userRole === 'admin' && (
+            <div className="card">
+              <div className="flex items-center mb-6">
+                <ShieldCheckIcon className="h-6 w-6 text-primary-400 mr-3" />
+                <div>
+                  <h2 className="text-xl font-semibold text-white">{t('webhookUrl')}</h2>
+                  <p className="text-gray-400 text-sm">
+                    {t('webhookUrlDescription')}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Webhook URL
-                </label>
-                <div className="flex space-x-3">
-                  <input
-                    type="url"
-                    value={settings.webhookUrl}
-                    onChange={(e) => handleWebhookChange(e.target.value)}
-                    placeholder="https://your-webhook-url.com/endpoint"
-                    className="flex-1 input"
-                  />
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    {t('webhookUrl')}
+                  </label>
+                  <div className="flex space-x-3">
+                    <input
+                      type="url"
+                      value={settings.webhookUrl}
+                      onChange={(e) => handleWebhookChange(e.target.value)}
+                      placeholder={t('webhookUrlPlaceholder')}
+                      className="flex-1 input"
+                    />
+                    <button
+                      onClick={testWebhook}
+                      disabled={!settings.webhookUrl || !validateWebhookUrl(settings.webhookUrl)}
+                      className="btn-secondary whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {t('testWebhook')}
+                    </button>
+                  </div>
+                  {settings.webhookUrl && !validateWebhookUrl(settings.webhookUrl) && (
+                    <p className="mt-2 text-sm text-red-400">
+                      {t('enterValidUrl')}
+                    </p>
+                  )}
+                  <p className="mt-2 text-sm text-gray-400">
+                    {t('webhookUrlDescription')}
+                  </p>
+                </div>
+
+                <div className="flex justify-end">
                   <button
-                    onClick={testWebhook}
-                    disabled={!settings.webhookUrl || !validateWebhookUrl(settings.webhookUrl)}
-                    className="btn-secondary whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={saveSettings}
+                    disabled={saving}
+                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Test
+                    {saving ? t('loading') : `${t('save')} ${t('webhookUrl')} ${t('settings')}`}
                   </button>
                 </div>
-                {settings.webhookUrl && !validateWebhookUrl(settings.webhookUrl) && (
-                  <p className="mt-2 text-sm text-red-400">
-                    Please enter a valid URL starting with http:// or https://
-                  </p>
-                )}
-                <p className="mt-2 text-sm text-gray-400">
-                  This webhook will be called when tickets are created, updated, or completed.
-                  The payload will include ticket details and user information.
-                </p>
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  onClick={saveSettings}
-                  disabled={saving}
-                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {saving ? 'Saving...' : 'Save Webhook Settings'}
-                </button>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Language Settings */}
           <div className="card">
@@ -221,7 +234,7 @@ export default function SettingsPage() {
             <div className="flex items-center mb-6">
               <Cog6ToothIcon className="h-6 w-6 text-primary-400 mr-3" />
               <div>
-                <h2 className="text-xl font-semibold text-white">Application Information</h2>
+                <h2 className="text-xl font-semibold text-white">{t('applicationInfo')}</h2>
                 <p className="text-gray-400 text-sm">
                   Version and system information
                 </p>
@@ -230,19 +243,19 @@ export default function SettingsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <h4 className="text-sm font-medium text-gray-300 mb-1">Version</h4>
+                <h4 className="text-sm font-medium text-gray-300 mb-1">{t('version')}</h4>
                 <p className="text-gray-200">1.0.0</p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-300 mb-1">Build</h4>
+                <h4 className="text-sm font-medium text-gray-300 mb-1">{t('build')}</h4>
                 <p className="text-gray-200">Development</p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-300 mb-1">Current Theme</h4>
+                <h4 className="text-sm font-medium text-gray-300 mb-1">{t('currentTheme')}</h4>
                 <p className="text-gray-200 capitalize">{theme.replace('-', ' ')}</p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-300 mb-1">User ID</h4>
+                <h4 className="text-sm font-medium text-gray-300 mb-1">{t('userId')}</h4>
                 <p className="text-gray-200 font-mono text-sm">{user?.id}</p>
               </div>
             </div>
