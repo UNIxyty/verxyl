@@ -130,9 +130,9 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto p-6">
+        <div className="max-w-4xl mx-auto p-6">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">{t('settingsTitle')}</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
           <p className="text-gray-400">
             Customize your Verxyl Ticket Management experience
           </p>
