@@ -63,7 +63,7 @@ export function CreateTicketModal({ isOpen, onClose, onSuccess }: CreateTicketMo
 
       console.log('Creating ticket with deadline:', deadline)
 
-      const response = await fetch('/api/tickets', {
+      const response = await fetch('/api/tickets-simple', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
