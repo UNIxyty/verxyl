@@ -2,12 +2,10 @@
 
 import { DashboardLayout } from '@/components/DashboardLayout'
 import { ThemePicker } from '@/components/ThemePicker'
-import { LanguageSelector } from '@/components/LanguageSelector'
 import { useTheme } from '@/components/ThemeProvider'
 import { useAuth } from '@/components/AuthProvider'
-import { useLanguage } from '@/lib/language-context'
 import { useEffect, useState } from 'react'
-import { Cog6ToothIcon, LinkIcon, PaintBrushIcon, GlobeAltIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
+import { Cog6ToothIcon, LinkIcon, PaintBrushIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
 interface Settings {
@@ -17,7 +15,6 @@ interface Settings {
 export default function SettingsPage() {
   const { user } = useAuth()
   const { theme, setTheme } = useTheme()
-  const { t } = useLanguage()
   const [settings, setSettings] = useState<Settings>({
     webhookUrl: ''
   })
@@ -102,13 +99,13 @@ export default function SettingsPage() {
       })
 
       if (response.ok) {
-        toast.success(t('webhookTestSuccess'))
+        toast.success('Webhook test successful!')
       } else {
-        toast.error(t('webhookTestFailed'))
+        toast.error('Webhook test failed. Check your URL and try again.')
       }
     } catch (error) {
       console.error('Webhook test error:', error)
-      toast.error(t('webhookTestFailed'))
+      toast.error('Webhook test failed. Check your URL and try again.')
     }
   }
 
@@ -148,9 +145,9 @@ export default function SettingsPage() {
               <div className="flex items-center mb-6">
                 <ShieldCheckIcon className="h-6 w-6 text-primary-400 mr-3" />
                 <div>
-                  <h2 className="text-xl font-semibold text-white">{t('webhookUrl')}</h2>
+                  <h2 className="text-xl font-semibold text-white">Webhook Configuration</h2>
                   <p className="text-gray-400 text-sm">
-                    {t('webhookUrlDescription')}
+                    Configure webhook URLs for ticket notifications and automation
                   </p>
                 </div>
               </div>
@@ -158,14 +155,14 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    {t('webhookUrl')}
+                    Webhook URL
                   </label>
                   <div className="flex space-x-3">
                     <input
                       type="url"
                       value={settings.webhookUrl}
                       onChange={(e) => handleWebhookChange(e.target.value)}
-                      placeholder={t('webhookUrlPlaceholder')}
+                      placeholder="https://your-webhook-url.com/endpoint"
                       className="flex-1 input"
                     />
                     <button
@@ -173,16 +170,17 @@ export default function SettingsPage() {
                       disabled={!settings.webhookUrl || !validateWebhookUrl(settings.webhookUrl)}
                       className="btn-secondary whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {t('testWebhook')}
+                      Test
                     </button>
                   </div>
                   {settings.webhookUrl && !validateWebhookUrl(settings.webhookUrl) && (
                     <p className="mt-2 text-sm text-red-400">
-                      {t('enterValidUrl')}
+                      Please enter a valid URL starting with http:// or https://
                     </p>
                   )}
                   <p className="mt-2 text-sm text-gray-400">
-                    {t('webhookUrlDescription')}
+                    This webhook will be called when tickets are created, updated, or completed.
+                    The payload will include ticket details and user information.
                   </p>
                 </div>
 
@@ -192,36 +190,22 @@ export default function SettingsPage() {
                     disabled={saving}
                     className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {saving ? t('loading') : `${t('save')} ${t('webhookUrl')} ${t('settings')}`}
+                    {saving ? 'Saving...' : 'Save Webhook Settings'}
                   </button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Language Settings */}
-          <div className="card">
-            <div className="flex items-center mb-6">
-              <GlobeAltIcon className="h-6 w-6 text-primary-400 mr-3" />
-              <div>
-                <h2 className="text-xl font-semibold text-white">{t('language')}</h2>
-                <p className="text-gray-400 text-sm">
-                  {t('languageDescription')}
-                </p>
-              </div>
-            </div>
-
-            <LanguageSelector />
-          </div>
 
           {/* Theme Settings */}
           <div className="card">
             <div className="flex items-center mb-6">
               <PaintBrushIcon className="h-6 w-6 text-primary-400 mr-3" />
               <div>
-                <h2 className="text-xl font-semibold text-white">{t('theme')}</h2>
+                <h2 className="text-xl font-semibold text-white">Theme Settings</h2>
                 <p className="text-gray-400 text-sm">
-                  {t('themeDescription')}
+                  Choose your preferred color theme
                 </p>
               </div>
             </div>
@@ -234,7 +218,7 @@ export default function SettingsPage() {
             <div className="flex items-center mb-6">
               <Cog6ToothIcon className="h-6 w-6 text-primary-400 mr-3" />
               <div>
-                <h2 className="text-xl font-semibold text-white">{t('applicationInfo')}</h2>
+                <h2 className="text-xl font-semibold text-white">Application Information</h2>
                 <p className="text-gray-400 text-sm">
                   Version and system information
                 </p>
@@ -243,19 +227,19 @@ export default function SettingsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <h4 className="text-sm font-medium text-gray-300 mb-1">{t('version')}</h4>
+                <h4 className="text-sm font-medium text-gray-300 mb-1">Version</h4>
                 <p className="text-gray-200">1.0.0</p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-300 mb-1">{t('build')}</h4>
+                <h4 className="text-sm font-medium text-gray-300 mb-1">Build</h4>
                 <p className="text-gray-200">Development</p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-300 mb-1">{t('currentTheme')}</h4>
+                <h4 className="text-sm font-medium text-gray-300 mb-1">Current Theme</h4>
                 <p className="text-gray-200 capitalize">{theme.replace('-', ' ')}</p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-300 mb-1">{t('userId')}</h4>
+                <h4 className="text-sm font-medium text-gray-300 mb-1">User ID</h4>
                 <p className="text-gray-200 font-mono text-sm">{user?.id}</p>
               </div>
             </div>
