@@ -5,7 +5,7 @@ export async function GET() {
   try {
     console.log('=== STATUS CHECK START ===')
     
-    const status = {
+    const status: any = {
       timestamp: new Date().toISOString(),
       supabase: {
         configured: isSupabaseConfigured(),
