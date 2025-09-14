@@ -12,18 +12,26 @@ interface WebhookPayload {
 
 export async function sendWebhook(payload: WebhookPayload): Promise<{ success: boolean; userNotified?: boolean }> {
   try {
-    // Get webhook URL from localStorage (user settings)
-    const savedSettings = localStorage.getItem('userSettings')
-    if (!savedSettings) {
-      console.log('No webhook URL configured')
-      return { success: false }
+    // Get webhook URL from environment variable or database
+    let webhookUrl = process.env.WEBHOOK_URL
+    
+    // If no environment variable, try to get from database (admin settings)
+    if (!webhookUrl) {
+      try {
+        const { supabase } = await import('./supabase')
+        const { data: settings } = await supabase
+          .from('admin_settings')
+          .select('webhook_url')
+          .single()
+        
+        webhookUrl = settings?.webhook_url
+      } catch (error) {
+        console.log('Could not fetch webhook URL from database:', error)
+      }
     }
 
-    const settings = JSON.parse(savedSettings)
-    const webhookUrl = settings.webhookUrl
-
     if (!webhookUrl || !isValidUrl(webhookUrl)) {
-      console.log('Invalid webhook URL:', webhookUrl)
+      console.log('No valid webhook URL configured')
       return { success: false }
     }
 

@@ -142,35 +142,39 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
 
   console.log('Ticket created successfully:', data)
 
-  // Temporarily disable webhook to debug the issue
-  // TODO: Re-enable webhook after fixing the main issue
-  /*
+  // Send webhook for ticket creation
   if (data) {
-    const { dateTicket, timeTicket } = extractDateTime(data.deadline)
-    
-    console.log('Sending webhook for ticket creation')
-    const webhookResult = await sendWebhook({
-      ticketAction: 'created',
-      ticket_id: data.id,
-      urgency: data.urgency,
-      dateTicket,
-      timeTicket,
-      creatorName: getUserFullName(data.created_by_user),
-      workerName: getUserFullName(data.assigned_user),
-      creatorEmail: getUserEmail(data.created_by_user),
-      workerEmail: getUserEmail(data.assigned_user)
-    })
+    try {
+      const { dateTicket, timeTicket } = extractDateTime(data.deadline)
+      
+      console.log('Sending webhook for ticket creation')
+      const webhookResult = await sendWebhook({
+        ticketAction: 'created',
+        ticket_id: data.id,
+        urgency: data.urgency,
+        dateTicket,
+        timeTicket,
+        creatorName: getUserFullName(data.created_by_user),
+        workerName: getUserFullName(data.assigned_user),
+        creatorEmail: getUserEmail(data.created_by_user),
+        workerEmail: getUserEmail(data.assigned_user)
+      })
 
-    // Update user_notified field if webhook indicates user was notified
-    if (webhookResult.success && webhookResult.userNotified) {
-      console.log('User was notified, updating user_notified field')
-      await supabase
-        .from('tickets')
-        .update({ user_notified: true })
-        .eq('id', data.id)
+      console.log('Webhook result:', webhookResult)
+
+      // Update user_notified field if webhook indicates user was notified
+      if (webhookResult.success && webhookResult.userNotified) {
+        console.log('User was notified, updating user_notified field')
+        await supabase
+          .from('tickets')
+          .update({ user_notified: true })
+          .eq('id', data.id)
+      }
+    } catch (webhookError) {
+      console.error('Webhook error (non-critical):', webhookError)
+      // Don't fail ticket creation if webhook fails
     }
   }
-  */
 
   return data as Ticket
 }
