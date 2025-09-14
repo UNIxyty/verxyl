@@ -20,14 +20,39 @@ export async function POST() {
     
     console.log('Supabase is configured, testing simple insert...')
     
-    // Test simple insert without joins
-    // Using valid UUID format for testing
+    // First, let's get a real user ID from the database
+    console.log('Fetching existing users...')
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select('id')
+      .limit(1)
+    
+    if (usersError) {
+      console.error('Error fetching users:', usersError)
+      return NextResponse.json({
+        error: 'Failed to fetch users',
+        details: usersError.message
+      })
+    }
+    
+    if (!users || users.length === 0) {
+      console.error('No users found in database')
+      return NextResponse.json({
+        error: 'No users found',
+        details: 'Database has no users to assign tickets to'
+      })
+    }
+    
+    const realUserId = users[0].id
+    console.log('Using real user ID:', realUserId)
+    
+    // Test simple insert with real user ID
     const testData = {
       title: 'Test Ticket',
       urgency: 'low' as const,
       details: 'This is a test ticket',
-      assigned_to: '00000000-0000-0000-0000-000000000001',
-      created_by: '00000000-0000-0000-0000-000000000002',
+      assigned_to: realUserId,
+      created_by: realUserId,
       status: 'new' as const
     }
     
