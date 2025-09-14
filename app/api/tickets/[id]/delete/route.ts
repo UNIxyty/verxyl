@@ -15,6 +15,18 @@ export async function DELETE(
       }, { status: 500 })
     }
     
+    // Check if service role key is available
+    const hasServiceRole = !!process.env.SUPABASE_SERVICE_ROLE_KEY
+    console.log('Service role key available:', hasServiceRole)
+    
+    if (!hasServiceRole) {
+      console.error('SUPABASE_SERVICE_ROLE_KEY not set!')
+      return NextResponse.json({
+        error: 'SUPABASE_SERVICE_ROLE_KEY not configured',
+        details: 'Please add SUPABASE_SERVICE_ROLE_KEY to your Vercel environment variables'
+      }, { status: 500 })
+    }
+    
     const { id } = params
     
     console.log('Deleting ticket:', id)
