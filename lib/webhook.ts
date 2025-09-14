@@ -18,16 +18,25 @@ export async function sendWebhook(payload: WebhookPayload): Promise<{ success: b
     // If no environment variable, try to get from database (admin settings)
     if (!webhookUrl) {
       try {
+        console.log('Attempting to fetch webhook URL from database...')
         const { supabase } = await import('./supabase')
-        const { data: settings } = await supabase
+        
+        const { data: settings, error } = await supabase
           .from('admin_settings')
           .select('setting_value')
           .eq('setting_key', 'webhook_url')
           .single()
         
-        webhookUrl = settings?.setting_value
+        console.log('Database query result:', { data: settings, error })
+        
+        if (error) {
+          console.error('Database query error:', error)
+        } else {
+          webhookUrl = settings?.setting_value
+          console.log('Webhook URL from database:', webhookUrl)
+        }
       } catch (error) {
-        console.log('Could not fetch webhook URL from database:', error)
+        console.error('Could not fetch webhook URL from database:', error)
       }
     }
 
