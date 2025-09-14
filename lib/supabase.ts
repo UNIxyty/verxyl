@@ -1,0 +1,166 @@
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase environment variables:', {
+    url: !!supabaseUrl,
+    key: !!supabaseAnonKey
+  })
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+export type Database = {
+  public: {
+    Tables: {
+      users: {
+        Row: {
+          id: string
+          email: string
+          full_name: string | null
+          avatar_url: string | null
+          username: string | null
+          telegram_username: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          full_name?: string | null
+          avatar_url?: string | null
+          username?: string | null
+          telegram_username?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          full_name?: string | null
+          avatar_url?: string | null
+          username?: string | null
+          telegram_username?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      tickets: {
+        Row: {
+          id: string
+          title: string
+          urgency: 'low' | 'medium' | 'high' | 'critical'
+          deadline: string | null
+          details: string
+          status: 'new' | 'in_progress' | 'completed'
+          assigned_to: string
+          created_by: string
+          solution_type: 'prompt' | 'n8n_workflow' | 'other' | null
+          solution_data: any | null
+          output_result: any | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          urgency: 'low' | 'medium' | 'high' | 'critical'
+          deadline?: string | null
+          details: string
+          status?: 'new' | 'in_progress' | 'completed'
+          assigned_to: string
+          created_by: string
+          solution_type?: 'prompt' | 'n8n_workflow' | 'other' | null
+          solution_data?: any | null
+          output_result?: any | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          urgency?: 'low' | 'medium' | 'high' | 'critical'
+          deadline?: string | null
+          details?: string
+          status?: 'new' | 'in_progress' | 'completed'
+          assigned_to?: string
+          created_by?: string
+          solution_type?: 'prompt' | 'n8n_workflow' | 'other' | null
+          solution_data?: any | null
+          output_result?: any | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      ai_prompt_backups: {
+        Row: {
+          id: string
+          user_id: string
+          prompt_text: string
+          ai_model: string
+          previous_version_id: string | null
+          output_logic: any | null
+          output_result: any | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          prompt_text: string
+          ai_model: string
+          previous_version_id?: string | null
+          output_logic?: any | null
+          output_result?: any | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          prompt_text?: string
+          ai_model?: string
+          previous_version_id?: string | null
+          output_logic?: any | null
+          output_result?: any | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      n8n_project_backups: {
+        Row: {
+          id: string
+          user_id: string
+          project_name: string
+          workflow_json: any
+          previous_version_id: string | null
+          description: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          project_name: string
+          workflow_json: any
+          previous_version_id?: string | null
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          project_name?: string
+          workflow_json?: any
+          previous_version_id?: string | null
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+    }
+  }
+}

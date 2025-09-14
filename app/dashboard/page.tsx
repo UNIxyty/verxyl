@@ -1,0 +1,200 @@
+'use client'
+
+import { DashboardLayout } from '@/components/DashboardLayout'
+import { useAuth } from '@/components/AuthProvider'
+import { useEffect, useState } from 'react'
+import { getTicketsByAssignedUser, getAllTickets } from '@/lib/database'
+import { TicketIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
+
+interface Ticket {
+  id: string
+  title: string
+  urgency: 'low' | 'medium' | 'high' | 'critical'
+  status: 'new' | 'in_progress' | 'completed'
+  created_at: string
+  created_by_user: {
+    full_name: string
+  }
+}
+
+export default function DashboardPage() {
+  const { user } = useAuth()
+  const [myTickets, setMyTickets] = useState<Ticket[]>([])
+  const [allTickets, setAllTickets] = useState<Ticket[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (user) {
+      loadDashboardData()
+    }
+  }, [user])
+
+  const loadDashboardData = async () => {
+    if (!user) return
+    
+    try {
+      const [myTicketsData, allTicketsData] = await Promise.all([
+        getTicketsByAssignedUser(user.id),
+        getAllTickets()
+      ])
+      
+      setMyTickets(myTicketsData.slice(0, 5)) // Show only 5 most recent
+      setAllTickets(allTicketsData.slice(0, 10)) // Show only 10 most recent
+    } catch (error) {
+      console.error('Error loading dashboard data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getUrgencyColor = (urgency: string) => {
+    switch (urgency) {
+      case 'critical': return 'badge-critical'
+      case 'high': return 'badge-high'
+      case 'medium': return 'badge-medium'
+      case 'low': return 'badge-low'
+      default: return 'badge-low'
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'new': return 'badge-new'
+      case 'in_progress': return 'badge-in-progress'
+      case 'completed': return 'badge-completed'
+      default: return 'badge-new'
+    }
+  }
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="animate-pulse">
+          <div className="h-8 bg-dark-700 rounded w-1/4 mb-6"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="card">
+                <div className="h-4 bg-dark-700 rounded w-1/2 mb-4"></div>
+                <div className="h-8 bg-dark-700 rounded w-1/4"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
+          <p className="text-gray-400">Welcome back! Here's an overview of your tickets and activity.</p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="card">
+            <div className="flex items-center">
+              <div className="p-2 bg-primary-600 rounded-lg">
+                <TicketIcon className="h-6 w-6 text-white" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-400">My Active Tickets</p>
+                <p className="text-2xl font-bold text-white">
+                  {myTickets.filter(t => t.status !== 'completed').length}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="flex items-center">
+              <div className="p-2 bg-yellow-600 rounded-lg">
+                <ClockIcon className="h-6 w-6 text-white" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-400">In Progress</p>
+                <p className="text-2xl font-bold text-white">
+                  {myTickets.filter(t => t.status === 'in_progress').length}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-600 rounded-lg">
+                <CheckCircleIcon className="h-6 w-6 text-white" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-400">Completed</p>
+                <p className="text-2xl font-bold text-white">
+                  {myTickets.filter(t => t.status === 'completed').length}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* My Recent Tickets */}
+        <div className="card">
+          <h2 className="text-xl font-semibold text-white mb-4">My Recent Tickets</h2>
+          {myTickets.length === 0 ? (
+            <p className="text-gray-400">No tickets assigned to you yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {myTickets.map((ticket) => (
+                <div key={ticket.id} className="flex items-center justify-between p-4 bg-dark-700 rounded-lg">
+                  <div className="flex-1">
+                    <h3 className="font-medium text-white">{ticket.title}</h3>
+                    <p className="text-sm text-gray-400">
+                      Created by {ticket.created_by_user?.full_name || 'Unknown'}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className={`badge ${getUrgencyColor(ticket.urgency)}`}>
+                      {ticket.urgency}
+                    </span>
+                    <span className={`badge ${getStatusColor(ticket.status)}`}>
+                      {ticket.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* All Recent Tickets */}
+        <div className="card">
+          <h2 className="text-xl font-semibold text-white mb-4">Recent Activity</h2>
+          {allTickets.length === 0 ? (
+            <p className="text-gray-400">No tickets in the system yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {allTickets.map((ticket) => (
+                <div key={ticket.id} className="flex items-center justify-between p-4 bg-dark-700 rounded-lg">
+                  <div className="flex-1">
+                    <h3 className="font-medium text-white">{ticket.title}</h3>
+                    <p className="text-sm text-gray-400">
+                      Created by {ticket.created_by_user?.full_name || 'Unknown'}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className={`badge ${getUrgencyColor(ticket.urgency)}`}>
+                      {ticket.urgency}
+                    </span>
+                    <span className={`badge ${getStatusColor(ticket.status)}`}>
+                      {ticket.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </DashboardLayout>
+  )
+}
