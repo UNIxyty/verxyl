@@ -1,28 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
     console.log('=== BYPASS TICKETS API START ===')
     
-    // Use service role key to bypass RLS
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('Missing Supabase configuration')
+    if (!isSupabaseConfigured()) {
+      console.error('Supabase not configured')
       return NextResponse.json({
-        error: 'Supabase not configured properly'
+        error: 'Supabase not configured'
       }, { status: 500 })
     }
     
-    // Create Supabase client with service role key (bypasses RLS)
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    })
+    // Use regular Supabase client (RLS should be disabled)
+    console.log('Using regular Supabase client')
     
     const body = await request.json()
     console.log('Creating ticket with bypass:', body)
