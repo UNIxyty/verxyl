@@ -151,6 +151,7 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
       const webhookResult = await sendWebhook({
         ticketAction: 'created',
         ticket_id: data.id,
+        ticket_title: data.title,
         urgency: data.urgency,
         dateTicket,
         timeTicket,
@@ -205,6 +206,7 @@ export const updateTicket = async (id: string, updates: TicketUpdate): Promise<T
       const webhookResult = await sendWebhook({
         ticketAction: 'updated',
         ticket_id: data.id,
+        ticket_title: data.title,
         urgency: data.urgency,
         dateTicket,
         timeTicket,
@@ -339,6 +341,7 @@ export const completeTicket = async (id: string, solutionData: any): Promise<Tic
       const webhookResult = await sendWebhook({
         ticketAction: 'solved',
         ticket_id: data.id,
+        ticket_title: data.title,
         urgency: data.urgency,
         dateTicket,
         timeTicket,
@@ -404,6 +407,7 @@ export const editTicket = async (id: string, updates: TicketUpdate): Promise<Tic
       const webhookResult = await sendWebhook({
         ticketAction: 'updated',
         ticket_id: data.id,
+        ticket_title: data.title,
         urgency: data.urgency,
         dateTicket,
         timeTicket,
@@ -465,6 +469,7 @@ export const deleteTicket = async (id: string): Promise<boolean> => {
       const webhookResult = await sendWebhook({
         ticketAction: 'deleted',
         ticket_id: ticketData.id,
+        ticket_title: ticketData.title,
         urgency: ticketData.urgency,
         dateTicket,
         timeTicket,

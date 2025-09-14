@@ -9,6 +9,7 @@ export async function POST() {
     const testData = {
       ticketAction: 'created' as const,
       ticket_id: 'test-ticket-123',
+      ticket_title: 'Test Ticket - Webhook Functionality',
       urgency: 'medium' as const,
       dateTicket: '2025-01-17',
       timeTicket: '12:00',

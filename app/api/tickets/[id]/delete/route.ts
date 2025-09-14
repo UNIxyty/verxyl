@@ -65,6 +65,7 @@ export async function DELETE(
         const webhookResult = await sendWebhook({
           ticketAction: 'deleted',
           ticket_id: ticketData.id,
+          ticket_title: ticketData.title,
           urgency: ticketData.urgency,
           dateTicket,
           timeTicket,

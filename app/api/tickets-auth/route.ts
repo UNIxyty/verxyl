@@ -110,6 +110,7 @@ export async function POST(request: NextRequest) {
         const webhookResult = await sendWebhook({
           ticketAction: 'created',
           ticket_id: data.id,
+          ticket_title: data.title,
           urgency: data.urgency,
           dateTicket,
           timeTicket,

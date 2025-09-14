@@ -1,6 +1,7 @@
 interface WebhookPayload {
   ticketAction: 'created' | 'updated' | 'solved' | 'deleted'
   ticket_id: string
+  ticket_title: string
   urgency: 'low' | 'medium' | 'high' | 'critical'
   dateTicket: string | null
   timeTicket: string | null
