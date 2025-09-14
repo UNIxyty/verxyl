@@ -163,3 +163,4 @@ Run the SQL commands from `supabase-schema.sql` in your Supabase SQL editor to c
 ## License
 
 MIT License - see LICENSE file for details.
+# verxyl
