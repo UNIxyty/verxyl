@@ -94,7 +94,13 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
   // Check if Supabase is configured
   if (!isSupabaseConfigured()) {
     console.error('Supabase is not configured. Please check your environment variables.')
-    throw new Error('Database not configured')
+    console.error('Environment check:', {
+      hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      urlValue: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      isPlaceholder: process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co'
+    })
+    throw new Error('Database not configured - missing Supabase environment variables')
   }
   
   // Validate deadline format if provided
