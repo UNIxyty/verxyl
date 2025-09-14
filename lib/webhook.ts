@@ -21,10 +21,11 @@ export async function sendWebhook(payload: WebhookPayload): Promise<{ success: b
         const { supabase } = await import('./supabase')
         const { data: settings } = await supabase
           .from('admin_settings')
-          .select('webhook_url')
+          .select('setting_value')
+          .eq('setting_key', 'webhook_url')
           .single()
         
-        webhookUrl = settings?.webhook_url
+        webhookUrl = settings?.setting_value
       } catch (error) {
         console.log('Could not fetch webhook URL from database:', error)
       }
