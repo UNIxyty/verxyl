@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(users || [])
   } catch (error) {
     console.error('Unexpected error in admin users API:', error)
-    return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: 'Internal server error', details: errorMessage }, { status: 500 })
   }
 }
