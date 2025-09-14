@@ -5,12 +5,12 @@ export async function GET() {
   try {
     console.log('=== WEBHOOK STATUS CHECK ===')
     
-    const status = {
+    const status: any = {
       timestamp: new Date().toISOString(),
       webhookUrl: {
         fromEnv: process.env.WEBHOOK_URL || null,
-        fromDatabase: null,
-        final: null
+        fromDatabase: null as string | null,
+        final: null as string | null
       },
       supabase: {
         configured: isSupabaseConfigured()
