@@ -32,14 +32,20 @@ export async function GET(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     
     if (user) {
-      const { data: userData } = await supabase
+      const { data: userData, error: userError } = await supabase
         .from('users')
         .select('approval_status')
         .eq('id', user.id)
         .single()
 
-      if (userData?.approval_status === 'pending' || userData?.approval_status === 'rejected') {
+      // If user doesn't exist in users table or has pending/rejected status, redirect to pending approval
+      if (userError || !userData || userData.approval_status === 'pending' || userData.approval_status === 'rejected') {
         return NextResponse.redirect(`${requestUrl.origin}/pending-approval`)
+      }
+      
+      // Only redirect to dashboard if user is approved
+      if (userData.approval_status === 'approved') {
+        return NextResponse.redirect(`${requestUrl.origin}/dashboard`)
       }
     }
   }

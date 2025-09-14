@@ -20,25 +20,40 @@ export default function AdminPage() {
   const { user } = useAuth()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const checkAdminAndFetchUsers = async () => {
       try {
-        const response = await fetch('/api/admin/users')
-        const data = await response.json()
-        console.log('Admin users response:', data)
-        setUsers(Array.isArray(data) ? data : [])
+        // First check if user is admin
+        const userStatusResponse = await fetch('/api/user-status')
+        const userStatus = await userStatusResponse.json()
+        
+        if (userStatusResponse.ok && userStatus.role === 'admin' && userStatus.approval_status === 'approved') {
+          setIsAdmin(true)
+          
+          // Only fetch users if admin
+          const response = await fetch('/api/admin/users')
+          const data = await response.json()
+          console.log('Admin users response:', data)
+          setUsers(Array.isArray(data) ? data : [])
+        } else {
+          // Not admin, redirect to dashboard
+          router.push('/dashboard')
+        }
       } catch (error) {
-        console.error('Error fetching users:', error)
-        setUsers([])
+        console.error('Error checking admin status or fetching users:', error)
+        router.push('/dashboard')
       } finally {
         setLoading(false)
       }
     }
 
-    fetchUsers()
-  }, [])
+    if (user) {
+      checkAdminAndFetchUsers()
+    }
+  }, [user, router])
 
   const handleApproveUser = async (userId: string) => {
     try {
@@ -85,6 +100,20 @@ export default function AdminPage() {
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-500"></div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  // If not admin, show access denied
+  if (!isAdmin) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-white mb-4">Access Denied</h1>
+            <p className="text-gray-400">You don't have permission to access this page.</p>
+          </div>
         </div>
       </DashboardLayout>
     )
