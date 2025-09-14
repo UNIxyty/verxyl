@@ -22,7 +22,7 @@ CREATE POLICY "Users can create tickets" ON tickets
     FOR INSERT
     WITH CHECK (
         auth.uid() IS NOT NULL AND
-        auth.uid()::text = created_by
+        auth.uid() = created_by::uuid
     );
 
 -- Policy 2: Users can view tickets they created
@@ -30,7 +30,7 @@ CREATE POLICY "Users can view tickets they created" ON tickets
     FOR SELECT
     USING (
         auth.uid() IS NOT NULL AND
-        auth.uid()::text = created_by
+        auth.uid() = created_by::uuid
     );
 
 -- Policy 3: Users can view tickets assigned to them
@@ -38,7 +38,7 @@ CREATE POLICY "Users can view tickets assigned to them" ON tickets
     FOR SELECT
     USING (
         auth.uid() IS NOT NULL AND
-        auth.uid()::text = assigned_to
+        auth.uid() = assigned_to::uuid
     );
 
 -- Policy 4: Users can update tickets assigned to them (but not change assignment)
@@ -46,10 +46,10 @@ CREATE POLICY "Users can update tickets assigned to them" ON tickets
     FOR UPDATE
     USING (
         auth.uid() IS NOT NULL AND
-        auth.uid()::text = assigned_to
+        auth.uid() = assigned_to::uuid
     )
     WITH CHECK (
-        auth.uid()::text = assigned_to AND
+        auth.uid() = assigned_to::uuid AND
         created_by = (SELECT created_by FROM tickets WHERE id = tickets.id)
     );
 
@@ -60,7 +60,7 @@ CREATE POLICY "Admin can view all tickets" ON tickets
         auth.uid() IS NOT NULL AND
         EXISTS (
             SELECT 1 FROM users 
-            WHERE users.id = auth.uid()::text 
+            WHERE users.id::uuid = auth.uid() 
             AND users.role = 'admin'
         )
     );
@@ -72,7 +72,7 @@ CREATE POLICY "Admin can update all tickets" ON tickets
         auth.uid() IS NOT NULL AND
         EXISTS (
             SELECT 1 FROM users 
-            WHERE users.id = auth.uid()::text 
+            WHERE users.id::uuid = auth.uid() 
             AND users.role = 'admin'
         )
     );
@@ -84,7 +84,7 @@ CREATE POLICY "Admin can delete tickets" ON tickets
         auth.uid() IS NOT NULL AND
         EXISTS (
             SELECT 1 FROM users 
-            WHERE users.id = auth.uid()::text 
+            WHERE users.id::uuid = auth.uid() 
             AND users.role = 'admin'
         )
     );
@@ -101,11 +101,11 @@ DROP POLICY IF EXISTS "Admin can update all users" ON users;
 -- Create user policies
 CREATE POLICY "Users can view their own profile" ON users
     FOR SELECT
-    USING (auth.uid()::text = id);
+    USING (auth.uid() = id::uuid);
 
 CREATE POLICY "Users can update their own profile" ON users
     FOR UPDATE
-    USING (auth.uid()::text = id);
+    USING (auth.uid() = id::uuid);
 
 CREATE POLICY "Admin can view all users" ON users
     FOR SELECT
@@ -113,7 +113,7 @@ CREATE POLICY "Admin can view all users" ON users
         auth.uid() IS NOT NULL AND
         EXISTS (
             SELECT 1 FROM users 
-            WHERE users.id = auth.uid()::text 
+            WHERE users.id::uuid = auth.uid() 
             AND users.role = 'admin'
         )
     );
@@ -124,7 +124,7 @@ CREATE POLICY "Admin can update all users" ON users
         auth.uid() IS NOT NULL AND
         EXISTS (
             SELECT 1 FROM users 
-            WHERE users.id = auth.uid()::text 
+            WHERE users.id::uuid = auth.uid() 
             AND users.role = 'admin'
         )
     );
