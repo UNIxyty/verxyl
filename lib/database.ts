@@ -198,19 +198,26 @@ export const updateTicket = async (id: string, updates: TicketUpdate): Promise<T
 
   // Send webhook for ticket update
   if (data) {
-    const { dateTicket, timeTicket } = extractDateTime(data.deadline)
-    
-    sendWebhook({
-      ticketAction: 'updated',
-      ticket_id: data.id,
-      urgency: data.urgency,
-      dateTicket,
-      timeTicket,
-      creatorName: getUserFullName(data.created_by_user),
-      workerName: getUserFullName(data.assigned_user),
-      creatorEmail: getUserEmail(data.created_by_user),
-      workerEmail: getUserEmail(data.assigned_user)
-    })
+    try {
+      const { dateTicket, timeTicket } = extractDateTime(data.deadline)
+      
+      console.log('Sending webhook for ticket update')
+      const webhookResult = await sendWebhook({
+        ticketAction: 'updated',
+        ticket_id: data.id,
+        urgency: data.urgency,
+        dateTicket,
+        timeTicket,
+        creatorName: getUserFullName(data.created_by_user),
+        workerName: getUserFullName(data.assigned_user),
+        creatorEmail: getUserEmail(data.created_by_user),
+        workerEmail: getUserEmail(data.assigned_user)
+      })
+
+      console.log('Webhook result:', webhookResult)
+    } catch (webhookError) {
+      console.error('Webhook error (non-critical):', webhookError)
+    }
   }
 
   return data as Ticket
@@ -325,19 +332,26 @@ export const completeTicket = async (id: string, solutionData: any): Promise<Tic
 
   // Send webhook for ticket completion
   if (data) {
-    const { dateTicket, timeTicket } = extractDateTime(data.deadline)
-    
-    sendWebhook({
-      ticketAction: 'solved',
-      ticket_id: data.id,
-      urgency: data.urgency,
-      dateTicket,
-      timeTicket,
-      creatorName: getUserFullName(data.created_by_user),
-      workerName: getUserFullName(data.assigned_user),
-      creatorEmail: getUserEmail(data.created_by_user),
-      workerEmail: getUserEmail(data.assigned_user)
-    })
+    try {
+      const { dateTicket, timeTicket } = extractDateTime(data.deadline)
+      
+      console.log('Sending webhook for ticket completion')
+      const webhookResult = await sendWebhook({
+        ticketAction: 'solved',
+        ticket_id: data.id,
+        urgency: data.urgency,
+        dateTicket,
+        timeTicket,
+        creatorName: getUserFullName(data.created_by_user),
+        workerName: getUserFullName(data.assigned_user),
+        creatorEmail: getUserEmail(data.created_by_user),
+        workerEmail: getUserEmail(data.assigned_user)
+      })
+
+      console.log('Webhook result:', webhookResult)
+    } catch (webhookError) {
+      console.error('Webhook error (non-critical):', webhookError)
+    }
   }
 
   return data as Ticket
@@ -383,19 +397,26 @@ export const editTicket = async (id: string, updates: TicketUpdate): Promise<Tic
 
   // Send webhook for ticket update
   if (data) {
-    const { dateTicket, timeTicket } = extractDateTime(data.deadline)
-    
-    sendWebhook({
-      ticketAction: 'updated',
-      ticket_id: data.id,
-      urgency: data.urgency,
-      dateTicket,
-      timeTicket,
-      creatorName: getUserFullName(data.created_by_user),
-      workerName: getUserFullName(data.assigned_user),
-      creatorEmail: getUserEmail(data.created_by_user),
-      workerEmail: getUserEmail(data.assigned_user)
-    })
+    try {
+      const { dateTicket, timeTicket } = extractDateTime(data.deadline)
+      
+      console.log('Sending webhook for ticket update')
+      const webhookResult = await sendWebhook({
+        ticketAction: 'updated',
+        ticket_id: data.id,
+        urgency: data.urgency,
+        dateTicket,
+        timeTicket,
+        creatorName: getUserFullName(data.created_by_user),
+        workerName: getUserFullName(data.assigned_user),
+        creatorEmail: getUserEmail(data.created_by_user),
+        workerEmail: getUserEmail(data.assigned_user)
+      })
+
+      console.log('Webhook result:', webhookResult)
+    } catch (webhookError) {
+      console.error('Webhook error (non-critical):', webhookError)
+    }
   }
 
   return data as Ticket
@@ -437,19 +458,26 @@ export const deleteTicket = async (id: string): Promise<boolean> => {
 
   // Send webhook for ticket deletion
   if (ticketData) {
-    const { dateTicket, timeTicket } = extractDateTime(ticketData.deadline)
-    
-    sendWebhook({
-      ticketAction: 'deleted',
-      ticket_id: ticketData.id,
-      urgency: ticketData.urgency,
-      dateTicket,
-      timeTicket,
-      creatorName: getUserFullName(ticketData.created_by_user),
-      workerName: getUserFullName(ticketData.assigned_user),
-      creatorEmail: getUserEmail(ticketData.created_by_user),
-      workerEmail: getUserEmail(ticketData.assigned_user)
-    })
+    try {
+      const { dateTicket, timeTicket } = extractDateTime(ticketData.deadline)
+      
+      console.log('Sending webhook for ticket deletion')
+      const webhookResult = await sendWebhook({
+        ticketAction: 'deleted',
+        ticket_id: ticketData.id,
+        urgency: ticketData.urgency,
+        dateTicket,
+        timeTicket,
+        creatorName: getUserFullName(ticketData.created_by_user),
+        workerName: getUserFullName(ticketData.assigned_user),
+        creatorEmail: getUserEmail(ticketData.created_by_user),
+        workerEmail: getUserEmail(ticketData.assigned_user)
+      })
+
+      console.log('Webhook result:', webhookResult)
+    } catch (webhookError) {
+      console.error('Webhook error (non-critical):', webhookError)
+    }
   }
 
   return true
