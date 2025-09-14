@@ -17,13 +17,32 @@ export async function GET(request: NextRequest) {
         {
           cookies: {
             get(name: string) {
-              return cookieStore.get(name)?.value
+              const cookie = cookieStore.get(name)
+              console.log(`Auth callback - Getting cookie ${name}:`, cookie?.value ? 'exists' : 'missing')
+              return cookie?.value
             },
             set(name: string, value: string, options: any) {
-              cookieStore.set({ name, value, ...options })
+              console.log(`Auth callback - Setting cookie ${name}`)
+              cookieStore.set({ 
+                name, 
+                value, 
+                path: '/',
+                sameSite: 'lax',
+                secure: process.env.NODE_ENV === 'production',
+                ...options 
+              })
             },
             remove(name: string, options: any) {
-              cookieStore.set({ name, value: '', ...options })
+              console.log(`Auth callback - Removing cookie ${name}`)
+              cookieStore.set({ 
+                name, 
+                value: '', 
+                path: '/',
+                sameSite: 'lax',
+                secure: process.env.NODE_ENV === 'production',
+                maxAge: 0,
+                ...options 
+              })
             },
           },
         }

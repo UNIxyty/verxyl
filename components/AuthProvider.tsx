@@ -60,8 +60,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    try {
+      const supabase = createClient()
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut()
+      
+      if (error) {
+        console.error('Supabase sign out error:', error)
+      }
+      
+      // Clear all cookies manually (Chrome compatibility)
+      const cookies = document.cookie.split(';')
+      for (let cookie of cookies) {
+        const eqPos = cookie.indexOf('=')
+        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim()
+        if (name && (name.includes('supabase') || name.includes('sb-') || name.includes('auth'))) {
+          document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`
+          document.cookie = `${name}=; Path=/; Domain=${window.location.hostname}; Expires=Thu, 01 Jan 1970 00:00:00 GMT`
+          document.cookie = `${name}=; Path=/; Domain=.${window.location.hostname}; Expires=Thu, 01 Jan 1970 00:00:00 GMT`
+        }
+      }
+      
+      // Clear localStorage and sessionStorage
+      localStorage.clear()
+      sessionStorage.clear()
+      
+      // Force page reload to clear any cached state
+      window.location.href = '/login'
+      
+    } catch (error) {
+      console.error('Sign out error:', error)
+      // Fallback: force redirect to login
+      window.location.href = '/login'
+    }
   }
 
   const value = {
