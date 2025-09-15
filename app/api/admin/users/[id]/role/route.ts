@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { supabaseAdmin } from '@/lib/supabase'
-import { sendWebhook } from '@/lib/webhook'
+import { sendNewWebhook } from '@/lib/new-webhook'
 
 export async function PATCH(
   request: NextRequest,
@@ -124,23 +124,22 @@ export async function PATCH(
 
     const updatedUser = updatedUsers[0]
 
-    // Send webhook for role change
+    // Send new webhook for role change
     try {
-      await sendWebhook({
+      await sendNewWebhook({
         action: 'role_changed',
-        ticket_id: null, // Not applicable for role changes
-        ticket_title: null,
-        user_id: targetUserId,
-        user_name: updatedUser.email,
         admin_id: user.id,
+        admin_email: user.email || '',
+        admin_name: 'Admin User', // You might want to get this from user data
+        user_id: targetUserId,
+        user_email: updatedUser.email,
+        user_name: updatedUser.full_name || updatedUser.email,
         roleChanged: true,
-        adminID: user.id,
-        userID: targetUserId,
         prevRole: targetUser.role,
         currentRole: role
       })
     } catch (webhookError) {
-      console.error('Webhook error for role change:', webhookError)
+      console.error('New webhook error for role change:', webhookError)
       // Don't fail the request if webhook fails
     }
 

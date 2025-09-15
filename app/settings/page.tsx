@@ -17,6 +17,12 @@ export default function SettingsPage() {
   const [isWebhookSaving, setIsWebhookSaving] = useState(false)
   const [webhookStatus, setWebhookStatus] = useState<'configured' | 'not-configured' | null>(null)
   const [usingFallback, setUsingFallback] = useState(false)
+  
+  // New webhook settings
+  const [newWebhookDomain, setNewWebhookDomain] = useState('')
+  const [newWebhookPath, setNewWebhookPath] = useState('')
+  const [isNewWebhookLoading, setIsNewWebhookLoading] = useState(false)
+  const [isNewWebhookSaving, setIsNewWebhookSaving] = useState(false)
 
   // Check user role
   useEffect(() => {
@@ -59,6 +65,30 @@ export default function SettingsPage() {
     loadWebhookSettings()
   }, [userRole])
 
+  // Load new webhook settings for admins
+  useEffect(() => {
+    const loadNewWebhookSettings = async () => {
+      if (userRole === 'admin') {
+        setIsNewWebhookLoading(true)
+        try {
+          const response = await fetch('/api/admin/new-webhook')
+          if (response.ok) {
+            const data = await response.json()
+            setNewWebhookDomain(data.webhook_domain || '')
+            setNewWebhookPath(data.webhook_path || '')
+          } else {
+            console.error('Failed to load new webhook settings')
+          }
+        } catch (error) {
+          console.error('Error loading new webhook settings:', error)
+        } finally {
+          setIsNewWebhookLoading(false)
+        }
+      }
+    }
+    loadNewWebhookSettings()
+  }, [userRole])
+
   const handleWebhookSave = async () => {
     if (!webhookUrl.trim()) {
       toast.error('Please enter a webhook URL')
@@ -88,6 +118,43 @@ export default function SettingsPage() {
       toast.error('Failed to save webhook URL')
     } finally {
       setIsWebhookSaving(false)
+    }
+  }
+
+  const handleNewWebhookSave = async () => {
+    if (!newWebhookDomain.trim()) {
+      toast.error('Please enter a webhook domain')
+      return
+    }
+
+    if (!newWebhookPath.trim()) {
+      toast.error('Please enter a webhook path')
+      return
+    }
+
+    setIsNewWebhookSaving(true)
+    try {
+      const response = await fetch('/api/admin/new-webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          webhook_domain: newWebhookDomain.trim(),
+          webhook_path: newWebhookPath.trim()
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        toast.success(data.message || 'New webhook settings saved successfully!')
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.error || 'Failed to save new webhook settings')
+      }
+    } catch (error) {
+      console.error('Error saving new webhook settings:', error)
+      toast.error('Failed to save new webhook settings')
+    } finally {
+      setIsNewWebhookSaving(false)
     }
   }
 
@@ -181,6 +248,94 @@ export default function SettingsPage() {
                   {isViewer && (
                     <><br /><span className="text-yellow-200">⚠️ As a viewer, you have limited access to system settings.</span></>
                   )}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* New Webhook Settings */}
+          <div className="card">
+            <div className="flex items-center mb-6">
+              <ShieldCheckIcon className="h-6 w-6 text-primary-400 mr-3" />
+              <div>
+                <h2 className="text-xl font-semibold text-white">New Webhook System</h2>
+                <p className="text-gray-400 text-sm">
+                  Configure the new webhook system with domain and path settings
+                </p>
+              </div>
+            </div>
+
+            {isAdmin ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Webhook Domain
+                  </label>
+                  <input
+                    type="url"
+                    value={newWebhookDomain}
+                    onChange={(e) => setNewWebhookDomain(e.target.value)}
+                    placeholder="https://n8n.fluntstudios.com"
+                    className="input w-full"
+                    disabled={isNewWebhookLoading || isNewWebhookSaving}
+                  />
+                  <p className="text-gray-400 text-xs mt-1">
+                    The base domain for your webhook endpoint (e.g., https://n8n.fluntstudios.com)
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Webhook Path
+                  </label>
+                  <input
+                    type="text"
+                    value={newWebhookPath}
+                    onChange={(e) => setNewWebhookPath(e.target.value)}
+                    placeholder="/webhook/path"
+                    className="input w-full"
+                    disabled={isNewWebhookLoading || isNewWebhookSaving}
+                  />
+                  <p className="text-gray-400 text-xs mt-1">
+                    The path to your webhook endpoint (e.g., /webhook/verxyl-tickets)
+                  </p>
+                </div>
+
+                {newWebhookDomain && newWebhookPath && (
+                  <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
+                    <p className="text-blue-200 text-sm">
+                      <strong>Full Webhook URL:</strong><br />
+                      <code className="text-blue-100">{newWebhookDomain}{newWebhookPath}</code>
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleNewWebhookSave}
+                    disabled={isNewWebhookLoading || isNewWebhookSaving}
+                    className="btn-primary"
+                  >
+                    {isNewWebhookSaving ? 'Saving...' : 'Save & Test'}
+                  </button>
+                </div>
+
+                <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+                  <p className="text-green-200 text-sm">
+                    <strong>New Webhook System Features:</strong><br />
+                    • Separate domain and path configuration<br />
+                    • Enhanced payload with detailed role change information<br />
+                    • Better error handling and logging<br />
+                    • Automatic testing on save
+                  </p>
+                </div>
+              </div>
+            ) : (
+              // Non-admin user notice
+              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                <p className="text-blue-200 text-sm">
+                  <strong>Note:</strong> New webhook configuration is managed by system administrators. 
+                  Contact your administrator to modify these settings.
                 </p>
               </div>
             )}
