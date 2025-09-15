@@ -260,16 +260,16 @@ export default function AdminPage() {
                     }`}
                     onClick={() => user.approval_status === 'pending' ? handleUserClick(user) : undefined}
                   >
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
+                      <div className="flex items-center space-x-2 flex-shrink-0">
                         {getStatusIcon(user.approval_status)}
                         <span className={`font-medium text-sm ${getStatusColor(user.approval_status)}`}>
                           {user.approval_status}
                         </span>
                       </div>
-                      <div>
-                        <p className="text-white font-medium text-sm sm:text-base">{user.email}</p>
-                        <p className="text-xs sm:text-sm text-gray-400">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-white font-medium text-sm sm:text-base truncate">{user.email}</p>
+                        <p className="text-xs sm:text-sm text-gray-400 truncate">
                           Joined: {new Date(user.created_at).toLocaleDateString()}
                         </p>
                       </div>
@@ -283,7 +283,7 @@ export default function AdminPage() {
                             value={user.role}
                             onChange={(e) => updateUserRole(user.id, e.target.value as any)}
                             disabled={updating === user.id}
-                            className="bg-gray-700 border border-gray-600 rounded-md px-3 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500 min-w-0"
+                            className="bg-gray-700 border border-gray-600 rounded-md px-3 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500 min-w-0 w-full sm:w-auto"
                           >
                             <option value="admin">Admin</option>
                             <option value="worker">Worker</option>

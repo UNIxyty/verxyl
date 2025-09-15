@@ -164,33 +164,35 @@ export default function CompletedTicketsPage() {
         ) : (
           <div className="space-y-4">
             {tickets.map((ticket) => (
-              <div key={ticket.id} className="card">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
+              <div key={ticket.id} className="card card-responsive">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                       <h3 
                         className="text-lg font-semibold text-white cursor-pointer hover:text-primary-400 transition-colors"
                         onClick={() => handleViewTicket(ticket)}
                       >
                         {ticket.title}
                       </h3>
-                      <span className={`badge ${getUrgencyColor(ticket.urgency)}`}>
-                        {ticket.urgency}
-                      </span>
-                      <span className="badge badge-completed">
-                        completed
-                      </span>
-                      {ticket.solution_type && (
-                        <div className="flex items-center space-x-1 text-sm text-gray-400">
-                          {getSolutionTypeIcon(ticket.solution_type)}
-                          <span>{getSolutionTypeLabel(ticket.solution_type)}</span>
-                        </div>
-                      )}
+                      <div className="flex flex-wrap gap-2">
+                        <span className={`badge ${getUrgencyColor(ticket.urgency)}`}>
+                          {ticket.urgency}
+                        </span>
+                        <span className="badge badge-completed">
+                          completed
+                        </span>
+                        {ticket.solution_type && (
+                          <div className="flex items-center space-x-1 text-sm text-gray-400">
+                            {getSolutionTypeIcon(ticket.solution_type)}
+                            <span>{getSolutionTypeLabel(ticket.solution_type)}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
-                    <p className="text-gray-300 mb-3">{ticket.details}</p>
+                    <p className="text-gray-300 mb-3 text-sm sm:text-base">{ticket.details}</p>
                     
-                    <div className="flex items-center space-x-6 text-sm text-gray-400 mb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm text-gray-400 mb-4">
                       <div>
                         <span className="font-medium">Created by:</span> {ticket.created_by_user?.full_name || ticket.created_by_user?.email || 'Unknown'}
                       </div>
@@ -202,17 +204,17 @@ export default function CompletedTicketsPage() {
                     {(ticket.solution_data || ticket.output_result) && (
                       <button
                         onClick={() => toggleExpanded(ticket.id)}
-                        className="text-primary-400 hover:text-primary-300 text-sm font-medium"
+                        className="text-primary-400 hover:text-primary-300 text-sm font-medium mb-2 sm:mb-0"
                       >
                         {expandedTicket === ticket.id ? 'Hide Details' : 'Show Solution Details'}
                       </button>
                     )}
                   </div>
                   
-                  <div className="flex flex-col space-y-2 ml-4">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 mt-4 sm:mt-0">
                     <button
                       onClick={() => handleViewTicket(ticket)}
-                      className="btn-secondary flex items-center text-sm"
+                      className="btn-secondary flex items-center text-sm btn-mobile"
                     >
                       <EyeIcon className="h-4 w-4 mr-1" />
                       View
@@ -225,11 +227,11 @@ export default function CompletedTicketsPage() {
                     <div className="space-y-4">
                       {ticket.solution_type === 'prompt' && ticket.solution_data?.prompt_text && (
                         <div>
-                          <div className="flex items-center justify-between mb-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
                             <h4 className="text-sm font-medium text-gray-300">Prompt Used:</h4>
                             <button
                               onClick={() => copyToClipboard(ticket.solution_data.prompt_text, 'Prompt')}
-                              className="btn-secondary flex items-center text-xs px-2 py-1"
+                              className="btn-secondary flex items-center text-xs px-2 py-1 w-full sm:w-auto"
                             >
                               <ClipboardDocumentIcon className="h-3 w-3 mr-1" />
                               Copy
@@ -245,16 +247,16 @@ export default function CompletedTicketsPage() {
 
                       {ticket.solution_type === 'n8n_workflow' && ticket.solution_data?.filename && (
                         <div>
-                          <div className="flex items-center justify-between mb-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
                             <h4 className="text-sm font-medium text-gray-300">Workflow File:</h4>
-                            <div className="flex space-x-2">
+                            <div className="flex flex-col sm:flex-row gap-2">
                               {ticket.solution_data.workflow_json && (
                                 <button
                                   onClick={() => {
                                     const jsonString = JSON.stringify(ticket.solution_data.workflow_json, null, 2)
                                     downloadFile(jsonString, `${ticket.solution_data.filename || 'workflow'}.json`, 'application/json')
                                   }}
-                                  className="btn-secondary flex items-center text-xs px-2 py-1"
+                                  className="btn-secondary flex items-center text-xs px-2 py-1 w-full sm:w-auto"
                                 >
                                   <ArrowDownTrayIcon className="h-3 w-3 mr-1" />
                                   Download
@@ -263,7 +265,7 @@ export default function CompletedTicketsPage() {
                               {ticket.solution_data.workflow_json && (
                                 <button
                                   onClick={() => copyToClipboard(JSON.stringify(ticket.solution_data.workflow_json, null, 2), 'Workflow JSON')}
-                                  className="btn-secondary flex items-center text-xs px-2 py-1"
+                                  className="btn-secondary flex items-center text-xs px-2 py-1 w-full sm:w-auto"
                                 >
                                   <ClipboardDocumentIcon className="h-3 w-3 mr-1" />
                                   Copy
@@ -287,7 +289,7 @@ export default function CompletedTicketsPage() {
                               {ticket.solution_data.description && (
                                 <button
                                   onClick={() => copyToClipboard(ticket.solution_data.description, 'Description')}
-                                  className="btn-secondary flex items-center text-xs px-2 py-1"
+                                  className="btn-secondary flex items-center text-xs px-2 py-1 w-full sm:w-auto"
                                 >
                                   <ClipboardDocumentIcon className="h-3 w-3 mr-1" />
                                   Copy
@@ -296,7 +298,7 @@ export default function CompletedTicketsPage() {
                               {ticket.solution_data.file_content && (
                                 <button
                                   onClick={() => downloadFile(ticket.solution_data.file_content, ticket.solution_data.filename || 'solution.txt')}
-                                  className="btn-secondary flex items-center text-xs px-2 py-1"
+                                  className="btn-secondary flex items-center text-xs px-2 py-1 w-full sm:w-auto"
                                 >
                                   <ArrowDownTrayIcon className="h-3 w-3 mr-1" />
                                   Download
