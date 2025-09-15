@@ -54,6 +54,27 @@ export async function DELETE(
     
     // Delete the ticket
     console.log('Attempting to delete ticket with ID:', id)
+    
+    // First, let's verify the ticket exists with the same query
+    const { data: verifyTicket, error: verifyError } = await supabaseAdmin
+      .from('tickets')
+      .select('id, title, status')
+      .eq('id', id)
+      .single()
+    
+    console.log('Verify ticket exists:', verifyTicket)
+    console.log('Verify error:', verifyError)
+    
+    if (!verifyTicket) {
+      console.error('Ticket verification failed - ticket does not exist')
+      return NextResponse.json({
+        error: 'Ticket not found',
+        details: 'Ticket does not exist in database',
+        ticketId: id
+      }, { status: 404 })
+    }
+    
+    // Now attempt the delete
     const { data: deleteResult, error } = await supabaseAdmin
       .from('tickets')
       .delete()
