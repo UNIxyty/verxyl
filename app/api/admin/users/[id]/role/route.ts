@@ -48,31 +48,34 @@ export async function PATCH(
 
     // Check if target user exists and is approved
     console.log('Looking for user with ID:', targetUserId)
-    const { data: targetUser, error: targetError } = await supabaseAdmin
+    const { data: targetUsers, error: targetError } = await supabaseAdmin
       .from('users')
       .select('id, email, role, approval_status')
       .eq('id', targetUserId)
-      .single()
 
-    console.log('Target user lookup result:', { targetUser, targetError })
-
+    console.log('Target user lookup result:', { targetUsers, targetError })
+    
     if (targetError) {
       console.error('Error finding target user:', targetError)
       return NextResponse.json({ 
-        error: 'User not found',
+        error: 'Database error while finding user',
         details: targetError.message,
         code: targetError.code,
         targetUserId
-      }, { status: 404 })
+      }, { status: 500 })
     }
 
-    if (!targetUser) {
+    if (!targetUsers || targetUsers.length === 0) {
       console.error('Target user not found in database')
       return NextResponse.json({ 
         error: 'User not found in database',
         targetUserId
       }, { status: 404 })
     }
+
+    const targetUser = targetUsers[0]
+    console.log('Current user role:', targetUser.role)
+    console.log('Requested role:', role)
 
     if (targetUser.approval_status !== 'approved') {
       return NextResponse.json({ error: 'Can only change roles for approved users' }, { status: 400 })
