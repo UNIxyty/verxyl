@@ -149,6 +149,7 @@ export async function POST(request: NextRequest) {
       const { sendNewWebhook } = await import('@/lib/new-webhook')
       const testResult = await sendNewWebhook({
         action: 'ticket_created',
+        timestamp: new Date().toISOString(),
         ticket_id: 'test-ticket-id',
         ticket_title: 'Test Webhook Configuration',
         admin_id: user.id,
