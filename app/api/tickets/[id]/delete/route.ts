@@ -111,7 +111,7 @@ export async function DELETE(
         
         console.log('Sending webhook for ticket deletion')
         const webhookResult = await sendWebhook({
-          ticketAction: 'deleted',
+          action: 'deleted',
           ticket_id: ticketData.id,
           ticket_title: ticketData.title,
           urgency: ticketData.urgency,
@@ -120,7 +120,10 @@ export async function DELETE(
           creatorName: getUserFullName(ticketData.created_by_user),
           workerName: getUserFullName(ticketData.assigned_user),
           creatorEmail: getUserEmail(ticketData.created_by_user),
-          workerEmail: getUserEmail(ticketData.assigned_user)
+          workerEmail: getUserEmail(ticketData.assigned_user),
+          user_id: ticketData.created_by,
+          user_name: getUserFullName(ticketData.created_by_user),
+          admin_id: ticketData.assigned_to
         })
 
         console.log('Webhook result:', webhookResult)
