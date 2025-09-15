@@ -28,10 +28,10 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if current user is admin
+    // Check if current user is admin and get their full data
     const { data: currentUserData, error: userError } = await supabase
       .from('users')
-      .select('role, approval_status')
+      .select('role, approval_status, full_name, email')
       .eq('id', user.id)
       .single()
 
@@ -131,7 +131,7 @@ export async function PATCH(
         timestamp: new Date().toISOString(),
         admin_id: user.id,
         admin_email: user.email || '',
-        admin_name: 'Admin User', // You might want to get this from user data
+        admin_name: currentUserData.full_name || currentUserData.email || 'Admin User',
         user_id: targetUserId,
         user_email: updatedUser.email,
         user_name: updatedUser.full_name || updatedUser.email,

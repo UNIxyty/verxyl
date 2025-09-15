@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     // Check if current user is admin
     const { data: currentUserData, error: userError } = await supabase
       .from('users')
-      .select('role, approval_status')
+      .select('role, approval_status, full_name, email')
       .eq('id', user.id)
       .single()
 
@@ -92,10 +92,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if current user is admin
+    // Check if current user is admin and get their full data
     const { data: currentUserData, error: userError } = await supabase
       .from('users')
-      .select('role, approval_status')
+      .select('role, approval_status, full_name, email')
       .eq('id', user.id)
       .single()
 
@@ -181,10 +181,10 @@ export async function POST(request: NextRequest) {
         ticket_title: 'Test Webhook Configuration',
         admin_id: user.id,
         admin_email: user.email || '',
-        admin_name: 'Admin User',
+        admin_name: currentUserData.full_name || currentUserData.email || 'Admin User',
         user_id: user.id,
         user_email: user.email || '',
-        user_name: 'Admin User'
+        user_name: currentUserData.full_name || currentUserData.email || 'Admin User'
       })
 
       if (!testResult.success) {
