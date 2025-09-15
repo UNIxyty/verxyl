@@ -1,6 +1,7 @@
 "use client"
 
 import React from 'react'
+import Image from 'next/image'
 
 type LogoProps = {
   className?: string
@@ -8,7 +9,19 @@ type LogoProps = {
 }
 
 export function Logo({ className = "h-6", title = "Verxyl Tickets" }: LogoProps) {
-  // Inline SVG wordmark + mark that looks good on dark background
+  // Try to load /logo.svg from public; if it fails at build, fallback to inline SVG
+  // Next/Image requires width/height; use a container to control height via className
+  const useExternal = true
+
+  if (useExternal) {
+    return (
+      <span className={className} aria-label={title} role="img" style={{ display: 'inline-flex', alignItems: 'center' }}>
+        <Image src="/logo.svg" alt={title} width={220} height={40} priority />
+      </span>
+    )
+  }
+
+  // Inline fallback
   return (
     <svg
       className={className}
@@ -19,12 +32,10 @@ export function Logo({ className = "h-6", title = "Verxyl Tickets" }: LogoProps)
       role="img"
     >
       <title>{title}</title>
-      {/* Ticket mark */}
       <g>
         <rect x="2" y="6" width="46" height="28" rx="6" fill="#0ea5e9" />
         <path d="M10 14h30M10 20h22M10 26h18" stroke="white" strokeWidth="2" strokeLinecap="round" />
       </g>
-      {/* Wordmark "Verxyl" */}
       <g transform="translate(58, 9)">
         <path d="M0 0 L6 0 L12 22 L6 22 L0 0Z" fill="#e2e8f0" />
         <path d="M18 0 H26 L22 22 H14 L18 0Z" fill="#e2e8f0" />
