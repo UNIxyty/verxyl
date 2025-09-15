@@ -362,7 +362,10 @@ export const completeTicket = async (id: string, solutionData: any): Promise<Tic
         creatorName: getUserFullName(data.created_by_user),
         workerName: getUserFullName(data.assigned_user),
         creatorEmail: getUserEmail(data.created_by_user),
-        workerEmail: getUserEmail(data.assigned_user)
+        workerEmail: getUserEmail(data.assigned_user),
+        user_id: data.created_by,
+        user_name: getUserFullName(data.created_by_user),
+        admin_id: data.assigned_to
       })
 
       console.log('Webhook result:', webhookResult)
