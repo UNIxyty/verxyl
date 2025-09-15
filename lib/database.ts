@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from './supabase'
 import type { Database } from './supabase'
-import { sendWebhook, extractDateTime, getUserFullName, getUserEmail } from './webhook'
+import { sendNewWebhook } from './new-webhook'
+import { extractDateTime, getUserFullName, getUserEmail } from './webhook-utils'
 
 type User = Database['public']['Tables']['users']['Row']
 type UserInsert = Database['public']['Tables']['users']['Insert']
@@ -148,20 +149,22 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
       const { dateTicket, timeTicket } = extractDateTime(data.deadline)
       
       console.log('Sending webhook for ticket creation')
-      const webhookResult = await sendWebhook({
-        action: 'created',
+      const webhookResult = await sendNewWebhook({
+        action: 'ticket_created',
+        timestamp: new Date().toISOString(),
         ticket_id: data.id,
         ticket_title: data.title,
-        urgency: data.urgency,
-        dateTicket,
-        timeTicket,
-        creatorName: getUserFullName(data.created_by_user),
-        workerName: getUserFullName(data.assigned_user),
-        creatorEmail: getUserEmail(data.created_by_user),
-        workerEmail: getUserEmail(data.assigned_user),
-        user_id: data.created_by,
-        user_name: getUserFullName(data.created_by_user),
-        admin_id: data.assigned_to
+        ticket_urgency: data.urgency,
+        ticket_deadline: data.deadline,
+        creator_id: data.created_by,
+        creator_email: getUserEmail(data.created_by_user),
+        creator_name: getUserFullName(data.created_by_user),
+        worker_id: data.assigned_to,
+        worker_email: getUserEmail(data.assigned_user),
+        worker_name: getUserFullName(data.assigned_user),
+        admin_id: data.assigned_to,
+        admin_email: getUserEmail(data.assigned_user),
+        admin_name: getUserFullName(data.assigned_user)
       })
 
       console.log('Webhook result:', webhookResult)

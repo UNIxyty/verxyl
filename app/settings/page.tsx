@@ -12,17 +12,14 @@ export default function SettingsPage() {
   const { user } = useAuth()
   const { theme, setTheme } = useTheme()
   const [userRole, setUserRole] = useState<string | null>(null)
-  const [webhookUrl, setWebhookUrl] = useState('')
-  const [isWebhookLoading, setIsWebhookLoading] = useState(false)
-  const [isWebhookSaving, setIsWebhookSaving] = useState(false)
-  const [webhookStatus, setWebhookStatus] = useState<'configured' | 'not-configured' | null>(null)
-  const [usingFallback, setUsingFallback] = useState(false)
   
   // New webhook settings
   const [newWebhookDomain, setNewWebhookDomain] = useState('')
-  const [newWebhookPath, setNewWebhookPath] = useState('')
+  const [newWebhookPathTickets, setNewWebhookPathTickets] = useState('')
+  const [newWebhookPathUsers, setNewWebhookPathUsers] = useState('')
   const [isNewWebhookLoading, setIsNewWebhookLoading] = useState(false)
   const [isNewWebhookSaving, setIsNewWebhookSaving] = useState(false)
+  const [showDomainEdit, setShowDomainEdit] = useState(false)
 
   // Check user role
   useEffect(() => {
@@ -40,30 +37,6 @@ export default function SettingsPage() {
     checkUserRole()
   }, [user])
 
-  // Load webhook settings for admins
-  useEffect(() => {
-    const loadWebhookSettings = async () => {
-      if (userRole === 'admin') {
-        setIsWebhookLoading(true)
-        try {
-          const response = await fetch('/api/webhook-fallback')
-          if (response.ok) {
-            const data = await response.json()
-            setWebhookUrl(data.webhookUrl || '')
-            setWebhookStatus(data.isConfigured ? 'configured' : 'not-configured')
-            setUsingFallback(!data.usingDatabase)
-          } else {
-            console.error('Failed to load webhook settings')
-          }
-        } catch (error) {
-          console.error('Error loading webhook settings:', error)
-        } finally {
-          setIsWebhookLoading(false)
-        }
-      }
-    }
-    loadWebhookSettings()
-  }, [userRole])
 
   // Load new webhook settings for admins
   useEffect(() => {
@@ -75,7 +48,8 @@ export default function SettingsPage() {
           if (response.ok) {
             const data = await response.json()
             setNewWebhookDomain(data.webhook_domain || '')
-            setNewWebhookPath(data.webhook_path || '')
+            setNewWebhookPathTickets(data.webhook_path_tickets || '')
+            setNewWebhookPathUsers(data.webhook_path_users || '')
           } else {
             console.error('Failed to load new webhook settings')
           }
@@ -89,37 +63,6 @@ export default function SettingsPage() {
     loadNewWebhookSettings()
   }, [userRole])
 
-  const handleWebhookSave = async () => {
-    if (!webhookUrl.trim()) {
-      toast.error('Please enter a webhook URL')
-      return
-    }
-
-    setIsWebhookSaving(true)
-    try {
-      const response = await fetch('/api/webhook-fallback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ webhookUrl: webhookUrl.trim() })
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        toast.success('Webhook URL validated successfully!')
-        setWebhookStatus('configured')
-      } else {
-        const errorData = await response.json()
-        toast.error(errorData.error || 'Failed to save webhook URL')
-      }
-    } catch (error) {
-      console.error('Error saving webhook:', error)
-      toast.error('Failed to save webhook URL')
-    } finally {
-      setIsWebhookSaving(false)
-    }
-  }
 
   const handleNewWebhookSave = async () => {
     if (!newWebhookDomain.trim()) {
@@ -127,8 +70,13 @@ export default function SettingsPage() {
       return
     }
 
-    if (!newWebhookPath.trim()) {
-      toast.error('Please enter a webhook path')
+    if (!newWebhookPathTickets.trim()) {
+      toast.error('Please select a tickets webhook path')
+      return
+    }
+
+    if (!newWebhookPathUsers.trim()) {
+      toast.error('Please select a users webhook path')
       return
     }
 
@@ -139,13 +87,15 @@ export default function SettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           webhook_domain: newWebhookDomain.trim(),
-          webhook_path: newWebhookPath.trim()
+          webhook_path_tickets: newWebhookPathTickets.trim(),
+          webhook_path_users: newWebhookPathUsers.trim()
         })
       })
 
       if (response.ok) {
         const data = await response.json()
         toast.success(data.message || 'New webhook settings saved successfully!')
+        setShowDomainEdit(false)
       } else {
         const errorData = await response.json()
         toast.error(errorData.error || 'Failed to save new webhook settings')
@@ -174,138 +124,100 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-8">
-          {/* Webhook Configuration */}
+          {/* New Webhook System */}
           <div className="card">
             <div className="flex items-center mb-6">
               <ShieldCheckIcon className="h-6 w-6 text-primary-400 mr-3" />
               <div>
-                <h2 className="text-xl font-semibold text-white">Webhook Configuration</h2>
+                <h2 className="text-xl font-semibold text-white">Webhook System</h2>
                 <p className="text-gray-400 text-sm">
-                  {isAdmin ? 'Configure webhook URL for ticket notifications' : 'Webhook URL is configured via environment variables'}
-                </p>
-              </div>
-            </div>
-
-            {isAdmin ? (
-              // Admin webhook editing interface
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="webhook-url" className="block text-sm font-medium text-gray-300 mb-2">
-                    Webhook URL
-                  </label>
-                  <div className="flex space-x-3">
-                    <input
-                      type="url"
-                      id="webhook-url"
-                      value={webhookUrl}
-                      onChange={(e) => setWebhookUrl(e.target.value)}
-                      placeholder="https://your-webhook-endpoint.com/webhook"
-                      className="input flex-1"
-                      disabled={isWebhookLoading || isWebhookSaving}
-                    />
-                    <button
-                      onClick={handleWebhookSave}
-                      disabled={isWebhookLoading || isWebhookSaving}
-                      className="btn-primary whitespace-nowrap"
-                    >
-                      {isWebhookSaving ? 'Testing...' : 'Test & Save'}
-                    </button>
-                  </div>
-                </div>
-
-                {webhookStatus && (
-                  <div className="flex items-center space-x-2">
-                    {webhookStatus === 'configured' ? (
-                      <>
-                        <CheckCircleIcon className="h-5 w-5 text-green-400" />
-                        <span className="text-green-400 text-sm">Webhook is configured and working</span>
-                      </>
-                    ) : (
-                      <>
-                        <XCircleIcon className="h-5 w-5 text-red-400" />
-                        <span className="text-red-400 text-sm">Webhook is not configured</span>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
-                  <p className="text-green-200 text-sm">
-                    <strong>Note:</strong> Webhook URL is now stored in the database and can be managed directly from this interface. 
-                    Changes are saved immediately and will be used for all future webhook notifications.
-                    {usingFallback && (
-                      <><br /><span className="text-yellow-200">⚠️ Currently using environment variable fallback - database table not found. Run the database setup script to enable full functionality.</span></>
-                    )}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              // Non-admin user notice
-              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-                <p className="text-blue-200 text-sm">
-                  <strong>Note:</strong> Webhook configuration is managed by system administrators. 
-                  Contact your administrator to modify webhook settings.
-                  {isViewer && (
-                    <><br /><span className="text-yellow-200">⚠️ As a viewer, you have limited access to system settings.</span></>
-                  )}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* New Webhook Settings */}
-          <div className="card">
-            <div className="flex items-center mb-6">
-              <ShieldCheckIcon className="h-6 w-6 text-primary-400 mr-3" />
-              <div>
-                <h2 className="text-xl font-semibold text-white">New Webhook System</h2>
-                <p className="text-gray-400 text-sm">
-                  Configure the new webhook system with domain and path settings
+                  Configure webhook notifications with domain and path settings
                 </p>
               </div>
             </div>
 
             {isAdmin ? (
               <div className="space-y-4">
+                {/* Domain Section */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Webhook Domain
                   </label>
-                  <input
-                    type="url"
-                    value={newWebhookDomain}
-                    onChange={(e) => setNewWebhookDomain(e.target.value)}
-                    placeholder="https://n8n.fluntstudios.com"
-                    className="input w-full"
-                    disabled={isNewWebhookLoading || isNewWebhookSaving}
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={newWebhookDomain}
+                      onChange={(e) => setNewWebhookDomain(e.target.value)}
+                      placeholder="https://n8n.fluntstudios.com"
+                      className="input flex-1"
+                      disabled={isNewWebhookLoading || isNewWebhookSaving || !showDomainEdit}
+                    />
+                    <button
+                      onClick={() => setShowDomainEdit(!showDomainEdit)}
+                      className="btn-secondary whitespace-nowrap"
+                    >
+                      {showDomainEdit ? 'Cancel' : 'Change Domain'}
+                    </button>
+                  </div>
                   <p className="text-gray-400 text-xs mt-1">
-                    The base domain for your webhook endpoint (e.g., https://n8n.fluntstudios.com)
+                    The base domain for your webhook endpoint
                   </p>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Webhook Path
-                  </label>
-                  <input
-                    type="text"
-                    value={newWebhookPath}
-                    onChange={(e) => setNewWebhookPath(e.target.value)}
-                    placeholder="/webhook/path"
-                    className="input w-full"
-                    disabled={isNewWebhookLoading || isNewWebhookSaving}
-                  />
-                  <p className="text-gray-400 text-xs mt-1">
-                    The path to your webhook endpoint (e.g., /webhook/verxyl-tickets)
-                  </p>
+                {/* Path Settings */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Tickets Webhook Path
+                    </label>
+                    <select
+                      value={newWebhookPathTickets}
+                      onChange={(e) => setNewWebhookPathTickets(e.target.value)}
+                      className="input w-full"
+                      disabled={isNewWebhookLoading || isNewWebhookSaving}
+                    >
+                      <option value="">Select path...</option>
+                      <option value="/webhook/tickets">/webhook/tickets</option>
+                      <option value="/api/tickets">/api/tickets</option>
+                      <option value="/hooks/tickets">/hooks/tickets</option>
+                    </select>
+                    <p className="text-gray-400 text-xs mt-1">
+                      Path for ticket-related events
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Users Webhook Path
+                    </label>
+                    <select
+                      value={newWebhookPathUsers}
+                      onChange={(e) => setNewWebhookPathUsers(e.target.value)}
+                      className="input w-full"
+                      disabled={isNewWebhookLoading || isNewWebhookSaving}
+                    >
+                      <option value="">Select path...</option>
+                      <option value="/webhook/users">/webhook/users</option>
+                      <option value="/api/users">/api/users</option>
+                      <option value="/hooks/users">/hooks/users</option>
+                    </select>
+                    <p className="text-gray-400 text-xs mt-1">
+                      Path for user-related events
+                    </p>
+                  </div>
                 </div>
 
-                {newWebhookDomain && newWebhookPath && (
+                {/* Preview */}
+                {newWebhookDomain && (newWebhookPathTickets || newWebhookPathUsers) && (
                   <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
                     <p className="text-blue-200 text-sm">
-                      <strong>Full Webhook URL:</strong><br />
-                      <code className="text-blue-100">{newWebhookDomain}{newWebhookPath}</code>
+                      <strong>Webhook URLs:</strong><br />
+                      {newWebhookPathTickets && (
+                        <>Tickets: <code className="text-blue-100">{newWebhookDomain}{newWebhookPathTickets}</code><br /></>
+                      )}
+                      {newWebhookPathUsers && (
+                        <>Users: <code className="text-blue-100">{newWebhookDomain}{newWebhookPathUsers}</code></>
+                      )}
                     </p>
                   </div>
                 )}
@@ -322,10 +234,10 @@ export default function SettingsPage() {
 
                 <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
                   <p className="text-green-200 text-sm">
-                    <strong>New Webhook System Features:</strong><br />
+                    <strong>Webhook System Features:</strong><br />
                     • Separate domain and path configuration<br />
-                    • Enhanced payload with detailed role change information<br />
-                    • Better error handling and logging<br />
+                    • Different endpoints for tickets and users<br />
+                    • Enhanced payload with detailed information<br />
                     • Automatic testing on save
                   </p>
                 </div>
@@ -334,12 +246,13 @@ export default function SettingsPage() {
               // Non-admin user notice
               <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
                 <p className="text-blue-200 text-sm">
-                  <strong>Note:</strong> New webhook configuration is managed by system administrators. 
+                  <strong>Note:</strong> Webhook configuration is managed by system administrators. 
                   Contact your administrator to modify these settings.
                 </p>
               </div>
             )}
           </div>
+
 
           {/* Theme Settings */}
           <div className="card">

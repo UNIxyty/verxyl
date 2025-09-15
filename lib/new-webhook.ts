@@ -47,10 +47,16 @@ export async function sendNewWebhook(payload: NewWebhookPayload): Promise<{ succ
       .eq('setting_key', 'webhook_domain')
       .single()
     
+    // Determine which path to use based on action type
+    const isTicketAction = ['ticket_created', 'ticket_updated', 'ticket_solved', 'ticket_deleted', 'ticket_in_work'].includes(payload.action)
+    const isUserAction = ['role_changed'].includes(payload.action)
+    
+    const pathKey = isTicketAction ? 'webhook_path_tickets' : isUserAction ? 'webhook_path_users' : 'webhook_path_tickets'
+    
     const { data: pathSetting, error: pathError } = await supabaseAdmin
       .from('system_settings')
       .select('setting_value')
-      .eq('setting_key', 'webhook_path')
+      .eq('setting_key', pathKey)
       .single()
     
     if (settingsError && settingsError.code !== 'PGRST116') {

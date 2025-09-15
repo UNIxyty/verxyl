@@ -42,19 +42,27 @@ export async function GET(request: NextRequest) {
       .eq('setting_key', 'webhook_domain')
       .single()
 
-    const { data: pathSetting, error: pathError } = await supabaseAdmin
+    const { data: ticketsPathSetting, error: ticketsPathError } = await supabaseAdmin
       .from('system_settings')
       .select('setting_value')
-      .eq('setting_key', 'webhook_path')
+      .eq('setting_key', 'webhook_path_tickets')
+      .single()
+
+    const { data: usersPathSetting, error: usersPathError } = await supabaseAdmin
+      .from('system_settings')
+      .select('setting_value')
+      .eq('setting_key', 'webhook_path_users')
       .single()
 
     const webhookDomain = domainSetting?.setting_value || ''
-    const webhookPath = pathSetting?.setting_value || ''
+    const ticketsPath = ticketsPathSetting?.setting_value || ''
+    const usersPath = usersPathSetting?.setting_value || ''
 
     return NextResponse.json({
       success: true,
       webhook_domain: webhookDomain,
-      webhook_path: webhookPath
+      webhook_path_tickets: ticketsPath,
+      webhook_path_users: usersPath
     })
 
   } catch (error) {
@@ -95,20 +103,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    const { webhook_domain, webhook_path } = await request.json()
+    const { webhook_domain, webhook_path_tickets, webhook_path_users } = await request.json()
 
     // Validate inputs
     if (!webhook_domain || typeof webhook_domain !== 'string') {
       return NextResponse.json({ error: 'Webhook domain is required' }, { status: 400 })
     }
 
-    if (!webhook_path || typeof webhook_path !== 'string') {
-      return NextResponse.json({ error: 'Webhook path is required' }, { status: 400 })
+    if (!webhook_path_tickets || typeof webhook_path_tickets !== 'string') {
+      return NextResponse.json({ error: 'Tickets webhook path is required' }, { status: 400 })
+    }
+
+    if (!webhook_path_users || typeof webhook_path_users !== 'string') {
+      return NextResponse.json({ error: 'Users webhook path is required' }, { status: 400 })
     }
 
     // Validate domain format
     try {
-      const testUrl = `${webhook_domain}${webhook_path}`
+      const testUrl = `${webhook_domain}${webhook_path_tickets}`
       new URL(testUrl)
     } catch (error) {
       return NextResponse.json({ error: 'Invalid webhook URL format' }, { status: 400 })
@@ -129,19 +141,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to save webhook domain' }, { status: 500 })
     }
 
-    // Upsert webhook path setting
-    const { error: pathError } = await supabaseAdmin
+    // Upsert tickets webhook path setting
+    const { error: ticketsPathError } = await supabaseAdmin
       .from('system_settings')
       .upsert({
-        setting_key: 'webhook_path',
-        setting_value: webhook_path,
-        setting_description: 'Webhook path for new webhook system',
+        setting_key: 'webhook_path_tickets',
+        setting_value: webhook_path_tickets,
+        setting_description: 'Webhook path for tickets events',
         updated_at: new Date().toISOString()
       })
 
-    if (pathError) {
-      console.error('Error saving webhook path:', pathError)
-      return NextResponse.json({ error: 'Failed to save webhook path' }, { status: 500 })
+    if (ticketsPathError) {
+      console.error('Error saving tickets webhook path:', ticketsPathError)
+      return NextResponse.json({ error: 'Failed to save tickets webhook path' }, { status: 500 })
+    }
+
+    // Upsert users webhook path setting
+    const { error: usersPathError } = await supabaseAdmin
+      .from('system_settings')
+      .upsert({
+        setting_key: 'webhook_path_users',
+        setting_value: webhook_path_users,
+        setting_description: 'Webhook path for user events',
+        updated_at: new Date().toISOString()
+      })
+
+    if (usersPathError) {
+      console.error('Error saving users webhook path:', usersPathError)
+      return NextResponse.json({ error: 'Failed to save users webhook path' }, { status: 500 })
     }
 
     // Test webhook
