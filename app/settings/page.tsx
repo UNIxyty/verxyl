@@ -40,12 +40,12 @@ export default function SettingsPage() {
       if (userRole === 'admin') {
         setIsWebhookLoading(true)
         try {
-          const response = await fetch('/api/admin/webhook')
+          const response = await fetch('/api/webhook-direct')
           if (response.ok) {
             const data = await response.json()
             setWebhookUrl(data.webhookUrl || '')
             setWebhookStatus(data.isConfigured ? 'configured' : 'not-configured')
-            setUsingFallback(data.usingFallback || false)
+            setUsingFallback(!data.usingDatabase)
           } else {
             console.error('Failed to load webhook settings')
           }
@@ -67,7 +67,7 @@ export default function SettingsPage() {
 
     setIsWebhookSaving(true)
     try {
-      const response = await fetch('/api/admin/webhook', {
+      const response = await fetch('/api/webhook-direct', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
