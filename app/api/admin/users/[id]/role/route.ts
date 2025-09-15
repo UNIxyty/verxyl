@@ -76,20 +76,29 @@ export async function PATCH(
       }
     }
 
-    // Update user role
+    // Update user role (without updated_at if column doesn't exist)
     const { data: updatedUser, error: updateError } = await supabaseAdmin
       .from('users')
       .update({ 
-        role,
-        updated_at: new Date().toISOString()
+        role
       })
       .eq('id', targetUserId)
-      .select('id, email, role, approval_status, created_at, updated_at')
+      .select('id, email, role, approval_status, created_at')
       .single()
 
     if (updateError) {
       console.error('Error updating user role:', updateError)
-      return NextResponse.json({ error: 'Failed to update user role' }, { status: 500 })
+      console.error('Error details:', {
+        message: updateError.message,
+        code: updateError.code,
+        details: updateError.details,
+        hint: updateError.hint
+      })
+      return NextResponse.json({ 
+        error: 'Failed to update user role',
+        details: updateError.message,
+        code: updateError.code
+      }, { status: 500 })
     }
 
     return NextResponse.json({
