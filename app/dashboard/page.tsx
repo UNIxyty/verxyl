@@ -91,14 +91,14 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8 w-full">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-          <p className="text-gray-400">Welcome back! Here's an overview of your tickets and activity.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Dashboard</h1>
+          <p className="text-sm sm:text-base text-gray-400">Welcome back! Here's an overview of your tickets and activity.</p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="card">
             <div className="flex items-center">
               <div className="p-2 bg-primary-600 rounded-lg">

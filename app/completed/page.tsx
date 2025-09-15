@@ -147,10 +147,10 @@ export default function CompletedTicketsPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8 w-full">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Completed Tickets</h1>
-          <p className="text-gray-400">Tickets you have completed</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Completed Tickets</h1>
+          <p className="text-sm sm:text-base text-gray-400">Tickets you have completed</p>
         </div>
 
         {tickets.length === 0 ? (
