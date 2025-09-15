@@ -7,7 +7,7 @@ SELECT role, COUNT(*) as count FROM users GROUP BY role;
 -- Show all current constraints on the users table
 SELECT constraint_name, check_clause 
 FROM information_schema.check_constraints 
-WHERE table_name = 'users' AND constraint_name LIKE '%role%';
+WHERE constraint_schema = 'public' AND constraint_name LIKE '%role%';
 
 -- Drop ALL existing role constraints (there might be multiple)
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
@@ -27,7 +27,7 @@ ALTER TABLE users ADD CONSTRAINT users_role_check
 -- Verify the new constraint was added
 SELECT constraint_name, check_clause 
 FROM information_schema.check_constraints 
-WHERE table_name = 'users' AND constraint_name LIKE '%role%';
+WHERE constraint_schema = 'public' AND constraint_name LIKE '%role%';
 
 -- Show final role distribution
 SELECT role, COUNT(*) as count FROM users GROUP BY role;
