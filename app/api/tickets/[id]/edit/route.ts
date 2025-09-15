@@ -15,6 +15,18 @@ export async function PATCH(
       }, { status: 500 })
     }
     
+    // Check if service role key is available
+    const hasServiceRole = !!process.env.SUPABASE_SERVICE_ROLE_KEY
+    console.log('Service role key available:', hasServiceRole)
+    
+    if (!hasServiceRole) {
+      console.error('SUPABASE_SERVICE_ROLE_KEY not set!')
+      return NextResponse.json({
+        error: 'SUPABASE_SERVICE_ROLE_KEY not configured',
+        details: 'Please add SUPABASE_SERVICE_ROLE_KEY to your Vercel environment variables'
+      }, { status: 500 })
+    }
+    
     const { id } = params
     const updateData = await request.json()
     
@@ -58,9 +70,17 @@ export async function PATCH(
     
     if (error) {
       console.error('Error editing ticket:', error)
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      })
       return NextResponse.json({
         error: 'Failed to edit ticket',
-        details: error.message
+        details: error.message,
+        code: error.code,
+        hint: error.hint
       }, { status: 500 })
     }
     
