@@ -31,7 +31,3 @@ WHERE table_name = 'users' AND constraint_name LIKE '%role%';
 
 -- Show final role distribution
 SELECT role, COUNT(*) as count FROM users GROUP BY role;
-
--- Test that we can now update roles
-UPDATE users SET role = 'admin' WHERE role = 'viewer' LIMIT 1;
-UPDATE users SET role = 'viewer' WHERE role = 'admin' LIMIT 1;
