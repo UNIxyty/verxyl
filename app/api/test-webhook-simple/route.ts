@@ -7,7 +7,7 @@ export async function POST() {
     
     // Test webhook with sample data
     const testData = {
-      ticketAction: 'in_work' as const,
+      action: 'in_work' as const,
       ticket_id: 'test-ticket-123',
       ticket_title: 'Test Ticket - Start Work Webhook',
       urgency: 'medium' as const,
@@ -16,7 +16,10 @@ export async function POST() {
       creatorName: 'Test User',
       workerName: 'Test Worker',
       creatorEmail: 'test@example.com',
-      workerEmail: 'worker@example.com'
+      workerEmail: 'worker@example.com',
+      user_id: 'test-user-id',
+      user_name: 'Test User',
+      admin_id: 'test-admin-id'
     }
     
     console.log('Sending test webhook with data:', testData)
