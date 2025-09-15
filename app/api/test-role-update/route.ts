@@ -82,14 +82,13 @@ export async function POST(request: NextRequest) {
 
     // Try to update the user role
     console.log('Attempting to update user role...')
-    const { data: updatedUser, error: updateError } = await supabaseAdmin
+    const { data: updatedUsers, error: updateError } = await supabaseAdmin
       .from('users')
       .update({ role })
       .eq('id', userId)
       .select('id, email, role, approval_status, created_at')
-      .single()
 
-    console.log('Update result:', { updatedUser, updateError })
+    console.log('Update result:', { updatedUsers, updateError })
 
     if (updateError) {
       console.error('Update error details:', {
@@ -106,13 +105,29 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
+    // Check if any rows were affected
+    if (!updatedUsers || updatedUsers.length === 0) {
+      console.error('No rows were affected by the update')
+      return NextResponse.json({
+        error: 'User not found or update failed - no rows affected',
+        userId,
+        debug: {
+          originalUser: targetUser,
+          updateResult: updatedUsers
+        }
+      }, { status: 404 })
+    }
+
+    const updatedUser = updatedUsers[0]
+
     return NextResponse.json({
       success: true,
       message: `User role updated to ${role}`,
       user: updatedUser,
       debug: {
         originalUser: targetUser,
-        updatedUser: updatedUser
+        updatedUser: updatedUser,
+        rowsAffected: updatedUsers.length
       }
     })
 
