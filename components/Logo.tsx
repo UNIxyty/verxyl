@@ -16,7 +16,7 @@ export function Logo({ className = "h-6", title = "Verxyl Tickets" }: LogoProps)
   if (useExternal) {
     return (
       <span className={className} aria-label={title} role="img" style={{ display: 'inline-flex', alignItems: 'center' }}>
-        <Image src="/logo.svg" alt={title} width={220} height={40} priority />
+        <Image src="/logo.svg" alt={title} width={220} height={40} priority className="h-full w-auto" />
       </span>
     )
   }
