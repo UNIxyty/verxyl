@@ -103,7 +103,7 @@ export async function PATCH(
       .from('users')
       .update({ role })
       .eq('id', targetUserId)
-      .select('id, email, role, approval_status, created_at')
+      .select('id, email, role, approval_status, created_at, full_name')
 
     if (updateError) {
       console.error('Error updating user role:', updateError)
