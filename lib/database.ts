@@ -496,7 +496,10 @@ export const deleteTicket = async (id: string): Promise<boolean> => {
         creatorName: getUserFullName(ticketData.created_by_user),
         workerName: getUserFullName(ticketData.assigned_user),
         creatorEmail: getUserEmail(ticketData.created_by_user),
-        workerEmail: getUserEmail(ticketData.assigned_user)
+        workerEmail: getUserEmail(ticketData.assigned_user),
+        user_id: ticketData.created_by,
+        user_name: getUserFullName(ticketData.created_by_user),
+        admin_id: ticketData.assigned_to
       })
 
       console.log('Webhook result:', webhookResult)
