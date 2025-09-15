@@ -8,6 +8,19 @@ import { useEffect, useState } from 'react'
 import { Cog6ToothIcon, PaintBrushIcon, ShieldCheckIcon, CheckCircleIcon, XCircleIcon, BellIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
+// Notification types
+type NotificationKey =
+  | 'new_ticket'
+  | 'updated_ticket'
+  | 'deleted_ticket'
+  | 'solved_ticket'
+  | 'in_work_ticket'
+  | 'shared_ai_backup'
+  | 'shared_n8n_workflow'
+  | 'new_mail'
+
+type NotificationSettings = Record<NotificationKey, boolean>
+
 export default function SettingsPage() {
   const { user } = useAuth()
   const { theme, setTheme } = useTheme()
@@ -22,7 +35,7 @@ export default function SettingsPage() {
   const [showDomainEdit, setShowDomainEdit] = useState(false)
 
   // Notification settings
-  const [notificationSettings, setNotificationSettings] = useState({
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
     new_ticket: true,
     updated_ticket: true,
     deleted_ticket: true,
@@ -98,7 +111,7 @@ export default function SettingsPage() {
     loadNotificationSettings()
   }, [user])
 
-  const handleNotificationChange = (key: string, value: boolean) => {
+  const handleNotificationChange = (key: NotificationKey, value: boolean) => {
     setNotificationSettings(prev => ({
       ...prev,
       [key]: value
