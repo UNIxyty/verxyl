@@ -67,6 +67,7 @@ export default function AdminPage() {
 
   const updateUserRole = async (userId: string, newRole: 'admin' | 'worker' | 'viewer') => {
     setUpdating(userId)
+    console.log('Updating user role:', { userId, newRole })
     try {
       const response = await fetch(`/api/admin/users/${userId}/role`, {
         method: 'PATCH',
@@ -88,6 +89,7 @@ export default function AdminPage() {
         }
       } else {
         const errorData = await response.json()
+        console.error('Role update failed:', errorData)
         toast.error(errorData.error || 'Failed to update user role')
       }
     } catch (error) {
