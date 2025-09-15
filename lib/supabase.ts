@@ -38,7 +38,7 @@ export type Database = {
           telegram_username: string | null
           telegram_id: string | null
           approval_status: 'pending' | 'approved' | 'rejected'
-          role: 'user' | 'admin'
+          role: 'admin' | 'worker' | 'viewer'
           approved_by: string | null
           approved_at: string | null
           rejection_reason: string | null
@@ -54,7 +54,7 @@ export type Database = {
           telegram_username?: string | null
           telegram_id?: string | null
           approval_status?: 'pending' | 'approved' | 'rejected'
-          role?: 'user' | 'admin'
+          role?: 'admin' | 'worker' | 'viewer'
           approved_by?: string | null
           approved_at?: string | null
           rejection_reason?: string | null
@@ -70,7 +70,7 @@ export type Database = {
           telegram_username?: string | null
           telegram_id?: string | null
           approval_status?: 'pending' | 'approved' | 'rejected'
-          role?: 'user' | 'admin'
+          role?: 'admin' | 'worker' | 'viewer'
           approved_by?: string | null
           approved_at?: string | null
           rejection_reason?: string | null
