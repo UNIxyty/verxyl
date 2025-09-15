@@ -147,7 +147,7 @@ export default function CompletedTicketsPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 sm:space-y-8 w-full">
+      <div className="space-y-6 sm:space-y-8 w-full max-w-full overflow-x-hidden">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Completed Tickets</h1>
           <p className="text-sm sm:text-base text-gray-400">Tickets you have completed</p>

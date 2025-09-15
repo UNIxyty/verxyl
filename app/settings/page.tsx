@@ -115,7 +115,7 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout>
-        <div className="w-full max-w-4xl">
+        <div className="w-full max-w-4xl overflow-x-hidden">
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Settings</h1>
           <p className="text-gray-400 text-sm sm:text-base">
