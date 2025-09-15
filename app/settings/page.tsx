@@ -40,7 +40,7 @@ export default function SettingsPage() {
       if (userRole === 'admin') {
         setIsWebhookLoading(true)
         try {
-          const response = await fetch('/api/webhook-direct')
+          const response = await fetch('/api/webhook-fallback')
           if (response.ok) {
             const data = await response.json()
             setWebhookUrl(data.webhookUrl || '')
@@ -67,7 +67,7 @@ export default function SettingsPage() {
 
     setIsWebhookSaving(true)
     try {
-      const response = await fetch('/api/webhook-direct', {
+      const response = await fetch('/api/webhook-fallback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
