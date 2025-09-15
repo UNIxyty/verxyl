@@ -397,8 +397,8 @@ export default function SettingsPage() {
                       <div className="flex items-center ml-4">
                         <input
                           type="checkbox"
-                          checked={notificationSettings[setting.key]}
-                          onChange={(e) => handleNotificationChange(setting.key, e.target.checked)}
+                          checked={notificationSettings[setting.key as NotificationKey]}
+                          onChange={(e) => handleNotificationChange(setting.key as NotificationKey, e.target.checked)}
                           disabled={isNotificationSaving}
                           className="w-4 h-4 text-primary-600 bg-dark-600 border-gray-500 rounded focus:ring-primary-500 focus:ring-2"
                         />
