@@ -176,27 +176,29 @@ export default function MyTicketsPage() {
         ) : (
           <div className="space-y-4">
             {tickets.map((ticket) => (
-                <div key={ticket.id} className="card">
-                <div className="flex items-start justify-between">
+                <div key={ticket.id} className="card card-responsive">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                       <h3 
                         className="text-lg font-semibold text-white cursor-pointer hover:text-primary-400 transition-colors"
                         onClick={() => handleViewTicket(ticket)}
                       >
                         {ticket.title}
                       </h3>
-                      <span className={`badge ${getUrgencyColor(ticket.urgency)}`}>
-                        {ticket.urgency}
-                      </span>
-                      <span className={`badge ${getStatusColor(ticket.status)}`}>
-                        {ticket.status.replace('_', ' ')}
-                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        <span className={`badge ${getUrgencyColor(ticket.urgency)}`}>
+                          {ticket.urgency}
+                        </span>
+                        <span className={`badge ${getStatusColor(ticket.status)}`}>
+                          {ticket.status.replace('_', ' ')}
+                        </span>
+                      </div>
                     </div>
                     
-                    <p className="text-gray-300 mb-3">{ticket.details}</p>
+                    <p className="text-gray-300 mb-3 text-sm sm:text-base">{ticket.details}</p>
                     
-                    <div className="flex items-center space-x-6 text-sm text-gray-400">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm text-gray-400">
                       <div>
                         <span className="font-medium">Created by:</span> {ticket.created_by_user?.full_name || ticket.created_by_user?.email || 'Unknown'}
                       </div>
@@ -212,10 +214,10 @@ export default function MyTicketsPage() {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col space-y-2 ml-4">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 mt-4 sm:mt-0">
                     <button
                       onClick={() => handleViewTicket(ticket)}
-                      className="btn-secondary flex items-center text-sm"
+                      className="btn-secondary flex items-center text-sm btn-mobile"
                     >
                       <EyeIcon className="h-4 w-4 mr-1" />
                       View
@@ -224,7 +226,7 @@ export default function MyTicketsPage() {
                     {ticket.status === 'new' && (
                       <button
                         onClick={() => handleStartWork(ticket.id)}
-                        className="btn-primary flex items-center text-sm"
+                        className="btn-primary flex items-center text-sm btn-mobile"
                       >
                         <PlayIcon className="h-4 w-4 mr-1" />
                         Start Work
@@ -234,7 +236,7 @@ export default function MyTicketsPage() {
                     {ticket.status === 'in_progress' && (
                       <button
                         onClick={() => handleCompleteTicket(ticket.id)}
-                        className="btn-primary flex items-center text-sm"
+                        className="btn-primary flex items-center text-sm btn-mobile"
                       >
                         <CheckCircleIcon className="h-4 w-4 mr-1" />
                         Complete

@@ -375,4 +375,83 @@ body {
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Responsive utilities */
+  .mobile-container {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  .mobile-text-sm {
+    @apply text-sm sm:text-base;
+  }
+
+  .mobile-text-xs {
+    @apply text-xs sm:text-sm;
+  }
+
+  .mobile-padding {
+    @apply p-4 sm:p-6;
+  }
+
+  .mobile-margin {
+    @apply m-4 sm:m-6;
+  }
+
+  .mobile-grid-responsive {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6;
+  }
+
+  .mobile-flex-responsive {
+    @apply flex flex-col sm:flex-row;
+  }
+
+  .mobile-space-responsive {
+    @apply space-y-4 sm:space-y-0 sm:space-x-4;
+  }
+
+  .mobile-hidden {
+    @apply hidden sm:block;
+  }
+
+  .mobile-visible {
+    @apply block sm:hidden;
+  }
+
+  /* Table responsive utilities */
+  .table-responsive {
+    @apply overflow-x-auto;
+  }
+
+  .table-responsive table {
+    @apply min-w-full;
+  }
+
+  .table-responsive th,
+  .table-responsive td {
+    @apply whitespace-nowrap px-4 py-2 text-left;
+  }
+
+  /* Modal responsive utilities */
+  .modal-responsive {
+    @apply w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl;
+  }
+
+  /* Button responsive utilities */
+  .btn-mobile {
+    @apply w-full sm:w-auto;
+  }
+
+  /* Card responsive utilities */
+  .card-responsive {
+    @apply p-4 sm:p-6;
+  }
+
+  /* Form responsive utilities */
+  .form-grid-responsive {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6;
+  }
+
+  .form-full-width {
+    @apply sm:col-span-2;
+  }
 }

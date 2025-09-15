@@ -197,7 +197,7 @@ export function EditTicketModal({ isOpen, onClose, ticket, onSuccess }: EditTick
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Edit Ticket" size="lg">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Title *
@@ -213,30 +213,32 @@ export function EditTicketModal({ isOpen, onClose, ticket, onSuccess }: EditTick
           )}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Urgency *
-          </label>
-          <UrgencyPicker
-            value={watch('urgency')}
-            onChange={(value) => setValue('urgency', value)}
-            className="w-full"
-          />
+        <div className="form-grid-responsive">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Urgency *
+            </label>
+            <UrgencyPicker
+              value={watch('urgency')}
+              onChange={(value) => setValue('urgency', value)}
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Assigned To *
+            </label>
+            <UserPicker
+              value={watch('assigned_to')}
+              onChange={(value) => setValue('assigned_to', value)}
+              users={users}
+              className="w-full"
+            />
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Assigned To *
-          </label>
-          <UserPicker
-            value={watch('assigned_to')}
-            onChange={(value) => setValue('assigned_to', value)}
-            users={users}
-            className="w-full"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-grid-responsive">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Deadline Date
@@ -276,18 +278,18 @@ export function EditTicketModal({ isOpen, onClose, ticket, onSuccess }: EditTick
           )}
         </div>
 
-        <div className="flex justify-end space-x-3 pt-4">
+        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
           <button
             type="button"
             onClick={handleClose}
-            className="btn-secondary"
+            className="btn-secondary btn-mobile"
             disabled={loading}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="btn-primary"
+            className="btn-primary btn-mobile"
             disabled={loading}
           >
             {loading ? 'Updating...' : 'Update Ticket'}

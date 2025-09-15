@@ -167,16 +167,16 @@ export default function AdminPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Admin Panel</h1>
-          <p className="text-gray-400">
+      <div className="max-w-7xl mx-auto mobile-padding">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Admin Panel</h1>
+          <p className="text-gray-400 text-sm sm:text-base">
             Manage user roles and permissions
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="mobile-grid-responsive mb-6 sm:mb-8">
           <div className="card">
             <div className="flex items-center">
               <UserGroupIcon className="h-8 w-8 text-primary-400 mr-3" />
@@ -221,7 +221,7 @@ export default function AdminPage() {
         {/* Tabs */}
         <div className="card">
           <div className="border-b border-gray-700">
-            <nav className="-mb-px flex space-x-8">
+            <nav className="-mb-px flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-8">
               {[
                 { id: 'approved', label: 'Approved Users', count: usersData?.approved.length || 0 },
                 { id: 'pending', label: 'Pending Approval', count: usersData?.pending.length || 0 },
@@ -230,7 +230,7 @@ export default function AdminPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-2 px-1 border-b-2 font-medium text-sm text-left sm:text-center ${
                     activeTab === tab.id
                       ? 'border-primary-500 text-primary-400'
                       : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
@@ -253,7 +253,7 @@ export default function AdminPage() {
                 {currentUsers.map((user) => (
                   <div 
                     key={user.id} 
-                    className={`flex items-center justify-between p-4 bg-gray-800 rounded-lg ${
+                    className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gray-800 rounded-lg ${
                       user.approval_status === 'pending' ? 'cursor-pointer hover:bg-gray-700 transition-colors' : ''
                     }`}
                     onClick={() => user.approval_status === 'pending' ? handleUserClick(user) : undefined}
@@ -261,27 +261,27 @@ export default function AdminPage() {
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center space-x-2">
                         {getStatusIcon(user.approval_status)}
-                        <span className={`font-medium ${getStatusColor(user.approval_status)}`}>
+                        <span className={`font-medium text-sm ${getStatusColor(user.approval_status)}`}>
                           {user.approval_status}
                         </span>
                       </div>
                       <div>
-                        <p className="text-white font-medium">{user.email}</p>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-white font-medium text-sm sm:text-base">{user.email}</p>
+                        <p className="text-xs sm:text-sm text-gray-400">
                           Joined: {new Date(user.created_at).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
                       {user.approval_status === 'approved' && (
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-gray-400">Role:</span>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                          <span className="text-xs sm:text-sm text-gray-400">Role:</span>
                           <select
                             value={user.role}
                             onChange={(e) => updateUserRole(user.id, e.target.value as any)}
                             disabled={updating === user.id}
-                            className="bg-gray-700 border border-gray-600 rounded-md px-3 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            className="bg-gray-700 border border-gray-600 rounded-md px-3 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500 min-w-0"
                           >
                             <option value="admin">Admin</option>
                             <option value="worker">Worker</option>
@@ -305,7 +305,7 @@ export default function AdminPage() {
         </div>
 
         {/* Role Information */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="mt-6 sm:mt-8 mobile-grid-responsive">
           <div className="card">
             <div className="flex items-center mb-4">
               <ShieldCheckIcon className="h-6 w-6 text-red-400 mr-3" />

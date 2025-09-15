@@ -205,37 +205,39 @@ export default function SentTicketsPage() {
         ) : (
           <div className="space-y-4">
             {tickets.map((ticket) => (
-              <div key={ticket.id} className="card">
-                <div className="flex items-start justify-between">
+              <div key={ticket.id} className="card card-responsive">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                       <h3 
                         className="text-lg font-semibold text-white cursor-pointer hover:text-primary-400 transition-colors"
                         onClick={() => handleViewTicket(ticket)}
                       >
                         {ticket.title}
                       </h3>
-                      <span className={`badge ${getUrgencyColor(ticket.urgency)}`}>
-                        {ticket.urgency}
-                      </span>
-                      <span className={`badge ${getStatusColor(ticket.status)}`}>
-                        {ticket.status.replace('_', ' ')}
-                      </span>
-                      {ticket.edited && (
-                        <span className="badge badge-warning">
-                          Edited
+                      <div className="flex flex-wrap gap-2">
+                        <span className={`badge ${getUrgencyColor(ticket.urgency)}`}>
+                          {ticket.urgency}
                         </span>
-                      )}
-                      {ticket.user_notified && (
-                        <span className="badge badge-success">
-                          User Notified
+                        <span className={`badge ${getStatusColor(ticket.status)}`}>
+                          {ticket.status.replace('_', ' ')}
                         </span>
-                      )}
+                        {ticket.edited && (
+                          <span className="badge badge-warning">
+                            Edited
+                          </span>
+                        )}
+                        {ticket.user_notified && (
+                          <span className="badge badge-success">
+                            User Notified
+                          </span>
+                        )}
+                      </div>
                     </div>
                     
-                    <p className="text-gray-300 mb-3">{ticket.details}</p>
+                    <p className="text-gray-300 mb-3 text-sm sm:text-base">{ticket.details}</p>
                     
-                    <div className="flex items-center space-x-6 text-sm text-gray-400">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm text-gray-400">
                       <div>
                         <span className="font-medium">Assigned to:</span> {ticket.assigned_user?.full_name || ticket.assigned_user?.email || 'Unknown'}
                       </div>
@@ -251,10 +253,10 @@ export default function SentTicketsPage() {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col space-y-2 ml-4">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 mt-4 sm:mt-0">
                     <button
                       onClick={() => handleViewTicket(ticket)}
-                      className="btn-secondary flex items-center text-sm"
+                      className="btn-secondary flex items-center text-sm btn-mobile"
                     >
                       <EyeIcon className="h-4 w-4 mr-1" />
                       View
@@ -263,7 +265,7 @@ export default function SentTicketsPage() {
                     {!ticket.edited && ticket.status !== 'completed' && (
                       <button
                         onClick={() => handleEditTicket(ticket)}
-                        className="btn-primary flex items-center text-sm"
+                        className="btn-primary flex items-center text-sm btn-mobile"
                       >
                         <PencilIcon className="h-4 w-4 mr-1" />
                         Edit
@@ -273,7 +275,7 @@ export default function SentTicketsPage() {
                     {ticket.status !== 'completed' && (
                       <button
                         onClick={() => handleDeleteTicket(ticket)}
-                        className="btn-danger flex items-center text-sm"
+                        className="btn-danger flex items-center text-sm btn-mobile"
                       >
                         <TrashIcon className="h-4 w-4 mr-1" />
                         Delete

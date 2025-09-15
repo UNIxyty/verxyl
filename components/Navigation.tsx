@@ -14,7 +14,9 @@ import {
   Cog6ToothIcon,
   PaperAirplaneIcon,
   HomeIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  Bars3Icon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 
 export function Navigation() {
@@ -22,6 +24,7 @@ export function Navigation() {
   const router = useRouter()
   const pathname = usePathname()
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: ['admin', 'worker', 'viewer'] },
@@ -55,27 +58,135 @@ export function Navigation() {
 
   if (!user) return null
 
+  const filteredNavigation = navigation.filter(item => {
+    if (userRole && item.roles) {
+      return item.roles.includes(userRole)
+    }
+    return true
+  })
+
+  const handleNavClick = (href: string) => {
+    router.push(href)
+    setIsMobileMenuOpen(false)
+  }
+
   return (
-    <nav className="bg-dark-800 border-r border-dark-700 w-64 min-h-screen flex flex-col">
-      <div className="flex items-center justify-between h-16 px-6 border-b border-dark-700">
-        <button
-          onClick={() => router.push('/dashboard')}
-          className="text-xl font-bold text-white hover:text-primary-400 transition-colors cursor-pointer"
-        >
-          Verxyl Tickets
-        </button>
+    <>
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-dark-800 border-b border-dark-700 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="text-lg font-bold text-white hover:text-primary-400 transition-colors"
+          >
+            Verxyl Tickets
+          </button>
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 text-gray-400 hover:text-gray-200 transition-colors"
+          >
+            {isMobileMenuOpen ? (
+              <XMarkIcon className="h-6 w-6" />
+            ) : (
+              <Bars3Icon className="h-6 w-6" />
+            )}
+          </button>
+        </div>
       </div>
-      
-      <div className="flex-1 px-3 py-4 space-y-1">
-        {navigation
-          .filter(item => {
-            // Filter based on user role
-            if (userRole && item.roles) {
-              return item.roles.includes(userRole)
-            }
-            return true
-          })
-          .map((item) => {
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setIsMobileMenuOpen(false)}>
+          <div className="bg-dark-800 border-r border-dark-700 w-64 min-h-screen flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between h-16 px-6 border-b border-dark-700">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="text-xl font-bold text-white hover:text-primary-400 transition-colors cursor-pointer"
+              >
+                Verxyl Tickets
+              </button>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="flex-1 px-3 py-4 space-y-1">
+              {filteredNavigation.map((item) => {
+                const isActive = pathname === item.href
+                return (
+                  <button
+                    key={item.name}
+                    onClick={() => handleNavClick(item.href)}
+                    className={`nav-link w-full justify-start ${
+                      isActive ? 'nav-link-active' : 'nav-link-inactive'
+                    }`}
+                  >
+                    <item.icon className="mr-3 h-5 w-5" />
+                    {item.name}
+                  </button>
+                )
+              })}
+            </div>
+            
+            <div className="p-4 border-t border-dark-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  {user.user_metadata?.avatar_url ? (
+                    <img
+                      src={user.user_metadata.avatar_url}
+                      alt="Profile"
+                      className="h-8 w-8 rounded-full"
+                    />
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-primary-600 flex items-center justify-center">
+                      <span className="text-sm font-medium text-white">
+                        {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-200 truncate">
+                      {user.user_metadata?.full_name || 'User'}
+                    </p>
+                    <p className="text-xs text-gray-400 truncate">
+                      {user.email}
+                    </p>
+                    {userRole && (
+                      <p className="text-xs text-primary-400 truncate">
+                        {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={signOut}
+                  className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+                  title="Sign out"
+                >
+                  <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Navigation */}
+      <nav className="hidden lg:flex bg-dark-800 border-r border-dark-700 w-64 min-h-screen flex-col">
+        <div className="flex items-center justify-between h-16 px-6 border-b border-dark-700">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="text-xl font-bold text-white hover:text-primary-400 transition-colors cursor-pointer"
+          >
+            Verxyl Tickets
+          </button>
+        </div>
+        
+        <div className="flex-1 px-3 py-4 space-y-1">
+          {filteredNavigation.map((item) => {
             const isActive = pathname === item.href
             return (
               <button
@@ -90,47 +201,48 @@ export function Navigation() {
               </button>
             )
           })}
-      </div>
-      
-      <div className="p-4 border-t border-dark-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            {user.user_metadata?.avatar_url ? (
-              <img
-                src={user.user_metadata.avatar_url}
-                alt="Profile"
-                className="h-8 w-8 rounded-full"
-              />
-            ) : (
-              <div className="h-8 w-8 rounded-full bg-primary-600 flex items-center justify-center">
-                <span className="text-sm font-medium text-white">
-                  {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}
-                </span>
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-200 truncate">
-                {user.user_metadata?.full_name || 'User'}
-              </p>
-              <p className="text-xs text-gray-400 truncate">
-                {user.email}
-              </p>
-              {userRole && (
-                <p className="text-xs text-primary-400 truncate">
-                  {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
-                </p>
-              )}
-            </div>
-          </div>
-          <button
-            onClick={signOut}
-            className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
-            title="Sign out"
-          >
-            <ArrowRightOnRectangleIcon className="h-5 w-5" />
-          </button>
         </div>
-      </div>
-    </nav>
+        
+        <div className="p-4 border-t border-dark-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              {user.user_metadata?.avatar_url ? (
+                <img
+                  src={user.user_metadata.avatar_url}
+                  alt="Profile"
+                  className="h-8 w-8 rounded-full"
+                />
+              ) : (
+                <div className="h-8 w-8 rounded-full bg-primary-600 flex items-center justify-center">
+                  <span className="text-sm font-medium text-white">
+                    {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}
+                  </span>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-200 truncate">
+                  {user.user_metadata?.full_name || 'User'}
+                </p>
+                <p className="text-xs text-gray-400 truncate">
+                  {user.email}
+                </p>
+                {userRole && (
+                  <p className="text-xs text-primary-400 truncate">
+                    {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+                  </p>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={signOut}
+              className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+              title="Sign out"
+            >
+              <ArrowRightOnRectangleIcon className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      </nav>
+    </>
   )
 }

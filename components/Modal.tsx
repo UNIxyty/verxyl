@@ -14,10 +14,10 @@ interface ModalProps {
 
 export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
   const sizeClasses = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl'
+    sm: 'max-w-sm sm:max-w-md',
+    md: 'max-w-sm sm:max-w-lg',
+    lg: 'max-w-sm sm:max-w-2xl',
+    xl: 'max-w-sm sm:max-w-4xl'
   }
 
   return (
@@ -36,7 +36,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
+          <div className="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -46,9 +46,9 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className={`w-full ${sizeClasses[size]} transform overflow-hidden rounded-2xl bg-dark-800 p-6 text-left align-middle shadow-xl transition-all border border-dark-700`}>
-                <div className="flex items-center justify-between mb-6">
-                  <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-white">
+              <Dialog.Panel className={`w-full ${sizeClasses[size]} transform overflow-hidden rounded-2xl bg-dark-800 p-4 sm:p-6 text-left align-middle shadow-xl transition-all border border-dark-700`}>
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <Dialog.Title as="h3" className="text-base sm:text-lg font-medium leading-6 text-white">
                     {title}
                   </Dialog.Title>
                   <button
@@ -56,7 +56,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
                     className="text-gray-400 hover:text-gray-200 transition-colors"
                     onClick={onClose}
                   >
-                    <XMarkIcon className="h-6 w-6" />
+                    <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" />
                   </button>
                 </div>
                 {children}

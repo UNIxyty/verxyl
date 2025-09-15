@@ -37,7 +37,7 @@ export function DeleteConfirmModal({
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
+          <div className="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -47,7 +47,7 @@ export function DeleteConfirmModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-dark-800 border border-dark-600 p-6 text-left align-middle shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-sm sm:max-w-md transform overflow-hidden rounded-2xl bg-dark-800 border border-dark-600 p-4 sm:p-6 text-left align-middle shadow-xl transition-all">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="flex-shrink-0">
                     <ExclamationTriangleIcon className="h-6 w-6 text-red-400" />

@@ -153,7 +153,7 @@ export function CreateTicketModal({ isOpen, onClose, onSuccess }: CreateTicketMo
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Create New Ticket" size="lg">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-2">
             Title *
@@ -170,7 +170,7 @@ export function CreateTicketModal({ isOpen, onClose, onSuccess }: CreateTicketMo
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-grid-responsive">
           <div>
             <label htmlFor="urgency" className="block text-sm font-medium text-gray-300 mb-2">
               Urgency *
@@ -200,7 +200,7 @@ export function CreateTicketModal({ isOpen, onClose, onSuccess }: CreateTicketMo
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-grid-responsive">
           <div>
             <label htmlFor="deadline_date" className="block text-sm font-medium text-gray-300 mb-2">
               Deadline Date
@@ -226,7 +226,6 @@ export function CreateTicketModal({ isOpen, onClose, onSuccess }: CreateTicketMo
           </div>
         </div>
 
-
         <div>
           <label htmlFor="details" className="block text-sm font-medium text-gray-300 mb-2">
             Details *
@@ -243,18 +242,18 @@ export function CreateTicketModal({ isOpen, onClose, onSuccess }: CreateTicketMo
           )}
         </div>
 
-        <div className="flex justify-end space-x-3 pt-4">
+        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
           <button
             type="button"
             onClick={onClose}
-            className="btn-secondary"
+            className="btn-secondary btn-mobile"
             disabled={loading}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="btn-primary"
+            className="btn-primary btn-mobile"
             disabled={loading}
           >
             {loading ? 'Creating...' : 'Create Ticket'}
