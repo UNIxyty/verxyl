@@ -158,10 +158,10 @@ export default function SettingsPage() {
                   </div>
                 )}
 
-                <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
-                  <p className="text-yellow-200 text-sm">
-                    <strong>Note:</strong> This will test the webhook URL but won't persist changes permanently. 
-                    To make permanent changes, update the <code className="bg-yellow-800/30 px-1 rounded">WEBHOOK_URL</code> environment variable in your deployment platform.
+                <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+                  <p className="text-green-200 text-sm">
+                    <strong>Note:</strong> Webhook URL is now stored in the database and can be managed directly from this interface. 
+                    Changes are saved immediately and will be used for all future webhook notifications.
                   </p>
                 </div>
               </div>
@@ -169,7 +169,7 @@ export default function SettingsPage() {
               // Regular user notice
               <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
                 <p className="text-blue-200 text-sm">
-                  <strong>Note:</strong> Webhook URL is configured via the <code className="bg-blue-800/30 px-1 rounded">WEBHOOK_URL</code> environment variable. 
+                  <strong>Note:</strong> Webhook configuration is managed by system administrators. 
                   Contact your administrator to modify webhook settings.
                 </p>
               </div>

@@ -13,15 +13,27 @@ interface WebhookPayload {
 
 export async function sendWebhook(payload: WebhookPayload): Promise<{ success: boolean; userNotified?: boolean }> {
   try {
-    // Get webhook URL from environment variable only
-    const webhookUrl = process.env.WEBHOOK_URL
+    // Get webhook URL from database
+    const { supabaseAdmin } = await import('@/lib/supabase')
+    const { data: webhookSetting, error: webhookError } = await supabaseAdmin
+      .from('system_settings')
+      .select('setting_value')
+      .eq('setting_key', 'webhook_url')
+      .single()
+
+    if (webhookError && webhookError.code !== 'PGRST116') {
+      console.error('Error fetching webhook setting:', webhookError)
+      return { success: false }
+    }
+
+    const webhookUrl = webhookSetting?.setting_value
     
     console.log('=== WEBHOOK DEBUG ===')
-    console.log('Webhook URL from environment:', webhookUrl ? '[CONFIGURED]' : '[NOT SET]')
-    console.log('Environment check:', {
-      hasWebhookUrl: !!process.env.WEBHOOK_URL,
-      webhookUrlLength: process.env.WEBHOOK_URL?.length || 0,
-      allEnvKeys: Object.keys(process.env).filter(key => key.includes('WEBHOOK') || key.includes('SUPABASE'))
+    console.log('Webhook URL from database:', webhookUrl ? '[CONFIGURED]' : '[NOT SET]')
+    console.log('Database check:', {
+      hasWebhookUrl: !!webhookUrl,
+      webhookUrlLength: webhookUrl?.length || 0,
+      settingExists: !!webhookSetting
     })
     console.log('===================')
 

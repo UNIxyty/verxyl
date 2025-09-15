@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,8 +35,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    // Return current webhook URL from environment
-    const webhookUrl = process.env.WEBHOOK_URL || ''
+    // Get webhook URL from database
+    const { data: webhookSetting, error: webhookError } = await supabaseAdmin
+      .from('system_settings')
+      .select('setting_value')
+      .eq('setting_key', 'webhook_url')
+      .single()
+
+    if (webhookError && webhookError.code !== 'PGRST116') {
+      console.error('Error fetching webhook setting:', webhookError)
+      return NextResponse.json({ error: 'Failed to fetch webhook setting' }, { status: 500 })
+    }
+
+    const webhookUrl = webhookSetting?.setting_value || ''
     
     return NextResponse.json({
       webhookUrl,
@@ -122,11 +134,50 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Note: In a real application, you would update the environment variable here
-    // For now, we'll just return success since environment variables are read-only at runtime
+    // Save webhook URL to database
+    const { data: existingSetting, error: existingError } = await supabaseAdmin
+      .from('system_settings')
+      .select('id')
+      .eq('setting_key', 'webhook_url')
+      .single()
+
+    if (existingSetting) {
+      // Update existing setting
+      const { error: updateError } = await supabaseAdmin
+        .from('system_settings')
+        .update({ 
+          setting_value: webhookUrl,
+          updated_by: user.id,
+          updated_at: new Date().toISOString()
+        })
+        .eq('setting_key', 'webhook_url')
+
+      if (updateError) {
+        console.error('Error updating webhook setting:', updateError)
+        return NextResponse.json({ error: 'Failed to save webhook URL' }, { status: 500 })
+      }
+    } else {
+      // Insert new setting
+      const { error: insertError } = await supabaseAdmin
+        .from('system_settings')
+        .insert({
+          setting_key: 'webhook_url',
+          setting_value: webhookUrl,
+          setting_description: 'Webhook URL for ticket notifications',
+          setting_type: 'url',
+          created_by: user.id,
+          updated_by: user.id
+        })
+
+      if (insertError) {
+        console.error('Error inserting webhook setting:', insertError)
+        return NextResponse.json({ error: 'Failed to save webhook URL' }, { status: 500 })
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'Webhook URL validated successfully. Note: To persist changes, update the WEBHOOK_URL environment variable in your deployment platform.',
+      message: 'Webhook URL saved and validated successfully!',
       webhookUrl
     })
 
