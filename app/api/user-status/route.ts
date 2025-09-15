@@ -48,11 +48,12 @@ export async function GET(request: NextRequest) {
       console.error('User status API - user query error:', userError.message)
       
       if (userError.code === 'PGRST116') {
-        return NextResponse.json({ 
-          error: 'User not found in database',
-          details: 'User may need to complete registration',
-          needsRegistration: true 
-        }, { status: 404 })
+        // Return 200 with a neutral payload so clients don't treat it as a hard failure
+        return NextResponse.json({
+          needsRegistration: true,
+          role: null,
+          approval_status: null
+        })
       }
       
       return NextResponse.json({ 
