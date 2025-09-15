@@ -167,7 +167,7 @@ export default function SettingsPage() {
                     </span>
                     <button
                       onClick={() => setShowDomainEdit(true)}
-                      className="text-blue-400 hover:text-blue-300 text-sm underline"
+                      className="btn-secondary text-sm"
                     >
                       change webhook domain
                     </button>
@@ -185,17 +185,19 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Tickets path:
                   </label>
-                  <select
-                    value={newWebhookPathTickets}
-                    onChange={(e) => setNewWebhookPathTickets(e.target.value)}
-                    className="input w-full"
-                    disabled={isNewWebhookLoading || isNewWebhookSaving}
-                  >
-                    <option value="">Select path...</option>
-                    <option value="/webhook/tickets">/webhook/tickets</option>
-                    <option value="/api/tickets">/api/tickets</option>
-                    <option value="/hooks/tickets">/hooks/tickets</option>
-                  </select>
+                  <div className="flex items-center">
+                    <span className="text-gray-300 bg-gray-800 px-3 py-2 rounded-l border border-gray-600 border-r-0 whitespace-nowrap">
+                      {newWebhookDomain || 'https://example.com'}
+                    </span>
+                    <input
+                      type="text"
+                      value={newWebhookPathTickets}
+                      onChange={(e) => setNewWebhookPathTickets(e.target.value)}
+                      placeholder="/webhook/tickets"
+                      className="input rounded-l-none border-l-0 flex-1"
+                      disabled={isNewWebhookLoading || isNewWebhookSaving}
+                    />
+                  </div>
                   <p className="text-gray-400 text-xs mt-1">
                     Path for ticket-related events
                   </p>
@@ -206,17 +208,19 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Users path:
                   </label>
-                  <select
-                    value={newWebhookPathUsers}
-                    onChange={(e) => setNewWebhookPathUsers(e.target.value)}
-                    className="input w-full"
-                    disabled={isNewWebhookLoading || isNewWebhookSaving}
-                  >
-                    <option value="">Select path...</option>
-                    <option value="/webhook/users">/webhook/users</option>
-                    <option value="/api/users">/api/users</option>
-                    <option value="/hooks/users">/hooks/users</option>
-                  </select>
+                  <div className="flex items-center">
+                    <span className="text-gray-300 bg-gray-800 px-3 py-2 rounded-l border border-gray-600 border-r-0 whitespace-nowrap">
+                      {newWebhookDomain || 'https://example.com'}
+                    </span>
+                    <input
+                      type="text"
+                      value={newWebhookPathUsers}
+                      onChange={(e) => setNewWebhookPathUsers(e.target.value)}
+                      placeholder="/webhook/users"
+                      className="input rounded-l-none border-l-0 flex-1"
+                      disabled={isNewWebhookLoading || isNewWebhookSaving}
+                    />
+                  </div>
                   <p className="text-gray-400 text-xs mt-1">
                     Path for user-related events
                   </p>
