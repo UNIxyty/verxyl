@@ -109,7 +109,7 @@ export function Navigation() {
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setIsMobileMenuOpen(false)}>
-          <div className="bg-dark-800 border-r border-dark-700 w-64 min-h-screen flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-dark-800 border-r border-dark-700 w-56 min-h-screen flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between h-16 px-6 border-b border-dark-700">
               <button onClick={() => router.push('/dashboard')} className="flex items-center gap-2">
                 <Logo className="h-8" />
@@ -184,14 +184,14 @@ export function Navigation() {
       )}
 
       {/* Desktop Navigation */}
-      <nav className="hidden lg:flex bg-dark-800 border-r border-dark-700 w-64 min-h-screen flex-col">
-        <div className="flex items-center justify-between h-16 px-6 border-b border-dark-700">
+      <nav className="hidden lg:flex bg-dark-800 border-r border-dark-700 w-56 min-h-screen flex-col fixed left-0 top-0 z-40">
+        <div className="flex items-center justify-between h-14 px-4 border-b border-dark-700">
           <button onClick={() => router.push('/dashboard')} className="flex items-center gap-2">
-            <Logo className="h-9" />
+            <Logo className="h-7" />
           </button>
         </div>
         
-        <div className="flex-1 px-3 py-4 space-y-1">
+        <div className="flex-1 px-2 py-3 space-y-1">
           {filteredNavigation.map((item) => {
             const isActive = pathname === item.href
             return (
@@ -209,24 +209,24 @@ export function Navigation() {
           })}
         </div>
         
-        <div className="p-4 border-t border-dark-700">
+        <div className="p-3 border-t border-dark-700">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               {user.user_metadata?.avatar_url ? (
                 <img
                   src={user.user_metadata.avatar_url}
                   alt="Profile"
-                  className="h-8 w-8 rounded-full"
+                  className="h-7 w-7 rounded-full"
                 />
               ) : (
-                <div className="h-8 w-8 rounded-full bg-primary-600 flex items-center justify-center">
-                  <span className="text-sm font-medium text-white">
+                <div className="h-7 w-7 rounded-full bg-primary-600 flex items-center justify-center">
+                  <span className="text-xs font-medium text-white">
                     {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}
                   </span>
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-200 truncate">
+                <p className="text-xs font-medium text-gray-200 truncate">
                   {user.user_metadata?.full_name || 'User'}
                 </p>
                 <p className="text-xs text-gray-400 truncate">

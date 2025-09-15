@@ -33,9 +33,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="flex min-h-screen bg-dark-900">
+    <div className="min-h-screen bg-dark-900">
       <Navigation />
-      <main className="flex-1 overflow-auto lg:ml-0">
+      <main className="lg:ml-56 pt-16 lg:pt-0">
         <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
           {children}
         </div>
