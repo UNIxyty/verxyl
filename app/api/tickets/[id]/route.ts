@@ -21,6 +21,18 @@ export async function PATCH(
     
     console.log('Updating ticket:', id, 'with data:', updateData)
 
+    // First, get the current ticket status to check for changes
+    const { data: currentTicket, error: fetchError } = await supabaseAdmin
+      .from('tickets')
+      .select('status')
+      .eq('id', id)
+      .single()
+
+    if (fetchError) {
+      console.error('Error fetching current ticket:', fetchError)
+      return NextResponse.json({ error: 'Failed to fetch ticket' }, { status: 500 })
+    }
+
     const { data: ticket, error: updateError } = await supabaseAdmin
       .from('tickets')
       .update({ ...updateData, updated_at: new Date().toISOString() })
@@ -37,19 +49,28 @@ export async function PATCH(
       return NextResponse.json({ error: 'Failed to update ticket' }, { status: 500 })
     }
 
-    // Send webhook for ticket update
+    // Send webhook for ticket update ONLY if status actually changed
     if (ticket) {
       try {
         const { dateTicket, timeTicket } = extractDateTime(ticket.deadline)
         
         // Determine webhook action based on what was updated
         let webhookAction: 'updated' | 'in_work' = 'updated'
-        if (updateData.status === 'in_progress') {
+        let shouldSendWebhook = true
+        
+        if (updateData.status === 'in_progress' && currentTicket.status !== 'in_progress') {
           webhookAction = 'in_work'
-          console.log('Sending webhook for ticket work started via API')
+          console.log('Sending webhook for ticket work started via API (status changed from', currentTicket.status, 'to in_progress)')
+        } else if (updateData.status === 'in_progress' && currentTicket.status === 'in_progress') {
+          console.log('Ticket is already in_progress, skipping webhook')
+          shouldSendWebhook = false
         } else {
           console.log('Sending webhook for ticket update via API')
         }
+        
+        if (!shouldSendWebhook) {
+          console.log('Skipping webhook - no status change detected')
+        } else {
         
         const webhookResult = await sendNewWebhook({
           action: webhookAction === 'in_work' ? 'ticket_in_work' : 'ticket_updated',
@@ -73,6 +94,7 @@ export async function PATCH(
         })
 
         console.log('Webhook result:', webhookResult)
+        }
       } catch (webhookError) {
         console.error('Webhook error (non-critical):', webhookError)
       }

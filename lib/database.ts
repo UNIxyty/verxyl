@@ -183,6 +183,18 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
 }
 
 export const updateTicket = async (id: string, updates: TicketUpdate): Promise<Ticket | null> => {
+  // First, get the current ticket status to check for changes
+  const { data: currentTicket, error: fetchError } = await supabase
+    .from('tickets')
+    .select('status')
+    .eq('id', id)
+    .single()
+
+  if (fetchError) {
+    console.error('Error fetching current ticket:', fetchError)
+    return null
+  }
+
   const { data, error } = await supabase
     .from('tickets')
     .update({ ...updates, updated_at: new Date().toISOString() })
@@ -199,19 +211,28 @@ export const updateTicket = async (id: string, updates: TicketUpdate): Promise<T
     return null
   }
 
-  // Send webhook for ticket update
+  // Send webhook for ticket update ONLY if status actually changed
   if (data) {
     try {
       const { dateTicket, timeTicket } = extractDateTime(data.deadline)
       
       // Determine webhook action based on what was updated
       let webhookAction: 'updated' | 'in_work' = 'updated'
-      if (updates.status === 'in_progress') {
+      let shouldSendWebhook = true
+      
+      if (updates.status === 'in_progress' && currentTicket.status !== 'in_progress') {
         webhookAction = 'in_work'
-        console.log('Sending webhook for ticket work started')
+        console.log('Sending webhook for ticket work started (status changed from', currentTicket.status, 'to in_progress)')
+      } else if (updates.status === 'in_progress' && currentTicket.status === 'in_progress') {
+        console.log('Ticket is already in_progress, skipping webhook')
+        shouldSendWebhook = false
       } else {
         console.log('Sending webhook for ticket update')
       }
+      
+      if (!shouldSendWebhook) {
+        console.log('Skipping webhook - no status change detected')
+      } else {
       
       const webhookResult = await sendNewWebhook({
         action: webhookAction === 'in_work' ? 'ticket_in_work' : 'ticket_updated',
@@ -235,6 +256,7 @@ export const updateTicket = async (id: string, updates: TicketUpdate): Promise<T
       })
 
       console.log('Webhook result:', webhookResult)
+      }
     } catch (webhookError) {
       console.error('Webhook error (non-critical):', webhookError)
     }
