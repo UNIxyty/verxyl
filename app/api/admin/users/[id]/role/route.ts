@@ -47,14 +47,31 @@ export async function PATCH(
     }
 
     // Check if target user exists and is approved
+    console.log('Looking for user with ID:', targetUserId)
     const { data: targetUser, error: targetError } = await supabaseAdmin
       .from('users')
       .select('id, email, role, approval_status')
       .eq('id', targetUserId)
       .single()
 
-    if (targetError || !targetUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    console.log('Target user lookup result:', { targetUser, targetError })
+
+    if (targetError) {
+      console.error('Error finding target user:', targetError)
+      return NextResponse.json({ 
+        error: 'User not found',
+        details: targetError.message,
+        code: targetError.code,
+        targetUserId
+      }, { status: 404 })
+    }
+
+    if (!targetUser) {
+      console.error('Target user not found in database')
+      return NextResponse.json({ 
+        error: 'User not found in database',
+        targetUserId
+      }, { status: 404 })
     }
 
     if (targetUser.approval_status !== 'approved') {
