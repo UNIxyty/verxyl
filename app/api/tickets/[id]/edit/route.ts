@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase'
-import { sendWebhook, extractDateTime, getUserFullName, getUserEmail } from '@/lib/webhook'
+import { sendNewWebhook } from '@/lib/new-webhook'
+import { extractDateTime, getUserFullName, getUserEmail } from '@/lib/webhook-utils'
 
 export async function PATCH(
   request: NextRequest,
@@ -92,20 +93,23 @@ export async function PATCH(
         const { dateTicket, timeTicket } = extractDateTime(data.deadline)
         
         console.log('Sending webhook for ticket update')
-        const webhookResult = await sendWebhook({
-          action: 'updated',
+        const webhookResult = await sendNewWebhook({
+          action: 'ticket_updated',
+          timestamp: new Date().toISOString(),
           ticket_id: data.id,
           ticket_title: data.title,
-          urgency: data.urgency,
-          dateTicket,
-          timeTicket,
-          creatorName: getUserFullName(data.created_by_user),
-          workerName: getUserFullName(data.assigned_user),
-          creatorEmail: getUserEmail(data.created_by_user),
-          workerEmail: getUserEmail(data.assigned_user),
-          user_id: data.created_by,
-          user_name: getUserFullName(data.created_by_user),
-          admin_id: data.assigned_to
+          ticket_urgency: data.urgency,
+          ticket_status: data.status,
+          ticket_deadline: data.deadline,
+          creator_id: data.created_by,
+          creator_email: getUserEmail(data.created_by_user),
+          creator_name: getUserFullName(data.created_by_user),
+          worker_id: data.assigned_to,
+          worker_email: getUserEmail(data.assigned_user),
+          worker_name: getUserFullName(data.assigned_user),
+          admin_id: data.assigned_to,
+          admin_email: getUserEmail(data.assigned_user),
+          admin_name: getUserFullName(data.assigned_user)
         })
 
         console.log('Webhook result:', webhookResult)

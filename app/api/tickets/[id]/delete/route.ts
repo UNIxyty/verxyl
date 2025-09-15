@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase'
-import { sendWebhook, extractDateTime, getUserFullName, getUserEmail } from '@/lib/webhook'
+import { sendNewWebhook } from '@/lib/new-webhook'
+import { extractDateTime, getUserFullName, getUserEmail } from '@/lib/webhook-utils'
 
 export async function DELETE(
   request: NextRequest,
@@ -110,20 +111,22 @@ export async function DELETE(
         const { dateTicket, timeTicket } = extractDateTime(ticketData.deadline)
         
         console.log('Sending webhook for ticket deletion')
-        const webhookResult = await sendWebhook({
-          action: 'deleted',
+        const webhookResult = await sendNewWebhook({
+          action: 'ticket_deleted',
+          timestamp: new Date().toISOString(),
           ticket_id: ticketData.id,
           ticket_title: ticketData.title,
-          urgency: ticketData.urgency,
-          dateTicket,
-          timeTicket,
-          creatorName: getUserFullName(ticketData.created_by_user),
-          workerName: getUserFullName(ticketData.assigned_user),
-          creatorEmail: getUserEmail(ticketData.created_by_user),
-          workerEmail: getUserEmail(ticketData.assigned_user),
-          user_id: ticketData.created_by,
-          user_name: getUserFullName(ticketData.created_by_user),
-          admin_id: ticketData.assigned_to
+          ticket_urgency: ticketData.urgency,
+          ticket_deadline: ticketData.deadline,
+          creator_id: ticketData.created_by,
+          creator_email: getUserEmail(ticketData.created_by_user),
+          creator_name: getUserFullName(ticketData.created_by_user),
+          worker_id: ticketData.assigned_to,
+          worker_email: getUserEmail(ticketData.assigned_user),
+          worker_name: getUserFullName(ticketData.assigned_user),
+          admin_id: ticketData.assigned_to,
+          admin_email: getUserEmail(ticketData.assigned_user),
+          admin_name: getUserFullName(ticketData.assigned_user)
         })
 
         console.log('Webhook result:', webhookResult)

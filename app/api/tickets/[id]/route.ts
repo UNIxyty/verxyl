@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase'
-import { sendWebhook, extractDateTime, getUserFullName, getUserEmail } from '@/lib/webhook'
+import { sendNewWebhook } from '@/lib/new-webhook'
+import { extractDateTime, getUserFullName, getUserEmail } from '@/lib/webhook-utils'
 
 export async function PATCH(
   request: NextRequest,
@@ -50,20 +51,23 @@ export async function PATCH(
           console.log('Sending webhook for ticket update via API')
         }
         
-        const webhookResult = await sendWebhook({
-          action: webhookAction,
+        const webhookResult = await sendNewWebhook({
+          action: webhookAction === 'in_work' ? 'ticket_in_work' : 'ticket_updated',
+          timestamp: new Date().toISOString(),
           ticket_id: ticket.id,
           ticket_title: ticket.title,
-          urgency: ticket.urgency,
-          dateTicket,
-          timeTicket,
-          creatorName: getUserFullName(ticket.created_by_user),
-          workerName: getUserFullName(ticket.assigned_user),
-          creatorEmail: getUserEmail(ticket.created_by_user),
-          workerEmail: getUserEmail(ticket.assigned_user),
-          user_id: ticket.created_by,
-          user_name: getUserFullName(ticket.created_by_user),
-          admin_id: ticket.assigned_to
+          ticket_urgency: ticket.urgency,
+          ticket_status: ticket.status,
+          ticket_deadline: ticket.deadline,
+          creator_id: ticket.created_by,
+          creator_email: getUserEmail(ticket.created_by_user),
+          creator_name: getUserFullName(ticket.created_by_user),
+          worker_id: ticket.assigned_to,
+          worker_email: getUserEmail(ticket.assigned_user),
+          worker_name: getUserFullName(ticket.assigned_user),
+          admin_id: ticket.assigned_to,
+          admin_email: getUserEmail(ticket.assigned_user),
+          admin_name: getUserFullName(ticket.assigned_user)
         })
 
         console.log('Webhook result:', webhookResult)

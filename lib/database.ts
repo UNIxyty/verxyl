@@ -217,20 +217,23 @@ export const updateTicket = async (id: string, updates: TicketUpdate): Promise<T
         console.log('Sending webhook for ticket update')
       }
       
-      const webhookResult = await sendWebhook({
-        action: webhookAction,
+      const webhookResult = await sendNewWebhook({
+        action: webhookAction === 'in_work' ? 'ticket_in_work' : 'ticket_updated',
+        timestamp: new Date().toISOString(),
         ticket_id: data.id,
         ticket_title: data.title,
-        urgency: data.urgency,
-        dateTicket,
-        timeTicket,
-        creatorName: getUserFullName(data.created_by_user),
-        workerName: getUserFullName(data.assigned_user),
-        creatorEmail: getUserEmail(data.created_by_user),
-        workerEmail: getUserEmail(data.assigned_user),
-        user_id: data.created_by,
-        user_name: getUserFullName(data.created_by_user),
-        admin_id: data.assigned_to
+        ticket_urgency: data.urgency,
+        ticket_status: data.status,
+        ticket_deadline: data.deadline,
+        creator_id: data.created_by,
+        creator_email: getUserEmail(data.created_by_user),
+        creator_name: getUserFullName(data.created_by_user),
+        worker_id: data.assigned_to,
+        worker_email: getUserEmail(data.assigned_user),
+        worker_name: getUserFullName(data.assigned_user),
+        admin_id: data.assigned_to,
+        admin_email: getUserEmail(data.assigned_user),
+        admin_name: getUserFullName(data.assigned_user)
       })
 
       console.log('Webhook result:', webhookResult)
@@ -355,20 +358,23 @@ export const completeTicket = async (id: string, solutionData: any): Promise<Tic
       const { dateTicket, timeTicket } = extractDateTime(data.deadline)
       
       console.log('Sending webhook for ticket completion')
-      const webhookResult = await sendWebhook({
-        action: 'solved',
+      const webhookResult = await sendNewWebhook({
+        action: 'ticket_solved',
+        timestamp: new Date().toISOString(),
         ticket_id: data.id,
         ticket_title: data.title,
-        urgency: data.urgency,
-        dateTicket,
-        timeTicket,
-        creatorName: getUserFullName(data.created_by_user),
-        workerName: getUserFullName(data.assigned_user),
-        creatorEmail: getUserEmail(data.created_by_user),
-        workerEmail: getUserEmail(data.assigned_user),
-        user_id: data.created_by,
-        user_name: getUserFullName(data.created_by_user),
-        admin_id: data.assigned_to
+        ticket_urgency: data.urgency,
+        ticket_status: 'completed',
+        ticket_deadline: data.deadline,
+        creator_id: data.created_by,
+        creator_email: getUserEmail(data.created_by_user),
+        creator_name: getUserFullName(data.created_by_user),
+        worker_id: data.assigned_to,
+        worker_email: getUserEmail(data.assigned_user),
+        worker_name: getUserFullName(data.assigned_user),
+        admin_id: data.assigned_to,
+        admin_email: getUserEmail(data.assigned_user),
+        admin_name: getUserFullName(data.assigned_user)
       })
 
       console.log('Webhook result:', webhookResult)
@@ -424,20 +430,23 @@ export const editTicket = async (id: string, updates: TicketUpdate): Promise<Tic
       const { dateTicket, timeTicket } = extractDateTime(data.deadline)
       
       console.log('Sending webhook for ticket update')
-      const webhookResult = await sendWebhook({
-        action: 'updated',
+      const webhookResult = await sendNewWebhook({
+        action: 'ticket_updated',
+        timestamp: new Date().toISOString(),
         ticket_id: data.id,
         ticket_title: data.title,
-        urgency: data.urgency,
-        dateTicket,
-        timeTicket,
-        creatorName: getUserFullName(data.created_by_user),
-        workerName: getUserFullName(data.assigned_user),
-        creatorEmail: getUserEmail(data.created_by_user),
-        workerEmail: getUserEmail(data.assigned_user),
-        user_id: data.created_by,
-        user_name: getUserFullName(data.created_by_user),
-        admin_id: data.assigned_to
+        ticket_urgency: data.urgency,
+        ticket_status: data.status,
+        ticket_deadline: data.deadline,
+        creator_id: data.created_by,
+        creator_email: getUserEmail(data.created_by_user),
+        creator_name: getUserFullName(data.created_by_user),
+        worker_id: data.assigned_to,
+        worker_email: getUserEmail(data.assigned_user),
+        worker_name: getUserFullName(data.assigned_user),
+        admin_id: data.assigned_to,
+        admin_email: getUserEmail(data.assigned_user),
+        admin_name: getUserFullName(data.assigned_user)
       })
 
       console.log('Webhook result:', webhookResult)
@@ -489,20 +498,22 @@ export const deleteTicket = async (id: string): Promise<boolean> => {
       const { dateTicket, timeTicket } = extractDateTime(ticketData.deadline)
       
       console.log('Sending webhook for ticket deletion')
-      const webhookResult = await sendWebhook({
-        action: 'deleted',
+      const webhookResult = await sendNewWebhook({
+        action: 'ticket_deleted',
+        timestamp: new Date().toISOString(),
         ticket_id: ticketData.id,
         ticket_title: ticketData.title,
-        urgency: ticketData.urgency,
-        dateTicket,
-        timeTicket,
-        creatorName: getUserFullName(ticketData.created_by_user),
-        workerName: getUserFullName(ticketData.assigned_user),
-        creatorEmail: getUserEmail(ticketData.created_by_user),
-        workerEmail: getUserEmail(ticketData.assigned_user),
-        user_id: ticketData.created_by,
-        user_name: getUserFullName(ticketData.created_by_user),
-        admin_id: ticketData.assigned_to
+        ticket_urgency: ticketData.urgency,
+        ticket_deadline: ticketData.deadline,
+        creator_id: ticketData.created_by,
+        creator_email: getUserEmail(ticketData.created_by_user),
+        creator_name: getUserFullName(ticketData.created_by_user),
+        worker_id: ticketData.assigned_to,
+        worker_email: getUserEmail(ticketData.assigned_user),
+        worker_name: getUserFullName(ticketData.assigned_user),
+        admin_id: ticketData.assigned_to,
+        admin_email: getUserEmail(ticketData.assigned_user),
+        admin_name: getUserFullName(ticketData.assigned_user)
       })
 
       console.log('Webhook result:', webhookResult)
