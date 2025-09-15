@@ -34,15 +34,37 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    // Always return environment variable for now (guaranteed to work)
-    const webhookUrl = process.env.WEBHOOK_URL || ''
+    // Try to get webhook URL from database first
+    let webhookUrl = ''
+    let usingDatabase = false
+    
+    try {
+      const { supabaseAdmin } = await import('@/lib/supabase')
+      const { data: webhookSetting, error: webhookError } = await supabaseAdmin
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'webhook_url')
+        .single()
+
+      if (!webhookError && webhookSetting) {
+        webhookUrl = webhookSetting.setting_value || ''
+        usingDatabase = true
+      }
+    } catch (error) {
+      console.log('Database access failed:', error)
+    }
+
+    // Fallback to environment variable if database fails
+    if (!usingDatabase) {
+      webhookUrl = process.env.WEBHOOK_URL || ''
+    }
 
     return NextResponse.json({
       webhookUrl,
       isConfigured: !!webhookUrl,
-      usingDatabase: false,
-      source: 'environment',
-      message: 'Using environment variable (database not available)'
+      usingDatabase,
+      source: usingDatabase ? 'database' : 'environment',
+      message: usingDatabase ? 'Using database setting' : 'Using environment variable'
     })
 
   } catch (error) {
@@ -119,13 +141,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Webhook test failed', details: error.message }, { status: 400 })
     }
 
-    // For now, just return success (we'll implement database saving later)
+    // Try to save to database
+    let savedToDatabase = false
+    let databaseMessage = ''
+    
+    try {
+      const { supabaseAdmin } = await import('@/lib/supabase')
+      const { data: existingSetting, error: existingError } = await supabaseAdmin
+        .from('system_settings')
+        .select('id')
+        .eq('setting_key', 'webhook_url')
+        .single()
+
+      if (existingSetting) {
+        // Update existing setting
+        const { error: updateError } = await supabaseAdmin
+          .from('system_settings')
+          .update({ 
+            setting_value: webhookUrl,
+            updated_by: user.id,
+            updated_at: new Date().toISOString()
+          })
+          .eq('setting_key', 'webhook_url')
+
+        if (updateError) {
+          databaseMessage = 'Webhook URL validated but could not save to database'
+        } else {
+          savedToDatabase = true
+          databaseMessage = 'Webhook URL saved to database successfully!'
+        }
+      } else {
+        databaseMessage = 'Webhook URL validated but no database setting found'
+      }
+    } catch (error) {
+      databaseMessage = 'Webhook URL validated but database access failed'
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'Webhook URL validated successfully! Note: Database saving not yet implemented.',
+      message: `Webhook URL validated successfully! ${databaseMessage}`,
       webhookUrl,
-      savedToDatabase: false,
-      databaseMessage: 'Database saving will be implemented after table setup'
+      savedToDatabase,
+      databaseMessage
     })
 
   } catch (error) {
