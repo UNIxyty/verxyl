@@ -162,6 +162,9 @@ export default function SettingsPage() {
                   <p className="text-green-200 text-sm">
                     <strong>Note:</strong> Webhook URL is now stored in the database and can be managed directly from this interface. 
                     Changes are saved immediately and will be used for all future webhook notifications.
+                    {webhookData?.usingFallback && (
+                      <><br /><span className="text-yellow-200">⚠️ Currently using environment variable fallback - database table not found. Run the database setup script to enable full functionality.</span></>
+                    )}
                   </p>
                 </div>
               </div>

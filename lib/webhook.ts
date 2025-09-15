@@ -13,27 +13,38 @@ interface WebhookPayload {
 
 export async function sendWebhook(payload: WebhookPayload): Promise<{ success: boolean; userNotified?: boolean }> {
   try {
-    // Get webhook URL from database
-    const { supabaseAdmin } = await import('@/lib/supabase')
-    const { data: webhookSetting, error: webhookError } = await supabaseAdmin
-      .from('system_settings')
-      .select('setting_value')
-      .eq('setting_key', 'webhook_url')
-      .single()
+    // Get webhook URL from database (fallback to environment variable)
+    let webhookUrl = ''
+    let usingFallback = false
+    
+    try {
+      const { supabaseAdmin } = await import('@/lib/supabase')
+      const { data: webhookSetting, error: webhookError } = await supabaseAdmin
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'webhook_url')
+        .single()
 
-    if (webhookError && webhookError.code !== 'PGRST116') {
-      console.error('Error fetching webhook setting:', webhookError)
-      return { success: false }
+      if (webhookError) {
+        console.log('Database table not found, falling back to environment variable:', webhookError.message)
+        webhookUrl = process.env.WEBHOOK_URL || ''
+        usingFallback = true
+      } else {
+        webhookUrl = webhookSetting?.setting_value || ''
+      }
+    } catch (error) {
+      console.log('Error accessing system_settings table, falling back to environment variable:', error)
+      webhookUrl = process.env.WEBHOOK_URL || ''
+      usingFallback = true
     }
-
-    const webhookUrl = webhookSetting?.setting_value
     
     console.log('=== WEBHOOK DEBUG ===')
-    console.log('Webhook URL from database:', webhookUrl ? '[CONFIGURED]' : '[NOT SET]')
+    console.log('Webhook URL source:', usingFallback ? 'Environment Variable' : 'Database')
+    console.log('Webhook URL status:', webhookUrl ? '[CONFIGURED]' : '[NOT SET]')
     console.log('Database check:', {
       hasWebhookUrl: !!webhookUrl,
       webhookUrlLength: webhookUrl?.length || 0,
-      settingExists: !!webhookSetting
+      usingFallback
     })
     console.log('===================')
 

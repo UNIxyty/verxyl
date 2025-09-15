@@ -35,23 +35,35 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    // Get webhook URL from database
-    const { data: webhookSetting, error: webhookError } = await supabaseAdmin
-      .from('system_settings')
-      .select('setting_value')
-      .eq('setting_key', 'webhook_url')
-      .single()
+    // Get webhook URL from database (fallback to environment variable)
+    let webhookUrl = ''
+    let usingFallback = false
+    
+    try {
+      const { data: webhookSetting, error: webhookError } = await supabaseAdmin
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'webhook_url')
+        .single()
 
-    if (webhookError && webhookError.code !== 'PGRST116') {
-      console.error('Error fetching webhook setting:', webhookError)
-      return NextResponse.json({ error: 'Failed to fetch webhook setting' }, { status: 500 })
+      if (webhookError) {
+        console.log('Database table not found or error, falling back to environment variable:', webhookError.message)
+        webhookUrl = process.env.WEBHOOK_URL || ''
+        usingFallback = true
+      } else {
+        webhookUrl = webhookSetting?.setting_value || ''
+      }
+    } catch (error) {
+      console.log('Error accessing system_settings table, falling back to environment variable:', error)
+      webhookUrl = process.env.WEBHOOK_URL || ''
+      usingFallback = true
     }
-
-    const webhookUrl = webhookSetting?.setting_value || ''
     
     return NextResponse.json({
       webhookUrl,
-      isConfigured: !!webhookUrl
+      isConfigured: !!webhookUrl,
+      usingFallback,
+      message: usingFallback ? 'Using environment variable (database table not found)' : 'Using database setting'
     })
 
   } catch (error) {
@@ -134,52 +146,73 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Save webhook URL to database
-    const { data: existingSetting, error: existingError } = await supabaseAdmin
-      .from('system_settings')
-      .select('id')
-      .eq('setting_key', 'webhook_url')
-      .single()
-
-    if (existingSetting) {
-      // Update existing setting
-      const { error: updateError } = await supabaseAdmin
+    // Try to save webhook URL to database (if table exists)
+    try {
+      const { data: existingSetting, error: existingError } = await supabaseAdmin
         .from('system_settings')
-        .update({ 
-          setting_value: webhookUrl,
-          updated_by: user.id,
-          updated_at: new Date().toISOString()
-        })
+        .select('id')
         .eq('setting_key', 'webhook_url')
+        .single()
 
-      if (updateError) {
-        console.error('Error updating webhook setting:', updateError)
-        return NextResponse.json({ error: 'Failed to save webhook URL' }, { status: 500 })
-      }
-    } else {
-      // Insert new setting
-      const { error: insertError } = await supabaseAdmin
-        .from('system_settings')
-        .insert({
-          setting_key: 'webhook_url',
-          setting_value: webhookUrl,
-          setting_description: 'Webhook URL for ticket notifications',
-          setting_type: 'url',
-          created_by: user.id,
-          updated_by: user.id
-        })
+      if (existingSetting) {
+        // Update existing setting
+        const { error: updateError } = await supabaseAdmin
+          .from('system_settings')
+          .update({ 
+            setting_value: webhookUrl,
+            updated_by: user.id,
+            updated_at: new Date().toISOString()
+          })
+          .eq('setting_key', 'webhook_url')
 
-      if (insertError) {
-        console.error('Error inserting webhook setting:', insertError)
-        return NextResponse.json({ error: 'Failed to save webhook URL' }, { status: 500 })
+        if (updateError) {
+          console.error('Error updating webhook setting:', updateError)
+          return NextResponse.json({ 
+            success: true,
+            message: 'Webhook URL validated successfully, but could not save to database. Please run the database setup script.',
+            webhookUrl,
+            warning: 'Database table not found - changes not persisted'
+          })
+        }
+      } else {
+        // Insert new setting
+        const { error: insertError } = await supabaseAdmin
+          .from('system_settings')
+          .insert({
+            setting_key: 'webhook_url',
+            setting_value: webhookUrl,
+            setting_description: 'Webhook URL for ticket notifications',
+            setting_type: 'url',
+            created_by: user.id,
+            updated_by: user.id
+          })
+
+        if (insertError) {
+          console.error('Error inserting webhook setting:', insertError)
+          return NextResponse.json({ 
+            success: true,
+            message: 'Webhook URL validated successfully, but could not save to database. Please run the database setup script.',
+            webhookUrl,
+            warning: 'Database table not found - changes not persisted'
+          })
+        }
       }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Webhook URL saved and validated successfully!',
+        webhookUrl
+      })
+
+    } catch (error) {
+      console.error('Error accessing system_settings table:', error)
+      return NextResponse.json({ 
+        success: true,
+        message: 'Webhook URL validated successfully, but could not save to database. Please run the database setup script.',
+        webhookUrl,
+        warning: 'Database table not found - changes not persisted'
+      })
     }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Webhook URL saved and validated successfully!',
-      webhookUrl
-    })
 
   } catch (error) {
     console.error('Webhook POST error:', error)
