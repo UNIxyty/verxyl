@@ -13,6 +13,8 @@ interface NewWebhookPayload {
   ticket_urgency?: 'low' | 'medium' | 'high' | 'critical'
   ticket_status?: 'new' | 'in_progress' | 'completed'
   ticket_deadline?: string
+  ticket_date?: string | null
+  ticket_time?: string | null
   ticket_details?: string
   
   // User fields

@@ -105,6 +105,8 @@ export async function POST(request: NextRequest) {
           ticket_title: data.title,
           ticket_urgency: data.urgency,
           ticket_deadline: data.deadline,
+          ticket_date: dateTicket,
+          ticket_time: timeTicket,
           creator_id: data.created_by,
           creator_email: getUserEmail(data.created_by_user),
           creator_name: getUserFullName(data.created_by_user),

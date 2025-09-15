@@ -118,6 +118,8 @@ export async function DELETE(
           ticket_title: ticketData.title,
           ticket_urgency: ticketData.urgency,
           ticket_deadline: ticketData.deadline,
+          ticket_date: dateTicket,
+          ticket_time: timeTicket,
           creator_id: ticketData.created_by,
           creator_email: getUserEmail(ticketData.created_by_user),
           creator_name: getUserFullName(ticketData.created_by_user),

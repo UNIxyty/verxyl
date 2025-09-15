@@ -59,6 +59,8 @@ export async function PATCH(
           ticket_urgency: ticket.urgency,
           ticket_status: ticket.status,
           ticket_deadline: ticket.deadline,
+          ticket_date: dateTicket,
+          ticket_time: timeTicket,
           creator_id: ticket.created_by,
           creator_email: getUserEmail(ticket.created_by_user),
           creator_name: getUserFullName(ticket.created_by_user),
