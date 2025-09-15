@@ -24,16 +24,16 @@ export function Navigation() {
   const [userRole, setUserRole] = useState<string | null>(null)
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-    { name: 'Create Ticket', href: '/create-ticket', icon: PlusIcon },
-    { name: 'My Tickets', href: '/my-tickets', icon: TicketIcon },
-    { name: 'Sent Tickets', href: '/sent-tickets', icon: PaperAirplaneIcon },
-    { name: 'Completed Tickets', href: '/completed', icon: CheckCircleIcon },
-    { name: 'AI Prompts', href: '/ai-backups', icon: LightBulbIcon },
-    { name: 'N8N Projects', href: '/n8n-backups', icon: CogIcon },
-    { name: 'Admin', href: '/admin', icon: ShieldCheckIcon },
-    { name: 'Profile', href: '/profile', icon: UserIcon },
-    { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
+    { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: ['admin', 'worker', 'viewer'] },
+    { name: 'Create Ticket', href: '/create-ticket', icon: PlusIcon, roles: ['admin', 'worker'] },
+    { name: 'My Tickets', href: '/my-tickets', icon: TicketIcon, roles: ['admin', 'worker', 'viewer'] },
+    { name: 'Sent Tickets', href: '/sent-tickets', icon: PaperAirplaneIcon, roles: ['admin', 'worker'] },
+    { name: 'Completed Tickets', href: '/completed', icon: CheckCircleIcon, roles: ['admin', 'worker', 'viewer'] },
+    { name: 'AI Prompts', href: '/ai-backups', icon: LightBulbIcon, roles: ['admin', 'worker'] },
+    { name: 'N8N Projects', href: '/n8n-backups', icon: CogIcon, roles: ['admin', 'worker'] },
+    { name: 'Admin', href: '/admin', icon: ShieldCheckIcon, roles: ['admin'] },
+    { name: 'Profile', href: '/profile', icon: UserIcon, roles: ['admin', 'worker', 'viewer'] },
+    { name: 'Settings', href: '/settings', icon: Cog6ToothIcon, roles: ['admin', 'worker', 'viewer'] },
   ]
 
   useEffect(() => {
@@ -69,9 +69,9 @@ export function Navigation() {
       <div className="flex-1 px-3 py-4 space-y-1">
         {navigation
           .filter(item => {
-            // Hide Admin link for non-admin users
-            if (item.name === 'Admin' && userRole !== 'admin') {
-              return false
+            // Filter based on user role
+            if (userRole && item.roles) {
+              return item.roles.includes(userRole)
             }
             return true
           })
@@ -115,6 +115,11 @@ export function Navigation() {
               <p className="text-xs text-gray-400 truncate">
                 {user.email}
               </p>
+              {userRole && (
+                <p className="text-xs text-primary-400 truncate">
+                  {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+                </p>
+              )}
             </div>
           </div>
           <button

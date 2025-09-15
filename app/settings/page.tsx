@@ -92,6 +92,8 @@ export default function SettingsPage() {
   }
 
   const isAdmin = userRole === 'admin'
+  const isWorker = userRole === 'worker'
+  const isViewer = userRole === 'viewer'
 
 
   return (
@@ -171,11 +173,14 @@ export default function SettingsPage() {
                 </div>
               </div>
             ) : (
-              // Regular user notice
+              // Non-admin user notice
               <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
                 <p className="text-blue-200 text-sm">
                   <strong>Note:</strong> Webhook configuration is managed by system administrators. 
                   Contact your administrator to modify webhook settings.
+                  {isViewer && (
+                    <><br /><span className="text-yellow-200">⚠️ As a viewer, you have limited access to system settings.</span></>
+                  )}
                 </p>
               </div>
             )}
@@ -224,6 +229,19 @@ export default function SettingsPage() {
               <div>
                 <h4 className="text-sm font-medium text-gray-300 mb-1">User ID</h4>
                 <p className="text-gray-200 font-mono text-sm">{user?.id}</p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-gray-300 mb-1">Role</h4>
+                <p className="text-gray-200 capitalize">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    isAdmin ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                    isWorker ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                    isViewer ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                    'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                  }`}>
+                    {userRole || 'Unknown'}
+                  </span>
+                </p>
               </div>
             </div>
           </div>

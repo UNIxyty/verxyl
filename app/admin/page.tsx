@@ -1,239 +1,361 @@
 'use client'
 
+import { DashboardLayout } from '@/components/DashboardLayout'
 import { useAuth } from '@/components/AuthProvider'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { CheckIcon, XMarkIcon, UserIcon } from '@heroicons/react/24/outline'
-import { DashboardLayout } from '@/components/DashboardLayout'
+import { 
+  ShieldCheckIcon, 
+  UserGroupIcon, 
+  ClockIcon, 
+  XCircleIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  UserIcon
+} from '@heroicons/react/24/outline'
+import toast from 'react-hot-toast'
+import { UserApprovalModal } from '@/components/UserApprovalModal'
 
 interface User {
   id: string
   email: string
-  full_name: string | null
-  avatar_url: string | null
+  role: 'admin' | 'worker' | 'viewer'
   approval_status: 'pending' | 'approved' | 'rejected'
   created_at: string
-  role: 'user' | 'admin'
+  updated_at: string
+}
+
+interface UsersData {
+  all: User[]
+  approved: User[]
+  pending: User[]
+  rejected: User[]
 }
 
 export default function AdminPage() {
   const { user } = useAuth()
-  const [users, setUsers] = useState<User[]>([])
+  const [usersData, setUsersData] = useState<UsersData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isAdmin, setIsAdmin] = useState(false)
-  const router = useRouter()
+  const [updating, setUpdating] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'approved' | 'pending' | 'rejected'>('approved')
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [showApprovalModal, setShowApprovalModal] = useState(false)
 
+  // Load users data
   useEffect(() => {
-    const checkAdminAndFetchUsers = async () => {
+    const loadUsers = async () => {
       try {
-        // First check if user is admin
-        const userStatusResponse = await fetch('/api/user-status')
-        const userStatus = await userStatusResponse.json()
-        
-        if (userStatusResponse.ok && userStatus.role === 'admin' && userStatus.approval_status === 'approved') {
-          setIsAdmin(true)
-          
-          // Only fetch users if admin
-          const response = await fetch('/api/admin/users')
+        const response = await fetch('/api/admin/users')
+        if (response.ok) {
           const data = await response.json()
-          console.log('Admin users response:', data)
-          setUsers(Array.isArray(data) ? data : [])
+          setUsersData(data.users)
         } else {
-          // Not admin, redirect to dashboard
-          router.push('/dashboard')
+          const errorData = await response.json()
+          toast.error(errorData.error || 'Failed to load users')
         }
       } catch (error) {
-        console.error('Error checking admin status or fetching users:', error)
-        router.push('/dashboard')
+        console.error('Error loading users:', error)
+        toast.error('Failed to load users')
       } finally {
         setLoading(false)
       }
     }
 
     if (user) {
-      checkAdminAndFetchUsers()
+      loadUsers()
     }
-  }, [user, router])
+  }, [user])
 
-  const handleApproveUser = async (userId: string) => {
+  const updateUserRole = async (userId: string, newRole: 'admin' | 'worker' | 'viewer') => {
+    setUpdating(userId)
     try {
-      const response = await fetch('/api/admin/approve-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, action: 'approve' })
+      const response = await fetch(`/api/admin/users/${userId}/role`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ role: newRole })
       })
-      
+
       if (response.ok) {
-        setUsers(users.map(u => 
-          u.id === userId 
-            ? { ...u, approval_status: 'approved' as const }
-            : u
-        ))
+        const data = await response.json()
+        toast.success(data.message)
+        
+        // Refresh users data
+        const refreshResponse = await fetch('/api/admin/users')
+        if (refreshResponse.ok) {
+          const refreshData = await refreshResponse.json()
+          setUsersData(refreshData.users)
+        }
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.error || 'Failed to update user role')
       }
     } catch (error) {
-      console.error('Error approving user:', error)
+      console.error('Error updating user role:', error)
+      toast.error('Failed to update user role')
+    } finally {
+      setUpdating(null)
     }
   }
 
-  const handleRejectUser = async (userId: string, reason: string) => {
+  const handleUserClick = (user: User) => {
+    setSelectedUser(user)
+    setShowApprovalModal(true)
+  }
+
+  const handleUserUpdated = async () => {
+    // Refresh users data
     try {
-      const response = await fetch('/api/admin/approve-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, action: 'reject', reason })
-      })
-      
+      const response = await fetch('/api/admin/users')
       if (response.ok) {
-        setUsers(users.map(u => 
-          u.id === userId 
-            ? { ...u, approval_status: 'rejected' as const }
-            : u
-        ))
+        const data = await response.json()
+        setUsersData(data.users)
       }
     } catch (error) {
-      console.error('Error rejecting user:', error)
+      console.error('Error refreshing users:', error)
     }
   }
+
+  const handleCloseModal = () => {
+    setShowApprovalModal(false)
+    setSelectedUser(null)
+  }
+
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case 'admin': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+      case 'worker': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+      case 'viewer': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+    }
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'approved': return <CheckCircleIcon className="h-5 w-5 text-green-500" />
+      case 'pending': return <ClockIcon className="h-5 w-5 text-yellow-500" />
+      case 'rejected': return <XCircleIcon className="h-5 w-5 text-red-500" />
+      default: return <ExclamationTriangleIcon className="h-5 w-5 text-gray-500" />
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved': return 'text-green-600 dark:text-green-400'
+      case 'pending': return 'text-yellow-600 dark:text-yellow-400'
+      case 'rejected': return 'text-red-600 dark:text-red-400'
+      default: return 'text-gray-600 dark:text-gray-400'
+    }
+  }
+
+  const currentUsers = usersData?.[activeTab] || []
 
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-500"></div>
-        </div>
-      </DashboardLayout>
-    )
-  }
-
-  // If not admin, show access denied
-  if (!isAdmin) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-white mb-4">Access Denied</h1>
-            <p className="text-gray-400">You don't have permission to access this page.</p>
+        <div className="max-w-7xl mx-auto p-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+              <p className="text-gray-400">Loading admin panel...</p>
+            </div>
           </div>
         </div>
       </DashboardLayout>
     )
   }
-
-  const pendingUsers = users.filter(u => u.approval_status === 'pending')
-  const approvedUsers = users.filter(u => u.approval_status === 'approved')
-  const rejectedUsers = users.filter(u => u.approval_status === 'rejected')
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
-          <p className="text-gray-400">Manage user access and approvals</p>
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">Admin Panel</h1>
+          <p className="text-gray-400">
+            Manage user roles and permissions
+          </p>
         </div>
 
-        {/* Pending Users */}
-        <div className="bg-dark-800 rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
-            <UserIcon className="h-5 w-5 mr-2" />
-            Pending Approvals ({pendingUsers.length})
-          </h2>
-          
-          {pendingUsers.length === 0 ? (
-            <p className="text-gray-400">No pending approvals</p>
-          ) : (
-            <div className="space-y-4">
-              {pendingUsers.map((user) => (
-                <div key={user.id} className="bg-dark-700 rounded-lg p-4 flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="h-10 w-10 rounded-full bg-primary-600 flex items-center justify-center">
-                      {user.avatar_url ? (
-                        <img src={user.avatar_url} alt={user.full_name || ''} className="h-10 w-10 rounded-full" />
-                      ) : (
-                        <UserIcon className="h-6 w-6 text-white" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">{user.full_name || 'No name'}</p>
-                      <p className="text-gray-400 text-sm">{user.email}</p>
-                      <p className="text-gray-500 text-xs">
-                        Joined: {new Date(user.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleApproveUser(user.id)}
-                      className="flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                    >
-                      <CheckIcon className="h-4 w-4 mr-1" />
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => {
-                        const reason = prompt('Reason for rejection (optional):')
-                        if (reason !== null) {
-                          handleRejectUser(user.id, reason)
-                        }
-                      }}
-                      className="flex items-center px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                    >
-                      <XMarkIcon className="h-4 w-4 mr-1" />
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Approved Users */}
-        <div className="bg-dark-800 rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">
-            Approved Users ({approvedUsers.length})
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {approvedUsers.map((user) => (
-              <div key={user.id} className="bg-dark-700 rounded-lg p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center">
-                    {user.avatar_url ? (
-                      <img src={user.avatar_url} alt={user.full_name || ''} className="h-8 w-8 rounded-full" />
-                    ) : (
-                      <UserIcon className="h-5 w-5 text-white" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-white text-sm font-medium">{user.full_name || 'No name'}</p>
-                    <p className="text-gray-400 text-xs">{user.email}</p>
-                  </div>
-                </div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="card">
+            <div className="flex items-center">
+              <UserGroupIcon className="h-8 w-8 text-primary-400 mr-3" />
+              <div>
+                <p className="text-sm font-medium text-gray-400">Total Users</p>
+                <p className="text-2xl font-bold text-white">{usersData?.all.length || 0}</p>
               </div>
-            ))}
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="flex items-center">
+              <CheckCircleIcon className="h-8 w-8 text-green-400 mr-3" />
+              <div>
+                <p className="text-sm font-medium text-gray-400">Approved</p>
+                <p className="text-2xl font-bold text-white">{usersData?.approved.length || 0}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="flex items-center">
+              <ClockIcon className="h-8 w-8 text-yellow-400 mr-3" />
+              <div>
+                <p className="text-sm font-medium text-gray-400">Pending</p>
+                <p className="text-2xl font-bold text-white">{usersData?.pending.length || 0}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="flex items-center">
+              <XCircleIcon className="h-8 w-8 text-red-400 mr-3" />
+              <div>
+                <p className="text-sm font-medium text-gray-400">Rejected</p>
+                <p className="text-2xl font-bold text-white">{usersData?.rejected.length || 0}</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Rejected Users */}
-        {rejectedUsers.length > 0 && (
-          <div className="bg-dark-800 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Rejected Users ({rejectedUsers.length})
-            </h2>
-            
-            <div className="space-y-2">
-              {rejectedUsers.map((user) => (
-                <div key={user.id} className="bg-dark-700 rounded-lg p-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-white text-sm">{user.full_name || 'No name'}</p>
-                    <p className="text-gray-400 text-xs">{user.email}</p>
-                  </div>
-                  <span className="text-red-400 text-xs">Rejected</span>
-                </div>
+        {/* Tabs */}
+        <div className="card">
+          <div className="border-b border-gray-700">
+            <nav className="-mb-px flex space-x-8">
+              {[
+                { id: 'approved', label: 'Approved Users', count: usersData?.approved.length || 0 },
+                { id: 'pending', label: 'Pending Approval', count: usersData?.pending.length || 0 },
+                { id: 'rejected', label: 'Rejected', count: usersData?.rejected.length || 0 }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === tab.id
+                      ? 'border-primary-500 text-primary-400'
+                      : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+                  }`}
+                >
+                  {tab.label} ({tab.count})
+                </button>
               ))}
-            </div>
+            </nav>
           </div>
-        )}
+
+          <div className="p-6">
+            {currentUsers.length === 0 ? (
+              <div className="text-center py-12">
+                <UserIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-400">No {activeTab} users found</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {currentUsers.map((user) => (
+                  <div 
+                    key={user.id} 
+                    className={`flex items-center justify-between p-4 bg-gray-800 rounded-lg ${
+                      user.approval_status === 'pending' ? 'cursor-pointer hover:bg-gray-700 transition-colors' : ''
+                    }`}
+                    onClick={() => user.approval_status === 'pending' ? handleUserClick(user) : undefined}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
+                        {getStatusIcon(user.approval_status)}
+                        <span className={`font-medium ${getStatusColor(user.approval_status)}`}>
+                          {user.approval_status}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-white font-medium">{user.email}</p>
+                        <p className="text-sm text-gray-400">
+                          Joined: {new Date(user.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      {user.approval_status === 'approved' && (
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-400">Role:</span>
+                          <select
+                            value={user.role}
+                            onChange={(e) => updateUserRole(user.id, e.target.value as any)}
+                            disabled={updating === user.id}
+                            className="bg-gray-700 border border-gray-600 rounded-md px-3 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          >
+                            <option value="admin">Admin</option>
+                            <option value="worker">Worker</option>
+                            <option value="viewer">Viewer</option>
+                          </select>
+                          {updating === user.id && (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500"></div>
+                          )}
+                        </div>
+                      )}
+                      
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
+                        {user.role}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Role Information */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="card">
+            <div className="flex items-center mb-4">
+              <ShieldCheckIcon className="h-6 w-6 text-red-400 mr-3" />
+              <h3 className="text-lg font-semibold text-white">Admin</h3>
+            </div>
+            <ul className="text-sm text-gray-400 space-y-2">
+              <li>• Full system access</li>
+              <li>• Manage webhook settings</li>
+              <li>• Approve/reject users</li>
+              <li>• Change user roles</li>
+              <li>• All ticket operations</li>
+            </ul>
+          </div>
+
+          <div className="card">
+            <div className="flex items-center mb-4">
+              <UserGroupIcon className="h-6 w-6 text-blue-400 mr-3" />
+              <h3 className="text-lg font-semibold text-white">Worker</h3>
+            </div>
+            <ul className="text-sm text-gray-400 space-y-2">
+              <li>• Create and manage tickets</li>
+              <li>• Update ticket status</li>
+              <li>• View all tickets</li>
+              <li>• Cannot change webhook settings</li>
+              <li>• Cannot approve users</li>
+            </ul>
+          </div>
+
+          <div className="card">
+            <div className="flex items-center mb-4">
+              <UserIcon className="h-6 w-6 text-green-400 mr-3" />
+              <h3 className="text-lg font-semibold text-white">Viewer</h3>
+            </div>
+            <ul className="text-sm text-gray-400 space-y-2">
+              <li>• View tickets only</li>
+              <li>• Cannot create tickets</li>
+              <li>• Cannot modify tickets</li>
+              <li>• Read-only access</li>
+              <li>• Limited functionality</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* User Approval Modal */}
+        <UserApprovalModal
+          user={selectedUser}
+          isOpen={showApprovalModal}
+          onClose={handleCloseModal}
+          onUserUpdated={handleUserUpdated}
+        />
       </div>
     </DashboardLayout>
   )
