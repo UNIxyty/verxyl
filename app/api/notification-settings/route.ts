@@ -59,9 +59,9 @@ export async function POST(request: NextRequest) {
     const validKeys = [
       'new_ticket', 'updated_ticket', 'deleted_ticket', 'solved_ticket', 
       'in_work_ticket', 'shared_ai_backup', 'shared_n8n_workflow', 'new_mail'
-    ]
+    ] as const
 
-    const filteredSettings = {}
+    const filteredSettings: Record<string, boolean> = {}
     for (const key of validKeys) {
       if (key in settingsData && typeof settingsData[key] === 'boolean') {
         filteredSettings[key] = settingsData[key]
