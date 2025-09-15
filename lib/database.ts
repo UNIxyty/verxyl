@@ -169,14 +169,8 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
 
       console.log('Webhook result:', webhookResult)
 
-      // Update user_notified field if webhook indicates user was notified
-      if (webhookResult.success && webhookResult.userNotified) {
-        console.log('User was notified, updating user_notified field')
-        await supabase
-          .from('tickets')
-          .update({ user_notified: true })
-          .eq('id', data.id)
-      }
+      // Note: New webhook system doesn't return userNotified status
+      // The webhook system handles notifications independently
     } catch (webhookError) {
       console.error('Webhook error (non-critical):', webhookError)
       // Don't fail ticket creation if webhook fails
