@@ -34,8 +34,8 @@ export async function GET(
 
     const { id } = params
 
-    // Verify user exists using session client
-    const { data: targetUser, error: userError } = await supabase
+    // Verify user exists using admin client to bypass RLS
+    const { data: targetUser, error: userError } = await supabaseAdmin
       .from('users')
       .select('id')
       .eq('id', id)
@@ -45,33 +45,33 @@ export async function GET(
       return NextResponse.json({ error: 'User not found', details: userError?.message }, { status: 404 })
     }
 
-    // Get tickets created by user
-    const { count: ticketsCreated } = await supabase
+    // Get tickets created by user using admin client
+    const { count: ticketsCreated } = await supabaseAdmin
       .from('tickets')
       .select('*', { count: 'exact', head: true })
       .eq('created_by', id)
 
-    // Get tickets assigned to user
-    const { count: ticketsAssigned } = await supabase
+    // Get tickets assigned to user using admin client
+    const { count: ticketsAssigned } = await supabaseAdmin
       .from('tickets')
       .select('*', { count: 'exact', head: true })
       .eq('assigned_to', id)
 
-    // Get tickets completed by user
-    const { count: ticketsCompleted } = await supabase
+    // Get tickets completed by user using admin client
+    const { count: ticketsCompleted } = await supabaseAdmin
       .from('tickets')
       .select('*', { count: 'exact', head: true })
       .eq('assigned_to', id)
       .eq('status', 'completed')
 
-    // Get mails sent by user
-    const { count: mailsSent } = await supabase
+    // Get mails sent by user using admin client
+    const { count: mailsSent } = await supabaseAdmin
       .from('mails')
       .select('*', { count: 'exact', head: true })
       .eq('sender_id', id)
 
-    // Get mails received by user
-    const { count: mailsReceived } = await supabase
+    // Get mails received by user using admin client
+    const { count: mailsReceived } = await supabaseAdmin
       .from('mails')
       .select('*', { count: 'exact', head: true })
       .eq('recipient_id', id)

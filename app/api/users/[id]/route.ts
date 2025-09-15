@@ -34,8 +34,8 @@ export async function GET(
 
     const { id } = params
 
-    // Fetch user profile using session client for RLS
-    const { data: targetUser, error } = await supabase
+    // Fetch user profile using admin client to bypass RLS
+    const { data: targetUser, error } = await supabaseAdmin
       .from('users')
       .select('id, email, full_name, role, created_at, approval_status, avatar_url')
       .eq('id', id)
