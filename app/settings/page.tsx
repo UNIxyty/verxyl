@@ -137,12 +137,13 @@ export default function SettingsPage() {
             </div>
 
             {isAdmin ? (
-              <div className="space-y-4">
-                {/* Domain Section */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Webhook Domain
-                  </label>
+            <div className="space-y-4">
+              {/* Domain Section - Read-only with small change button */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Webhook Domain
+                </label>
+                {showDomainEdit ? (
                   <div className="flex gap-2">
                     <input
                       type="url"
@@ -150,62 +151,77 @@ export default function SettingsPage() {
                       onChange={(e) => setNewWebhookDomain(e.target.value)}
                       placeholder="https://n8n.fluntstudios.com"
                       className="input flex-1"
-                      disabled={isNewWebhookLoading || isNewWebhookSaving || !showDomainEdit}
+                      disabled={isNewWebhookLoading || isNewWebhookSaving}
                     />
                     <button
-                      onClick={() => setShowDomainEdit(!showDomainEdit)}
+                      onClick={() => setShowDomainEdit(false)}
                       className="btn-secondary whitespace-nowrap"
                     >
-                      {showDomainEdit ? 'Cancel' : 'Change Domain'}
+                      Cancel
                     </button>
                   </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-200 bg-gray-800 px-3 py-2 rounded border border-gray-600 flex-1">
+                      {newWebhookDomain || 'No domain configured'}
+                    </span>
+                    <button
+                      onClick={() => setShowDomainEdit(true)}
+                      className="text-blue-400 hover:text-blue-300 text-sm underline"
+                    >
+                      change webhook domain
+                    </button>
+                  </div>
+                )}
+                <p className="text-gray-400 text-xs mt-1">
+                  The base domain for your webhook endpoint
+                </p>
+              </div>
+
+              {/* Path Settings - Single column with 2 rows */}
+              <div className="space-y-4">
+                {/* Row 1: Tickets Path */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Tickets path:
+                  </label>
+                  <select
+                    value={newWebhookPathTickets}
+                    onChange={(e) => setNewWebhookPathTickets(e.target.value)}
+                    className="input w-full"
+                    disabled={isNewWebhookLoading || isNewWebhookSaving}
+                  >
+                    <option value="">Select path...</option>
+                    <option value="/webhook/tickets">/webhook/tickets</option>
+                    <option value="/api/tickets">/api/tickets</option>
+                    <option value="/hooks/tickets">/hooks/tickets</option>
+                  </select>
                   <p className="text-gray-400 text-xs mt-1">
-                    The base domain for your webhook endpoint
+                    Path for ticket-related events
                   </p>
                 </div>
 
-                {/* Path Settings */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Tickets Webhook Path
-                    </label>
-                    <select
-                      value={newWebhookPathTickets}
-                      onChange={(e) => setNewWebhookPathTickets(e.target.value)}
-                      className="input w-full"
-                      disabled={isNewWebhookLoading || isNewWebhookSaving}
-                    >
-                      <option value="">Select path...</option>
-                      <option value="/webhook/tickets">/webhook/tickets</option>
-                      <option value="/api/tickets">/api/tickets</option>
-                      <option value="/hooks/tickets">/hooks/tickets</option>
-                    </select>
-                    <p className="text-gray-400 text-xs mt-1">
-                      Path for ticket-related events
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Users Webhook Path
-                    </label>
-                    <select
-                      value={newWebhookPathUsers}
-                      onChange={(e) => setNewWebhookPathUsers(e.target.value)}
-                      className="input w-full"
-                      disabled={isNewWebhookLoading || isNewWebhookSaving}
-                    >
-                      <option value="">Select path...</option>
-                      <option value="/webhook/users">/webhook/users</option>
-                      <option value="/api/users">/api/users</option>
-                      <option value="/hooks/users">/hooks/users</option>
-                    </select>
-                    <p className="text-gray-400 text-xs mt-1">
-                      Path for user-related events
-                    </p>
-                  </div>
+                {/* Row 2: Users Path */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Users path:
+                  </label>
+                  <select
+                    value={newWebhookPathUsers}
+                    onChange={(e) => setNewWebhookPathUsers(e.target.value)}
+                    className="input w-full"
+                    disabled={isNewWebhookLoading || isNewWebhookSaving}
+                  >
+                    <option value="">Select path...</option>
+                    <option value="/webhook/users">/webhook/users</option>
+                    <option value="/api/users">/api/users</option>
+                    <option value="/hooks/users">/hooks/users</option>
+                  </select>
+                  <p className="text-gray-400 text-xs mt-1">
+                    Path for user-related events
+                  </p>
                 </div>
+              </div>
 
                 {/* Preview */}
                 {newWebhookDomain && (newWebhookPathTickets || newWebhookPathUsers) && (
