@@ -97,6 +97,12 @@ export async function PATCH(
     }
 
     // Update user role (without updated_at if column doesn't exist)
+    console.log('Attempting to update user role:', {
+      targetUserId,
+      newRole: role,
+      currentRole: targetUser.role
+    })
+    
     const { data: updatedUsers, error: updateError } = await supabaseAdmin
       .from('users')
       .update({ 
@@ -104,6 +110,12 @@ export async function PATCH(
       })
       .eq('id', targetUserId)
       .select('id, email, role, approval_status, created_at')
+
+    console.log('Update operation result:', {
+      updatedUsers,
+      updateError,
+      updatedUsersCount: updatedUsers?.length || 0
+    })
 
     if (updateError) {
       console.error('Error updating user role:', updateError)
@@ -123,9 +135,23 @@ export async function PATCH(
     // Check if any rows were affected
     if (!updatedUsers || updatedUsers.length === 0) {
       console.error('No rows were affected by the update')
+      console.error('Debug info:', {
+        targetUserId,
+        role,
+        targetUserExists: !!targetUser,
+        targetUserRole: targetUser?.role,
+        targetUserApprovalStatus: targetUser?.approval_status
+      })
       return NextResponse.json({ 
         error: 'User not found or update failed - no rows affected',
-        targetUserId
+        targetUserId,
+        debug: {
+          targetUserId,
+          role,
+          targetUserExists: !!targetUser,
+          targetUserRole: targetUser?.role,
+          targetUserApprovalStatus: targetUser?.approval_status
+        }
       }, { status: 404 })
     }
 
