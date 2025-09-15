@@ -60,14 +60,14 @@ export async function GET(request: NextRequest) {
         tableExists,
         settingsCount,
         tableError: tableError ? {
-          message: tableError.message,
-          code: tableError.code,
-          details: tableError.details
+          message: (tableError as any).message || 'Unknown error',
+          code: (tableError as any).code || 'UNKNOWN',
+          details: (tableError as any).details || null
         } : null,
         webhookSetting,
         webhookError: webhookError ? {
-          message: webhookError.message,
-          code: webhookError.code
+          message: (webhookError as any).message || 'Unknown error',
+          code: (webhookError as any).code || 'UNKNOWN'
         } : null
       },
       environment: {
