@@ -54,14 +54,20 @@ export function Navigation() {
             setUserRole(null)
             return
           }
-          
+
           const data = await response.json()
           console.log('User status response:', data)
-          
-          if (data.role && typeof data.role === 'string') {
+
+          // If backend signals that the user needs registration, do not treat as an error
+          if (data && data.needsRegistration) {
+            setUserRole(null)
+            return
+          }
+
+          if (data && typeof data.role === 'string') {
             setUserRole(data.role)
           } else {
-            console.error('Invalid role data received:', data)
+            // Gracefully handle missing/invalid role without noisy errors
             setUserRole(null)
           }
         } catch (error) {
