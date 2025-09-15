@@ -51,7 +51,7 @@ export async function PATCH(
         }
         
         const webhookResult = await sendWebhook({
-          ticketAction: webhookAction,
+          action: webhookAction,
           ticket_id: ticket.id,
           ticket_title: ticket.title,
           urgency: ticket.urgency,
@@ -60,7 +60,10 @@ export async function PATCH(
           creatorName: getUserFullName(ticket.created_by_user),
           workerName: getUserFullName(ticket.assigned_user),
           creatorEmail: getUserEmail(ticket.created_by_user),
-          workerEmail: getUserEmail(ticket.assigned_user)
+          workerEmail: getUserEmail(ticket.assigned_user),
+          user_id: ticket.created_by,
+          user_name: getUserFullName(ticket.created_by_user),
+          admin_id: ticket.assigned_to
         })
 
         console.log('Webhook result:', webhookResult)
