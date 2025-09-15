@@ -21,10 +21,19 @@ export async function GET(request: NextRequest) {
 
     console.log('Webhook setting query result:', { webhookSetting, webhookError })
 
-    // Check table structure
-    const { data: tableInfo, error: tableError } = await supabaseAdmin
-      .rpc('get_table_info', { table_name: 'system_settings' })
-      .catch(() => ({ data: null, error: 'RPC not available' }))
+    // Check table structure (simplified - RPC might not be available)
+    let tableInfo = null
+    let tableError = null
+    
+    try {
+      const result = await supabaseAdmin
+        .rpc('get_table_info', { table_name: 'system_settings' })
+      tableInfo = result.data
+      tableError = result.error
+    } catch (err) {
+      tableInfo = null
+      tableError = 'RPC not available'
+    }
 
     console.log('Table info result:', { tableInfo, tableError })
 
