@@ -5,7 +5,7 @@ import { ThemePicker } from '@/components/ThemePicker'
 import { useTheme } from '@/components/ThemeProvider'
 import { useAuth } from '@/components/AuthProvider'
 import { useEffect, useState } from 'react'
-import { Cog6ToothIcon, PaintBrushIcon, ShieldCheckIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
+import { Cog6ToothIcon, PaintBrushIcon, ShieldCheckIcon, CheckCircleIcon, XCircleIcon, BellIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
 export default function SettingsPage() {
@@ -20,6 +20,20 @@ export default function SettingsPage() {
   const [isNewWebhookLoading, setIsNewWebhookLoading] = useState(false)
   const [isNewWebhookSaving, setIsNewWebhookSaving] = useState(false)
   const [showDomainEdit, setShowDomainEdit] = useState(false)
+
+  // Notification settings
+  const [notificationSettings, setNotificationSettings] = useState({
+    new_ticket: true,
+    updated_ticket: true,
+    deleted_ticket: true,
+    solved_ticket: true,
+    in_work_ticket: true,
+    shared_ai_backup: true,
+    shared_n8n_workflow: true,
+    new_mail: true
+  })
+  const [isNotificationLoading, setIsNotificationLoading] = useState(false)
+  const [isNotificationSaving, setIsNotificationSaving] = useState(false)
 
   // Check user role
   useEffect(() => {
@@ -63,6 +77,56 @@ export default function SettingsPage() {
     loadNewWebhookSettings()
   }, [userRole])
 
+  // Load notification settings
+  useEffect(() => {
+    const loadNotificationSettings = async () => {
+      if (user) {
+        setIsNotificationLoading(true)
+        try {
+          const response = await fetch('/api/notification-settings')
+          if (response.ok) {
+            const data = await response.json()
+            setNotificationSettings(data.settings)
+          }
+        } catch (error) {
+          console.error('Error loading notification settings:', error)
+        } finally {
+          setIsNotificationLoading(false)
+        }
+      }
+    }
+    loadNotificationSettings()
+  }, [user])
+
+  const handleNotificationChange = (key: string, value: boolean) => {
+    setNotificationSettings(prev => ({
+      ...prev,
+      [key]: value
+    }))
+  }
+
+  const handleNotificationSave = async () => {
+    setIsNotificationSaving(true)
+    try {
+      const response = await fetch('/api/notification-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(notificationSettings)
+      })
+
+      if (response.ok) {
+        toast.success('Notification settings saved successfully!')
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.error || 'Failed to save notification settings')
+      }
+    } catch (error) {
+      console.error('Error saving notification settings:', error)
+      toast.error('Failed to save notification settings')
+    } finally {
+      setIsNotificationSaving(false)
+    }
+  }
 
   const handleNewWebhookSave = async () => {
     if (!newWebhookDomain.trim()) {
@@ -273,6 +337,75 @@ export default function SettingsPage() {
             )}
           </div>
 
+
+          {/* Notification Settings */}
+          <div className="card">
+            <div className="flex items-center mb-4 sm:mb-6">
+              <BellIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400 mr-2 sm:mr-3" />
+              <div>
+                <h2 className="text-lg sm:text-xl font-semibold text-white">Notification Settings</h2>
+                <p className="text-gray-400 text-xs sm:text-sm">
+                  Choose which notifications you want to receive
+                </p>
+              </div>
+            </div>
+
+            {isNotificationLoading ? (
+              <div className="animate-pulse space-y-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="h-4 bg-dark-700 rounded w-1/3"></div>
+                    <div className="h-6 bg-dark-700 rounded w-12"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    { key: 'new_ticket', label: 'New Ticket', description: 'When a new ticket is created' },
+                    { key: 'updated_ticket', label: 'Updated Ticket', description: 'When a ticket is updated' },
+                    { key: 'deleted_ticket', label: 'Deleted Ticket', description: 'When a ticket is deleted' },
+                    { key: 'solved_ticket', label: 'Solved Ticket', description: 'When a ticket is marked as solved' },
+                    { key: 'in_work_ticket', label: 'In Work Ticket', description: 'When work starts on a ticket' },
+                    { key: 'shared_ai_backup', label: 'Shared AI Backup', description: 'When an AI backup is shared with you' },
+                    { key: 'shared_n8n_workflow', label: 'Shared N8N Workflow', description: 'When an N8N workflow is shared with you' },
+                    { key: 'new_mail', label: 'New Mail', description: 'When you receive a new internal mail' }
+                  ].map((setting) => (
+                    <div key={setting.key} className="flex items-center justify-between p-3 bg-dark-700 rounded-lg">
+                      <div className="flex-1">
+                        <label className="text-sm font-medium text-gray-200">
+                          {setting.label}
+                        </label>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {setting.description}
+                        </p>
+                      </div>
+                      <div className="flex items-center ml-4">
+                        <input
+                          type="checkbox"
+                          checked={notificationSettings[setting.key]}
+                          onChange={(e) => handleNotificationChange(setting.key, e.target.checked)}
+                          disabled={isNotificationSaving}
+                          className="w-4 h-4 text-primary-600 bg-dark-600 border-gray-500 rounded focus:ring-primary-500 focus:ring-2"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex flex-col sm:flex-row justify-end pt-4">
+                  <button
+                    onClick={handleNotificationSave}
+                    disabled={isNotificationLoading || isNotificationSaving}
+                    className="btn-primary btn-mobile"
+                  >
+                    {isNotificationSaving ? 'Saving...' : 'Save Notification Settings'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Theme Settings */}
           <div className="card">

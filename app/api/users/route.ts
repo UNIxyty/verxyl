@@ -1,43 +1,33 @@
 import { NextResponse } from 'next/server'
-import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase'
 
+// GET - Fetch all users (for compose mail, etc.)
 export async function GET() {
   try {
-    console.log('=== GET USERS API START ===')
-    
-    if (!isSupabaseConfigured()) {
-      return NextResponse.json({
-        error: 'Database not configured'
-      }, { status: 500 })
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-    
-    // Get all users to see what IDs are available
-    const { data, error } = await supabase
+
+    // Fetch all approved users
+    const { data: users, error } = await supabaseAdmin
       .from('users')
-      .select('id, email, full_name, approval_status')
-      .order('created_at', { ascending: false })
-    
+      .select('id, email, full_name, role')
+      .eq('approval_status', 'approved')
+      .order('full_name', { ascending: true, nullsFirst: false })
+
     if (error) {
       console.error('Error fetching users:', error)
-      return NextResponse.json({
-        error: 'Failed to fetch users',
-        details: error.message
-      }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
     }
-    
-    console.log('Users fetched successfully:', data?.length || 0)
-    
-    return NextResponse.json({
-      success: true,
-      users: data || [],
-      count: data?.length || 0
-    })
-    
+
+    // Don't include the current user in the list
+    const filteredUsers = users.filter(u => u.id !== user.id)
+
+    return NextResponse.json({ users: filteredUsers })
   } catch (error) {
-    console.error('=== GET USERS API ERROR ===', error)
-    return NextResponse.json({
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+    console.error('Unexpected error in users GET:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
