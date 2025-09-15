@@ -37,6 +37,29 @@ export function CreateTicketModal({ isOpen, onClose, onSuccess }: CreateTicketMo
     }
   })
 
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check for Cmd+Enter (Mac) or Ctrl+Enter (Windows/Linux)
+      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+        event.preventDefault()
+        if (!loading) {
+          handleSubmit(onSubmit)()
+        }
+      }
+    }
+
+    // Only add event listener when modal is open
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown)
+    }
+
+    // Cleanup event listener
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, loading, handleSubmit, onSubmit])
+
   const onSubmit = async (data: CreateTicketForm) => {
     if (!user) return
 
@@ -234,6 +257,9 @@ export function CreateTicketModal({ isOpen, onClose, onSuccess }: CreateTicketMo
             disabled={loading}
           >
             {loading ? 'Creating...' : 'Create Ticket'}
+            <span className="ml-2 text-xs opacity-70">
+              (⌘+Enter)
+            </span>
           </button>
         </div>
       </form>
