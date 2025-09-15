@@ -16,6 +16,7 @@ export default function SettingsPage() {
   const [isWebhookLoading, setIsWebhookLoading] = useState(false)
   const [isWebhookSaving, setIsWebhookSaving] = useState(false)
   const [webhookStatus, setWebhookStatus] = useState<'configured' | 'not-configured' | null>(null)
+  const [usingFallback, setUsingFallback] = useState(false)
 
   // Check user role
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function SettingsPage() {
             const data = await response.json()
             setWebhookUrl(data.webhookUrl || '')
             setWebhookStatus(data.isConfigured ? 'configured' : 'not-configured')
+            setUsingFallback(data.usingFallback || false)
           } else {
             console.error('Failed to load webhook settings')
           }
@@ -162,7 +164,7 @@ export default function SettingsPage() {
                   <p className="text-green-200 text-sm">
                     <strong>Note:</strong> Webhook URL is now stored in the database and can be managed directly from this interface. 
                     Changes are saved immediately and will be used for all future webhook notifications.
-                    {webhookData?.usingFallback && (
+                    {usingFallback && (
                       <><br /><span className="text-yellow-200">⚠️ Currently using environment variable fallback - database table not found. Run the database setup script to enable full functionality.</span></>
                     )}
                   </p>
