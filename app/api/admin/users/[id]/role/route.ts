@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { supabaseAdmin } from '@/lib/supabase'
+import { sendWebhook } from '@/lib/webhook'
 
 export async function PATCH(
   request: NextRequest,
@@ -96,35 +97,16 @@ export async function PATCH(
       }
     }
 
-    // Update user role (without updated_at if column doesn't exist)
-    console.log('Attempting to update user role:', {
-      targetUserId,
-      newRole: role,
-      currentRole: targetUser.role
-    })
-    
+    // Update user role directly (previous working logic)
+    console.log('Attempting direct update for user role:', { targetUserId, role })
     const { data: updatedUsers, error: updateError } = await supabaseAdmin
       .from('users')
-      .update({ 
-        role
-      })
+      .update({ role })
       .eq('id', targetUserId)
       .select('id, email, role, approval_status, created_at')
 
-    console.log('Update operation result:', {
-      updatedUsers,
-      updateError,
-      updatedUsersCount: updatedUsers?.length || 0
-    })
-
     if (updateError) {
       console.error('Error updating user role:', updateError)
-      console.error('Error details:', {
-        message: updateError.message,
-        code: updateError.code,
-        details: updateError.details,
-        hint: updateError.hint
-      })
       return NextResponse.json({ 
         error: 'Failed to update user role',
         details: updateError.message,
@@ -132,30 +114,35 @@ export async function PATCH(
       }, { status: 500 })
     }
 
-    // Check if any rows were affected
     if (!updatedUsers || updatedUsers.length === 0) {
       console.error('No rows were affected by the update')
-      console.error('Debug info:', {
-        targetUserId,
-        role,
-        targetUserExists: !!targetUser,
-        targetUserRole: targetUser?.role,
-        targetUserApprovalStatus: targetUser?.approval_status
-      })
       return NextResponse.json({ 
         error: 'User not found or update failed - no rows affected',
-        targetUserId,
-        debug: {
-          targetUserId,
-          role,
-          targetUserExists: !!targetUser,
-          targetUserRole: targetUser?.role,
-          targetUserApprovalStatus: targetUser?.approval_status
-        }
+        targetUserId
       }, { status: 404 })
     }
 
     const updatedUser = updatedUsers[0]
+
+    // Send webhook for role change
+    try {
+      await sendWebhook({
+        action: 'role_changed',
+        ticket_id: null, // Not applicable for role changes
+        ticket_title: null,
+        user_id: targetUserId,
+        user_name: updatedUser.email,
+        admin_id: user.id,
+        roleChanged: true,
+        adminID: user.id,
+        userID: targetUserId,
+        prevRole: targetUser.role,
+        currentRole: role
+      })
+    } catch (webhookError) {
+      console.error('Webhook error for role change:', webhookError)
+      // Don't fail the request if webhook fails
+    }
 
     return NextResponse.json({
       success: true,

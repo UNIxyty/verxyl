@@ -1,14 +1,23 @@
 interface WebhookPayload {
-  ticketAction: 'created' | 'updated' | 'solved' | 'deleted' | 'in_work'
-  ticket_id: string
-  ticket_title: string
-  urgency: 'low' | 'medium' | 'high' | 'critical'
-  dateTicket: string | null
-  timeTicket: string | null
-  creatorName: string
-  workerName: string
-  creatorEmail: string
-  workerEmail: string
+  action: 'created' | 'updated' | 'solved' | 'deleted' | 'in_work' | 'role_changed'
+  ticket_id: string | null
+  ticket_title: string | null
+  urgency?: 'low' | 'medium' | 'high' | 'critical'
+  dateTicket?: string | null
+  timeTicket?: string | null
+  creatorName?: string
+  workerName?: string
+  creatorEmail?: string
+  workerEmail?: string
+  user_id: string
+  user_name: string
+  admin_id: string
+  // Role change specific fields
+  roleChanged?: boolean
+  adminID?: string
+  userID?: string
+  prevRole?: string
+  currentRole?: string
 }
 
 export async function sendWebhook(payload: WebhookPayload): Promise<{ success: boolean; userNotified?: boolean }> {
