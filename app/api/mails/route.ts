@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(url.searchParams.get('limit') || '50')
     const offset = parseInt(url.searchParams.get('offset') || '0')
 
-    let query = supabaseAdmin
+    let query = supabase
       .from('mails')
       .select(`
         *,
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify recipient exists
-    const { data: recipient, error: recipientError } = await supabaseAdmin
+    const { data: recipient, error: recipientError } = await supabase
       .from('users')
       .select('id, email, full_name, role')
       .eq('id', recipient_id)
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the mail
-    const { data: mail, error: insertError } = await supabaseAdmin
+    const { data: mail, error: insertError } = await supabase
       .from('mails')
       .insert({
         sender_id: user.id,
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Error creating mail:', insertError)
-      return NextResponse.json({ error: 'Failed to send mail' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to send mail', details: insertError.message, code: insertError.code }, { status: 500 })
     }
 
     // Send webhook notification for new mail

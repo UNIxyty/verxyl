@@ -1,3 +1,6 @@
+-- Ensure required extension for UUID generation
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- Create mails table
 CREATE TABLE IF NOT EXISTS mails (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -47,32 +50,71 @@ ALTER TABLE mails ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE backup_shares ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies for mails table
-CREATE POLICY "Users can view their own mails" ON mails
-  FOR SELECT USING (
-    auth.uid()::text = sender_id::text OR 
-    auth.uid()::text = recipient_id::text
-  );
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE schemaname = 'public' AND tablename = 'mails' AND policyname = 'Users can view their own mails'
+  ) THEN
+    CREATE POLICY "Users can view their own mails" ON mails
+      FOR SELECT USING (
+        auth.uid()::text = sender_id::text OR 
+        auth.uid()::text = recipient_id::text
+      );
+  END IF;
+END $$;
 
-CREATE POLICY "Users can send mails" ON mails
-  FOR INSERT WITH CHECK (auth.uid()::text = sender_id::text);
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE schemaname = 'public' AND tablename = 'mails' AND policyname = 'Users can send mails'
+  ) THEN
+    CREATE POLICY "Users can send mails" ON mails
+      FOR INSERT WITH CHECK (auth.uid()::text = sender_id::text);
+  END IF;
+END $$;
 
-CREATE POLICY "Users can update their received mails" ON mails
-  FOR UPDATE USING (auth.uid()::text = recipient_id::text);
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE schemaname = 'public' AND tablename = 'mails' AND policyname = 'Users can update their received mails'
+  ) THEN
+    CREATE POLICY "Users can update their received mails" ON mails
+      FOR UPDATE USING (auth.uid()::text = recipient_id::text);
+  END IF;
+END $$;
 
--- RLS Policies for notification_settings table
-CREATE POLICY "Users can manage their own notification settings" ON notification_settings
-  FOR ALL USING (auth.uid()::text = user_id::text);
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE schemaname = 'public' AND tablename = 'notification_settings' AND policyname = 'Users can manage their own notification settings'
+  ) THEN
+    CREATE POLICY "Users can manage their own notification settings" ON notification_settings
+      FOR ALL USING (auth.uid()::text = user_id::text);
+  END IF;
+END $$;
 
--- RLS Policies for backup_shares table
-CREATE POLICY "Users can view backup shares they sent or received" ON backup_shares
-  FOR SELECT USING (
-    auth.uid()::text = shared_by::text OR 
-    auth.uid()::text = shared_with::text
-  );
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE schemaname = 'public' AND tablename = 'backup_shares' AND policyname = 'Users can view backup shares they sent or received'
+  ) THEN
+    CREATE POLICY "Users can view backup shares they sent or received" ON backup_shares
+      FOR SELECT USING (
+        auth.uid()::text = shared_by::text OR 
+        auth.uid()::text = shared_with::text
+      );
+  END IF;
+END $$;
 
-CREATE POLICY "Users can create backup shares" ON backup_shares
-  FOR INSERT WITH CHECK (auth.uid()::text = shared_by::text);
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE schemaname = 'public' AND tablename = 'backup_shares' AND policyname = 'Users can create backup shares'
+  ) THEN
+    CREATE POLICY "Users can create backup shares" ON backup_shares
+      FOR INSERT WITH CHECK (auth.uid()::text = shared_by::text);
+  END IF;
+END $$;
 
 -- Indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_mails_recipient_id ON mails(recipient_id);
@@ -92,7 +134,13 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Trigger for notification_settings
-CREATE TRIGGER update_notification_settings_updated_at 
-  BEFORE UPDATE ON notification_settings 
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Trigger for notification_settings (create only if missing)
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'update_notification_settings_updated_at'
+  ) THEN
+    CREATE TRIGGER update_notification_settings_updated_at 
+      BEFORE UPDATE ON notification_settings 
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+END $$;
