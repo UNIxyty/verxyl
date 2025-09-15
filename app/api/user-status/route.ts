@@ -4,61 +4,87 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   try {
+    // Check environment variables first
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.error('User status API - Missing Supabase environment variables')
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+    }
+
     const cookieStore = cookies()
     
-    // Debug: Log available cookies
-    const allCookies = cookieStore.getAll()
-    console.log('User status API - available cookies:', allCookies.map(c => c.name))
-    
-    // Debug: Check environment variables
-    console.log('User status API - Supabase URL exists:', !!process.env.NEXT_PUBLIC_SUPABASE_URL)
-    console.log('User status API - Supabase Key exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
-    
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
           get(name: string) {
-            const cookie = cookieStore.get(name)
-            console.log(`Cookie ${name}:`, cookie?.value ? 'exists' : 'missing')
-            return cookie?.value
+            return cookieStore.get(name)?.value
           },
         },
       }
     )
 
-    const { data: { user }, error } = await supabase.auth.getUser()
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     
-    console.log('User status API - auth result:', { user: user?.id, error })
+    if (authError) {
+      console.error('User status API - auth error:', authError.message)
+      return NextResponse.json({ error: 'Authentication failed', details: authError.message }, { status: 401 })
+    }
     
-    if (error || !user) {
-      console.error('User status API - auth error:', error)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user) {
+      console.error('User status API - no user found')
+      return NextResponse.json({ error: 'No authenticated user' }, { status: 401 })
     }
 
-    console.log('User status API - getting user data for:', user.id)
-
+    // Get user data from database
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('*')
+      .select('id, email, role, approval_status, full_name, created_at, updated_at')
       .eq('id', user.id)
       .single()
 
     if (userError) {
-      console.error('User status API - user query error:', userError)
-      return NextResponse.json({ error: 'User not found', details: userError.message }, { status: 404 })
+      console.error('User status API - user query error:', userError.message)
+      
+      if (userError.code === 'PGRST116') {
+        return NextResponse.json({ 
+          error: 'User not found in database',
+          details: 'User may need to complete registration',
+          needsRegistration: true 
+        }, { status: 404 })
+      }
+      
+      return NextResponse.json({ 
+        error: 'Failed to fetch user data', 
+        details: userError.message 
+      }, { status: 500 })
     }
 
-    console.log('User status API - returning user data:', { 
-      id: userData.id, 
-      role: userData.role, 
-      approval_status: userData.approval_status 
-    })
+    // Validate user data
+    if (!userData.role || !userData.approval_status) {
+      console.error('User status API - incomplete user data:', userData)
+      return NextResponse.json({ 
+        error: 'Incomplete user data',
+        details: 'User role or approval status missing' 
+      }, { status: 500 })
+    }
 
-    return NextResponse.json(userData)
+    return NextResponse.json({
+      id: userData.id,
+      email: userData.email,
+      role: userData.role,
+      approval_status: userData.approval_status,
+      full_name: userData.full_name,
+      created_at: userData.created_at,
+      updated_at: userData.updated_at
+    })
+    
   } catch (error) {
     console.error('User status API - unexpected error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }

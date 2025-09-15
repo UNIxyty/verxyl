@@ -46,11 +46,25 @@ export function Navigation() {
         try {
           console.log('Checking user role for:', user.id)
           const response = await fetch('/api/user-status')
+          
+          if (!response.ok) {
+            console.error('User status API failed:', response.status, response.statusText)
+            setUserRole(null)
+            return
+          }
+          
           const data = await response.json()
           console.log('User status response:', data)
-          setUserRole(data.role)
+          
+          if (data.role && typeof data.role === 'string') {
+            setUserRole(data.role)
+          } else {
+            console.error('Invalid role data received:', data)
+            setUserRole(null)
+          }
         } catch (error) {
           console.error('Error checking user role:', error)
+          setUserRole(null)
         }
       }
     }
@@ -149,7 +163,7 @@ export function Navigation() {
                     <p className="text-xs text-gray-400 truncate">
                       {user.email}
                     </p>
-                    {userRole && (
+                    {userRole && typeof userRole === 'string' && userRole.length > 0 && (
                       <p className="text-xs text-primary-400 truncate">
                         {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
                       </p>
@@ -218,7 +232,7 @@ export function Navigation() {
                 <p className="text-xs text-gray-400 truncate">
                   {user.email}
                 </p>
-                {userRole && (
+                {userRole && typeof userRole === 'string' && userRole.length > 0 && (
                   <p className="text-xs text-primary-400 truncate">
                     {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
                   </p>
