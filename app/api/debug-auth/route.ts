@@ -1,101 +1,99 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('=== DEBUG AUTH ===')
+    
+    // Check environment variables
+    console.log('SUPABASE_URL exists:', !!process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log('SUPABASE_ANON_KEY exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+    
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return NextResponse.json({ 
+        error: 'Server configuration error',
+        details: 'Missing Supabase environment variables'
+      }, { status: 500 })
+    }
+
     const cookieStore = cookies()
+    console.log('Cookie store available:', !!cookieStore)
     
-    // Debug: Log all available cookies
+    // List all cookies
     const allCookies = cookieStore.getAll()
-    console.log('Debug Auth API - All cookies:', allCookies.map(c => ({ name: c.name, value: c.value ? 'exists' : 'missing' })))
-    
-    // Debug: Check environment variables
-    console.log('Debug Auth API - Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
-    console.log('Debug Auth API - Supabase Key exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+    console.log('All cookies:', allCookies.map(c => ({ name: c.name, hasValue: !!c.value })))
     
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
           get(name: string) {
             const cookie = cookieStore.get(name)
-            console.log(`Debug Auth API - Cookie ${name}:`, cookie?.value ? 'exists' : 'missing')
+            console.log(`Getting cookie ${name}:`, !!cookie?.value)
             return cookie?.value
           },
         },
       }
     )
 
-    // Try to get the user
+    // Test authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    console.log('Debug Auth API - Auth result:', { 
-      userId: user?.id, 
-      userEmail: user?.email,
-      authError: authError?.message 
+    console.log('Auth result:', { 
+      user: user?.id, 
+      email: user?.email,
+      error: authError?.message 
     })
     
     if (authError) {
       return NextResponse.json({ 
-        error: 'Auth error',
+        error: 'Authentication failed',
         details: authError.message,
-        cookies: allCookies.map(c => c.name),
-        env: {
-          supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-          supabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        }
+        code: authError.status
       }, { status: 401 })
     }
-
+    
     if (!user) {
       return NextResponse.json({ 
         error: 'No user found',
-        cookies: allCookies.map(c => c.name),
-        env: {
-          supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-          supabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        }
+        details: 'User is null'
       }, { status: 401 })
     }
 
-    // Try to get user data from database
+    // Test user table access
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('*')
+      .select('id, email, full_name, role')
       .eq('id', user.id)
       .single()
 
-    console.log('Debug Auth API - User data result:', { 
-      userData: userData ? 'found' : 'not found',
-      userError: userError?.message 
+    console.log('User table access:', { 
+      userData: !!userData, 
+      error: userError?.message 
     })
 
-    return NextResponse.json({
+    return NextResponse.json({ 
       success: true,
-      auth: {
-        userId: user.id,
-        userEmail: user.email,
-        userMetadata: user.user_metadata
+      user: {
+        id: user.id,
+        email: user.email
       },
-      database: {
-        userExists: !!userData,
-        userData: userData || null,
-        error: userError?.message || null
-      },
-      cookies: allCookies.map(c => ({ name: c.name, exists: !!c.value })),
-      env: {
-        supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        supabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      userData,
+      debug: {
+        environment_configured: true,
+        cookies_available: true,
+        auth_successful: true,
+        user_table_accessible: !userError
       }
     })
 
   } catch (error) {
-    console.error('Debug Auth API - Unexpected error:', error)
+    console.error('Unexpected error in debug auth:', error)
     return NextResponse.json({ 
       error: 'Internal server error', 
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: (error as Error).message,
+      stack: (error as Error).stack
     }, { status: 500 })
   }
 }
