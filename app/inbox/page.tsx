@@ -14,6 +14,8 @@ import {
 } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 import { Modal } from '@/components/Modal'
+import { UserSelector } from '@/components/UserSelector'
+import { UserProfileModal } from '@/components/UserProfileModal'
 
 interface User {
   id: string
@@ -45,7 +47,6 @@ interface ComposeModalProps {
 }
 
 function ComposeModal({ isOpen, onClose, onSent }: ComposeModalProps) {
-  const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
   const [sending, setSending] = useState(false)
   const [formData, setFormData] = useState({
@@ -53,28 +54,6 @@ function ComposeModal({ isOpen, onClose, onSent }: ComposeModalProps) {
     subject: '',
     content: ''
   })
-
-  useEffect(() => {
-    if (isOpen) {
-      loadUsers()
-    }
-  }, [isOpen])
-
-  const loadUsers = async () => {
-    setLoading(true)
-    try {
-      const response = await fetch('/api/users')
-      if (response.ok) {
-        const data = await response.json()
-        setUsers(data.users || [])
-      }
-    } catch (error) {
-      console.error('Error loading users:', error)
-      toast.error('Failed to load users')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleSend = async () => {
     if (!formData.recipient_id || !formData.subject || !formData.content) {
@@ -114,19 +93,13 @@ function ComposeModal({ isOpen, onClose, onSent }: ComposeModalProps) {
           <label className="block text-sm font-medium text-gray-300 mb-2">
             To:
           </label>
-          <select
+          <UserSelector
             value={formData.recipient_id}
-            onChange={(e) => setFormData({ ...formData, recipient_id: e.target.value })}
-            className="select w-full"
-            disabled={loading || sending}
-          >
-            <option value="">Select recipient...</option>
-            {users.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.full_name || user.email} ({user.role})
-              </option>
-            ))}
-          </select>
+            onChange={(value) => setFormData({ ...formData, recipient_id: value as string })}
+            placeholder="Select recipient..."
+            disabled={sending}
+            className="w-full"
+          />
         </div>
 
         <div>
@@ -274,6 +247,8 @@ export default function InboxPage() {
   const [selectedMail, setSelectedMail] = useState<Mail | null>(null)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const [isUserProfileOpen, setIsUserProfileOpen] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -343,8 +318,15 @@ export default function InboxPage() {
   }
 
   const handleUserClick = (clickedUser: User) => {
-    // TODO: Implement user profile modal
-    toast.info(`User Profile: ${clickedUser.full_name || clickedUser.email}`)
+    setSelectedUserId(clickedUser.id)
+    setIsUserProfileOpen(true)
+  }
+
+  const handleSendMailToUser = (userId: string) => {
+    setIsUserProfileOpen(false)
+    setIsComposeOpen(true)
+    // Pre-select the user in compose modal
+    // This would need to be passed to the compose modal
   }
 
   const formatDate = (dateString: string) => {
@@ -516,6 +498,13 @@ export default function InboxPage() {
           onClose={() => setIsViewModalOpen(false)}
           mail={selectedMail}
           onUserClick={handleUserClick}
+        />
+
+        <UserProfileModal
+          isOpen={isUserProfileOpen}
+          onClose={() => setIsUserProfileOpen(false)}
+          userId={selectedUserId}
+          onSendMail={handleSendMailToUser}
         />
       </div>
     </DashboardLayout>
