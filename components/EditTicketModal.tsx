@@ -9,6 +9,7 @@ import { UrgencyPicker } from './UrgencyPicker'
 import { UserPicker } from './UserPicker'
 import { getAllUsers } from '@/lib/database'
 import { useAuth } from './AuthProvider'
+import { getKeyboardShortcutText } from '@/lib/platform'
 import toast from 'react-hot-toast'
 
 interface EditTicketForm {
@@ -291,7 +292,7 @@ export function EditTicketModal({ isOpen, onClose, ticket, onSuccess }: EditTick
           >
             {loading ? 'Updating...' : 'Update Ticket'}
             <span className="ml-2 text-xs opacity-70">
-              (⌘+Enter)
+              {getKeyboardShortcutText()}
             </span>
           </button>
         </div>

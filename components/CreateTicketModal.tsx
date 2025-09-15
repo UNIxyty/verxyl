@@ -9,6 +9,7 @@ import { UrgencyPicker } from './UrgencyPicker'
 import { UserPicker } from './UserPicker'
 import { useAuth } from './AuthProvider'
 import { supabase } from '@/lib/supabase'
+import { getKeyboardShortcutText } from '@/lib/platform'
 import toast from 'react-hot-toast'
 
 interface CreateTicketModalProps {
@@ -258,7 +259,7 @@ export function CreateTicketModal({ isOpen, onClose, onSuccess }: CreateTicketMo
           >
             {loading ? 'Creating...' : 'Create Ticket'}
             <span className="ml-2 text-xs opacity-70">
-              (⌘+Enter)
+              {getKeyboardShortcutText()}
             </span>
           </button>
         </div>
