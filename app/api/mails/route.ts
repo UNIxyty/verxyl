@@ -100,8 +100,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Verify recipient exists
-    const { data: recipient, error: recipientError } = await supabase
+    // Verify recipient exists (use admin to avoid RLS issues)
+    const { data: recipient, error: recipientError } = await supabaseAdmin
       .from('users')
       .select('id, email, full_name, role')
       .eq('id', recipient_id)
@@ -123,11 +123,7 @@ export async function POST(request: NextRequest) {
         related_id,
         related_type
       })
-      .select(`
-        *,
-        sender:users!mails_sender_id_fkey(id, email, full_name, role),
-        recipient:users!mails_recipient_id_fkey(id, email, full_name, role)
-      `)
+      .select('*')
       .single()
 
     if (insertError) {
@@ -156,6 +152,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ mail, message: 'Mail sent successfully' })
   } catch (error) {
     console.error('Unexpected error in mails POST:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error', details: (error as Error).message }, { status: 500 })
   }
 }
