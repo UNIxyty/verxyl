@@ -115,10 +115,10 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout>
-        <div className="max-w-4xl mx-auto p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
-          <p className="text-gray-400">
+        <div className="max-w-4xl mx-auto mobile-padding">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Settings</h1>
+          <p className="text-gray-400 text-sm sm:text-base">
             Customize your Verxyl Ticket Management experience
           </p>
         </div>
@@ -126,11 +126,11 @@ export default function SettingsPage() {
         <div className="space-y-8">
           {/* New Webhook System */}
           <div className="card">
-            <div className="flex items-center mb-6">
-              <ShieldCheckIcon className="h-6 w-6 text-primary-400 mr-3" />
+            <div className="flex items-center mb-4 sm:mb-6">
+              <ShieldCheckIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400 mr-2 sm:mr-3" />
               <div>
-                <h2 className="text-xl font-semibold text-white">Webhook System</h2>
-                <p className="text-gray-400 text-sm">
+                <h2 className="text-lg sm:text-xl font-semibold text-white">Webhook System</h2>
+                <p className="text-gray-400 text-xs sm:text-sm">
                   Configure webhook notifications with domain and path settings
                 </p>
               </div>
@@ -144,7 +144,7 @@ export default function SettingsPage() {
                   Webhook Domain
                 </label>
                 {showDomainEdit ? (
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="url"
                       value={newWebhookDomain}
@@ -155,19 +155,19 @@ export default function SettingsPage() {
                     />
                     <button
                       onClick={() => setShowDomainEdit(false)}
-                      className="btn-secondary whitespace-nowrap"
+                      className="btn-secondary whitespace-nowrap btn-mobile"
                     >
                       Cancel
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-200 bg-gray-800 px-3 py-2 rounded border border-gray-600 flex-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <span className="text-gray-200 bg-gray-800 px-3 py-2 rounded border border-gray-600 flex-1 text-sm sm:text-base">
                       {newWebhookDomain || 'No domain configured'}
                     </span>
                     <button
                       onClick={() => setShowDomainEdit(true)}
-                      className="btn-secondary text-sm"
+                      className="btn-secondary text-sm btn-mobile"
                     >
                       change webhook domain
                     </button>
@@ -185,19 +185,19 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Tickets path:
                   </label>
-                  <div className="flex items-center">
-                    <span className="text-gray-300 bg-gray-800 px-3 py-2 rounded-l border border-gray-600 border-r-0 whitespace-nowrap">
-                      {newWebhookDomain || 'https://example.com'}
-                    </span>
-                    <input
-                      type="text"
-                      value={newWebhookPathTickets}
-                      onChange={(e) => setNewWebhookPathTickets(e.target.value)}
-                      placeholder="/webhook/tickets"
-                      className="input rounded-l-none border-l-0 flex-1"
-                      disabled={isNewWebhookLoading || isNewWebhookSaving}
-                    />
-                  </div>
+                <div className="flex flex-col sm:flex-row">
+                  <span className="text-gray-300 bg-gray-800 px-3 py-2 rounded-t sm:rounded-l sm:rounded-t-lg border border-gray-600 sm:border-r-0 whitespace-nowrap text-sm sm:text-base">
+                    {newWebhookDomain || 'https://example.com'}
+                  </span>
+                  <input
+                    type="text"
+                    value={newWebhookPathTickets}
+                    onChange={(e) => setNewWebhookPathTickets(e.target.value)}
+                    placeholder="/webhook/tickets"
+                    className="input rounded-b sm:rounded-l-none sm:rounded-r border-t-0 sm:border-t sm:border-l-0 flex-1"
+                    disabled={isNewWebhookLoading || isNewWebhookSaving}
+                  />
+                </div>
                   <p className="text-gray-400 text-xs mt-1">
                     Path for ticket-related events
                   </p>
@@ -208,19 +208,19 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Users path:
                   </label>
-                  <div className="flex items-center">
-                    <span className="text-gray-300 bg-gray-800 px-3 py-2 rounded-l border border-gray-600 border-r-0 whitespace-nowrap">
-                      {newWebhookDomain || 'https://example.com'}
-                    </span>
-                    <input
-                      type="text"
-                      value={newWebhookPathUsers}
-                      onChange={(e) => setNewWebhookPathUsers(e.target.value)}
-                      placeholder="/webhook/users"
-                      className="input rounded-l-none border-l-0 flex-1"
-                      disabled={isNewWebhookLoading || isNewWebhookSaving}
-                    />
-                  </div>
+                <div className="flex flex-col sm:flex-row">
+                  <span className="text-gray-300 bg-gray-800 px-3 py-2 rounded-t sm:rounded-l sm:rounded-t-lg border border-gray-600 sm:border-r-0 whitespace-nowrap text-sm sm:text-base">
+                    {newWebhookDomain || 'https://example.com'}
+                  </span>
+                  <input
+                    type="text"
+                    value={newWebhookPathUsers}
+                    onChange={(e) => setNewWebhookPathUsers(e.target.value)}
+                    placeholder="/webhook/users"
+                    className="input rounded-b sm:rounded-l-none sm:rounded-r border-t-0 sm:border-t sm:border-l-0 flex-1"
+                    disabled={isNewWebhookLoading || isNewWebhookSaving}
+                  />
+                </div>
                   <p className="text-gray-400 text-xs mt-1">
                     Path for user-related events
                   </p>
@@ -242,11 +242,11 @@ export default function SettingsPage() {
                   </div>
                 )}
 
-                <div className="flex justify-end">
+                <div className="flex flex-col sm:flex-row justify-end">
                   <button
                     onClick={handleNewWebhookSave}
                     disabled={isNewWebhookLoading || isNewWebhookSaving}
-                    className="btn-primary"
+                    className="btn-primary btn-mobile"
                   >
                     {isNewWebhookSaving ? 'Saving...' : 'Save & Test'}
                   </button>
@@ -276,11 +276,11 @@ export default function SettingsPage() {
 
           {/* Theme Settings */}
           <div className="card">
-            <div className="flex items-center mb-6">
-              <PaintBrushIcon className="h-6 w-6 text-primary-400 mr-3" />
+            <div className="flex items-center mb-4 sm:mb-6">
+              <PaintBrushIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400 mr-2 sm:mr-3" />
               <div>
-                <h2 className="text-xl font-semibold text-white">Theme Settings</h2>
-                <p className="text-gray-400 text-sm">
+                <h2 className="text-lg sm:text-xl font-semibold text-white">Theme Settings</h2>
+                <p className="text-gray-400 text-xs sm:text-sm">
                   Choose your preferred color theme
                 </p>
               </div>
@@ -291,11 +291,11 @@ export default function SettingsPage() {
 
           {/* Application Info */}
           <div className="card">
-            <div className="flex items-center mb-6">
-              <Cog6ToothIcon className="h-6 w-6 text-primary-400 mr-3" />
+            <div className="flex items-center mb-4 sm:mb-6">
+              <Cog6ToothIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400 mr-2 sm:mr-3" />
               <div>
-                <h2 className="text-xl font-semibold text-white">Application Information</h2>
-                <p className="text-gray-400 text-sm">
+                <h2 className="text-lg sm:text-xl font-semibold text-white">Application Information</h2>
+                <p className="text-gray-400 text-xs sm:text-sm">
                   Version and system information
                 </p>
               </div>
