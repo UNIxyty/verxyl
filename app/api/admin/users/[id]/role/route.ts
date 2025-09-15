@@ -128,6 +128,7 @@ export async function PATCH(
     try {
       await sendNewWebhook({
         action: 'role_changed',
+        timestamp: new Date().toISOString(),
         admin_id: user.id,
         admin_email: user.email || '',
         admin_name: 'Admin User', // You might want to get this from user data
