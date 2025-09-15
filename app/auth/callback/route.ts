@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
             full_name: user.user_metadata?.full_name || user.user_metadata?.name,
             avatar_url: user.user_metadata?.avatar_url,
             approval_status: 'pending',
-            role: 'user'
+            role: 'viewer'
           })
           .select()
           .single()
