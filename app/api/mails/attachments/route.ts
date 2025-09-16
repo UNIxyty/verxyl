@@ -83,6 +83,19 @@ export async function POST(request: NextRequest) {
     const fileName = `${timestamp}-${randomString}.${fileExtension}`
     const filePath = `attachments/${user.id}/${fileName}`
 
+    // Check if storage bucket exists
+    const { data: buckets, error: bucketError } = await supabaseAdmin.storage.listBuckets()
+    if (bucketError) {
+      console.error('Error listing buckets:', bucketError)
+      return NextResponse.json({ error: 'Storage not available' }, { status: 500 })
+    }
+
+    const bucketExists = buckets?.some(bucket => bucket.id === 'mail-attachments')
+    if (!bucketExists) {
+      console.error('mail-attachments bucket does not exist')
+      return NextResponse.json({ error: 'Storage bucket not configured' }, { status: 500 })
+    }
+
     // Upload file to Supabase Storage
     const fileBuffer = await file.arrayBuffer()
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
@@ -94,7 +107,11 @@ export async function POST(request: NextRequest) {
 
     if (uploadError) {
       console.error('Error uploading file to storage:', uploadError)
-      return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 })
+      return NextResponse.json({ 
+        error: 'Failed to upload file', 
+        details: uploadError.message,
+        code: uploadError.error 
+      }, { status: 500 })
     }
 
     // Save attachment metadata to database
@@ -113,8 +130,16 @@ export async function POST(request: NextRequest) {
     if (dbError) {
       console.error('Error saving attachment metadata:', dbError)
       // Try to clean up uploaded file
-      await supabaseAdmin.storage.from('mail-attachments').remove([filePath])
-      return NextResponse.json({ error: 'Failed to save attachment metadata' }, { status: 500 })
+      try {
+        await supabaseAdmin.storage.from('mail-attachments').remove([filePath])
+      } catch (cleanupError) {
+        console.error('Error cleaning up uploaded file:', cleanupError)
+      }
+      return NextResponse.json({ 
+        error: 'Failed to save attachment metadata', 
+        details: dbError.message,
+        code: dbError.code
+      }, { status: 500 })
     }
 
     return NextResponse.json({ 
