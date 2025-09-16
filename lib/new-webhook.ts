@@ -1,5 +1,5 @@
 interface NewWebhookPayload {
-  action: 'ticket_created' | 'ticket_updated' | 'ticket_solved' | 'ticket_deleted' | 'ticket_in_work' | 'role_changed'
+  action: 'ticket_created' | 'ticket_updated' | 'ticket_solved' | 'ticket_deleted' | 'ticket_in_work' | 'role_changed' | 'new_mail' | 'project_created' | 'project_updated' | 'project_completed' | 'invoice_created' | 'invoice_sent' | 'invoice_paid' | 'notification_settings_changed'
   timestamp: string
   
   // Common fields
@@ -16,6 +16,34 @@ interface NewWebhookPayload {
   ticket_date?: string | null
   ticket_time?: string | null
   ticket_details?: string
+  
+  // Mail fields
+  mail_id?: string
+  mail_subject?: string
+  sender_id?: string
+  sender_email?: string
+  sender_name?: string
+  recipient_id?: string
+  recipient_email?: string
+  recipient_name?: string
+  
+  // Project fields
+  project_id?: string
+  project_title?: string
+  project_status?: string
+  project_deadline?: string
+  project_budget?: number
+  
+  // Invoice fields
+  invoice_id?: string
+  invoice_number?: string
+  invoice_title?: string
+  invoice_amount?: number
+  invoice_currency?: string
+  invoice_status?: string
+  client_id?: string
+  client_email?: string
+  client_name?: string
   
   // User fields
   user_id?: string
@@ -36,6 +64,10 @@ interface NewWebhookPayload {
   creator_id?: string
   creator_email?: string
   creator_name?: string
+  
+  // Notification settings fields
+  notification_type?: string
+  notification_enabled?: boolean
 }
 
 export async function sendNewWebhook(payload: NewWebhookPayload): Promise<{ success: boolean; error?: string }> {
@@ -52,8 +84,18 @@ export async function sendNewWebhook(payload: NewWebhookPayload): Promise<{ succ
     // Determine which path to use based on action type
     const isTicketAction = ['ticket_created', 'ticket_updated', 'ticket_solved', 'ticket_deleted', 'ticket_in_work'].includes(payload.action)
     const isUserAction = ['role_changed'].includes(payload.action)
+    const isMailAction = ['new_mail'].includes(payload.action)
+    const isProjectAction = ['project_created', 'project_updated', 'project_completed'].includes(payload.action)
+    const isInvoiceAction = ['invoice_created', 'invoice_sent', 'invoice_paid'].includes(payload.action)
+    const isNotificationAction = ['notification_settings_changed'].includes(payload.action)
     
-    const pathKey = isTicketAction ? 'webhook_path_tickets' : isUserAction ? 'webhook_path_users' : 'webhook_path_tickets'
+    let pathKey = 'webhook_path_tickets' // default
+    if (isTicketAction) pathKey = 'webhook_path_tickets'
+    else if (isUserAction) pathKey = 'webhook_path_users'
+    else if (isMailAction) pathKey = 'webhook_path_mails'
+    else if (isProjectAction) pathKey = 'webhook_path_projects'
+    else if (isInvoiceAction) pathKey = 'webhook_path_invoices'
+    else if (isNotificationAction) pathKey = 'webhook_path_notifications'
     
     const { data: pathSetting, error: pathError } = await supabaseAdmin
       .from('system_settings')
