@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test File Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .upload-area {
+            border: 2px dashed #666;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+        }
+        .upload-area:hover {
+            border-color: #999;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .file-info {
+            background: #333;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .result {
+            background: #2d5a2d;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .error {
+            background: #5a2d2d;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Mail Attachment Upload</h1>
+    
+    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+        <p>Click to select a file or drag and drop</p>
+        <input type="file" id="fileInput" onchange="handleFileSelect(event)">
+    </div>
+    
+    <div id="fileInfo" class="file-info" style="display: none;">
+        <h3>Selected File:</h3>
+        <p><strong>Name:</strong> <span id="fileName"></span></p>
+        <p><strong>Size:</strong> <span id="fileSize"></span></p>
+        <p><strong>Type:</strong> <span id="fileType"></span></p>
+    </div>
+    
+    <div>
+        <label for="mailId">Mail ID (create a mail first):</label><br>
+        <input type="text" id="mailId" placeholder="Enter mail ID" style="width: 100%; padding: 8px; margin: 5px 0;">
+    </div>
+    
+    <button onclick="uploadFile()">Upload File</button>
+    <button onclick="clearFile()">Clear File</button>
+    
+    <div id="result"></div>
+
+    <script>
+        let selectedFile = null;
+        
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                selectedFile = file;
+                showFileInfo(file);
+            }
+        }
+        
+        function showFileInfo(file) {
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+            document.getElementById('fileType').textContent = file.type;
+            document.getElementById('fileInfo').style.display = 'block';
+        }
+        
+        function clearFile() {
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileInfo').style.display = 'none';
+            document.getElementById('result').innerHTML = '';
+        }
+        
+        async function uploadFile() {
+            const mailId = document.getElementById('mailId').value;
+            
+            if (!selectedFile) {
+                showResult('Please select a file first', 'error');
+                return;
+            }
+            
+            if (!mailId) {
+                showResult('Please enter a mail ID', 'error');
+                return;
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                formData.append('mailId', mailId);
+                
+                showResult('Uploading...', '');
+                
+                const response = await fetch('/api/mails/attachments', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✅ Upload successful!<br>Attachment ID: ${result.attachment.id}`, '');
+                } else {
+                    showResult(`❌ Upload failed: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = message;
+            resultDiv.className = type === 'error' ? 'result error' : 'result';
+        }
+        
+        // Allow drag and drop
+        const uploadArea = document.querySelector('.upload-area');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#999';
+        });
+        
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#666';
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#666';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                selectedFile = files[0];
+                showFileInfo(selectedFile);
+            }
+        });
+    </script>
+</body>
+</html>
