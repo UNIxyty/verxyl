@@ -17,29 +17,33 @@ import {
   ExclamationTriangleIcon as ExclamationTriangleIconSolid
 } from '@heroicons/react/24/solid'
 
+interface User {
+  id: string
+  email: string
+  full_name: string | null
+  role: string
+}
+
 interface Mail {
   id: string
+  sender_id: string
+  recipient_id: string
   subject: string
   content: string
-  sender?: {
-    id: string
-    email: string
-    full_name: string
-    role: string
-  }
-  recipient?: {
-    id: string
-    email: string
-    full_name: string
-    role: string
-  }
   is_read: boolean
-  is_starred: boolean
-  is_important: boolean
-  is_draft: boolean
-  labels: string[]
-  created_at: string
   mail_type: string
+  related_id: string | null
+  related_type: string | null
+  created_at: string
+  read_at: string | null
+  sender: User
+  recipient: User
+  is_starred?: boolean
+  is_important?: boolean
+  is_draft?: boolean
+  labels?: string[]
+  reply_to_mail_id?: string | null
+  thread_id?: string | null
 }
 
 interface GmailInboxProps {
@@ -368,11 +372,11 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        toggleStar(mail.id, mail.is_starred)
+                        toggleStar(mail.id, mail.is_starred || false)
                       }}
                       className="p-1 hover:bg-gray-200 rounded"
                     >
-                      {mail.is_starred ? (
+                      {(mail.is_starred || false) ? (
                         <StarIconSolid className="h-4 w-4 text-yellow-500" />
                       ) : (
                         <StarIcon className="h-4 w-4 text-gray-400" />
@@ -383,11 +387,11 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        toggleImportant(mail.id, mail.is_important)
+                        toggleImportant(mail.id, mail.is_important || false)
                       }}
                       className="p-1 hover:bg-gray-200 rounded"
                     >
-                      {mail.is_important ? (
+                      {(mail.is_important || false) ? (
                         <ExclamationTriangleIconSolid className="h-4 w-4 text-red-500" />
                       ) : (
                         <ExclamationTriangleIcon className="h-4 w-4 text-gray-400" />
