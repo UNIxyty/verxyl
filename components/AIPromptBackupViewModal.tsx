@@ -24,25 +24,17 @@ export function AIPromptBackupViewModal({ isOpen, onClose, backup }: AIPromptBac
   if (!backup) return null
 
   const downloadPrompt = () => {
-    const promptData = {
-      id: backup.id,
-      prompt_text: backup.prompt_text,
-      ai_model: backup.ai_model,
-      output_logic: backup.output_logic,
-      output_result: backup.output_result,
-      created_at: backup.created_at,
-      updated_at: backup.updated_at
-    }
-
-    const dataStr = JSON.stringify(promptData, null, 2)
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
+    const exportFileDefaultName = `ai-prompt-${backup.ai_model}-${new Date(backup.created_at).toISOString().split('T')[0]}.txt`
     
-    const exportFileDefaultName = `ai-prompt-${backup.ai_model}-${new Date(backup.created_at).toISOString().split('T')[0]}.json`
-    
-    const linkElement = document.createElement('a')
-    linkElement.setAttribute('href', dataUri)
-    linkElement.setAttribute('download', exportFileDefaultName)
-    linkElement.click()
+    const blob = new Blob([backup.prompt_text], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = exportFileDefaultName
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
   const formatDate = (dateString: string) => {
@@ -56,21 +48,21 @@ export function AIPromptBackupViewModal({ isOpen, onClose, backup }: AIPromptBac
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="AI Prompt Details" size="lg">
-      <div className="space-y-6">
+    <Modal isOpen={isOpen} onClose={onClose} title="AI Prompt Details" size="full">
+      <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="border-b border-dark-700 pb-4">
+        <div className="border-b border-dark-700 pb-4 mb-6">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <LightBulbIcon className="h-5 w-5 text-yellow-500" />
-              <span className="font-medium text-white">{backup.ai_model}</span>
+              <LightBulbIcon className="h-6 w-6 text-yellow-500" />
+              <span className="text-lg font-medium text-white">{backup.ai_model}</span>
             </div>
             <button
               onClick={downloadPrompt}
-              className="flex items-center gap-2 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors text-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
             >
-              <ArrowDownTrayIcon className="h-4 w-4" />
-              Download
+              <ArrowDownTrayIcon className="h-5 w-5" />
+              Download as TXT
             </button>
           </div>
           <div className="text-sm text-gray-400">
@@ -83,48 +75,51 @@ export function AIPromptBackupViewModal({ isOpen, onClose, backup }: AIPromptBac
           )}
         </div>
 
-        {/* Prompt Text */}
-        <div>
-          <h3 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-            <DocumentTextIcon className="h-4 w-4" />
-            Prompt Text
-          </h3>
-          <div className="bg-dark-700 rounded-lg p-4">
-            <pre className="text-gray-200 whitespace-pre-wrap text-sm leading-relaxed">
-              {backup.prompt_text}
-            </pre>
+        {/* Main Content - Full Height */}
+        <div className="flex-1 overflow-auto space-y-6">
+          {/* Prompt Text */}
+          <div>
+            <h3 className="text-lg font-medium text-gray-300 mb-4 flex items-center gap-2">
+              <DocumentTextIcon className="h-5 w-5" />
+              Prompt Text
+            </h3>
+            <div className="bg-dark-700 rounded-lg p-6">
+              <pre className="text-gray-200 whitespace-pre-wrap text-base leading-relaxed font-mono">
+                {backup.prompt_text}
+              </pre>
+            </div>
           </div>
+
+          {/* Output Logic */}
+          {backup.output_logic && (
+            <div>
+              <h3 className="text-lg font-medium text-gray-300 mb-4">Output Logic</h3>
+              <div className="bg-dark-700 rounded-lg p-6">
+                <pre className="text-gray-200 text-sm font-mono">
+                  {JSON.stringify(backup.output_logic, null, 2)}
+                </pre>
+              </div>
+            </div>
+          )}
+
+          {/* Output Result */}
+          {backup.output_result && (
+            <div>
+              <h3 className="text-lg font-medium text-gray-300 mb-4">Output Result</h3>
+              <div className="bg-dark-700 rounded-lg p-6">
+                <pre className="text-gray-200 text-sm font-mono">
+                  {JSON.stringify(backup.output_result, null, 2)}
+                </pre>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Output Logic */}
-        {backup.output_logic && (
-          <div>
-            <h3 className="text-sm font-medium text-gray-300 mb-2">Output Logic</h3>
-            <div className="bg-dark-700 rounded-lg p-4">
-              <pre className="text-gray-200 text-sm">
-                {JSON.stringify(backup.output_logic, null, 2)}
-              </pre>
-            </div>
-          </div>
-        )}
-
-        {/* Output Result */}
-        {backup.output_result && (
-          <div>
-            <h3 className="text-sm font-medium text-gray-300 mb-2">Output Result</h3>
-            <div className="bg-dark-700 rounded-lg p-4">
-              <pre className="text-gray-200 text-sm">
-                {JSON.stringify(backup.output_result, null, 2)}
-              </pre>
-            </div>
-          </div>
-        )}
-
-        {/* Close Button */}
-        <div className="flex justify-end pt-4">
+        {/* Footer */}
+        <div className="flex justify-end pt-6 border-t border-dark-700 mt-6">
           <button
             onClick={onClose}
-            className="btn-secondary"
+            className="btn-secondary px-6 py-2"
           >
             Close
           </button>

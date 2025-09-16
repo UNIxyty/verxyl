@@ -57,25 +57,17 @@ export default function AIBackupsPage() {
   }
 
   const downloadPrompt = (backup: AIPromptBackup) => {
-    const promptData = {
-      id: backup.id,
-      prompt_text: backup.prompt_text,
-      ai_model: backup.ai_model,
-      output_logic: backup.output_logic,
-      output_result: backup.output_result,
-      created_at: backup.created_at,
-      updated_at: backup.updated_at
-    }
-
-    const dataStr = JSON.stringify(promptData, null, 2)
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
+    const exportFileDefaultName = `ai-prompt-${backup.ai_model}-${new Date(backup.created_at).toISOString().split('T')[0]}.txt`
     
-    const exportFileDefaultName = `ai-prompt-${backup.ai_model}-${new Date(backup.created_at).toISOString().split('T')[0]}.json`
-    
-    const linkElement = document.createElement('a')
-    linkElement.setAttribute('href', dataUri)
-    linkElement.setAttribute('download', exportFileDefaultName)
-    linkElement.click()
+    const blob = new Blob([backup.prompt_text], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = exportFileDefaultName
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
   const toggleExpanded = (backupId: string) => {
