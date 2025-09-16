@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { UserIcon, EyeIcon, PencilIcon } from '@heroicons/react/24/outline'
+import { UserIcon, EyeIcon, PencilIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { Modal } from './Modal'
 
 interface SharedUser {
   id: string
@@ -25,6 +26,7 @@ export function SharedUsersList({ backupId, backupType, onUserRemoved }: SharedU
   const [sharedUsers, setSharedUsers] = useState<SharedUser[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isRemoving, setIsRemoving] = useState<string | null>(null)
+  const [confirmRemove, setConfirmRemove] = useState<{ user: SharedUser; isOpen: boolean }>({ user: null as any, isOpen: false })
 
   useEffect(() => {
     fetchSharedUsers()
@@ -52,11 +54,16 @@ export function SharedUsersList({ backupId, backupType, onUserRemoved }: SharedU
   }
 
   const handleRemoveUser = async (shareId: string) => {
-    if (!confirm('Are you sure you want to remove access for this user?')) {
-      return
+    const user = sharedUsers.find(u => u.id === shareId)
+    if (user) {
+      setConfirmRemove({ user, isOpen: true })
     }
+  }
 
-    setIsRemoving(shareId)
+  const confirmRemoveUser = async () => {
+    if (!confirmRemove.user) return
+
+    setIsRemoving(confirmRemove.user.id)
     try {
       const endpoint = backupType === 'ai_prompt'
         ? `/api/ai-backups/unshare`
@@ -65,11 +72,11 @@ export function SharedUsersList({ backupId, backupType, onUserRemoved }: SharedU
       const response = await fetch(endpoint, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ share_id: shareId })
+        body: JSON.stringify({ share_id: confirmRemove.user.id })
       })
 
       if (response.ok) {
-        setSharedUsers(prev => prev.filter(user => user.id !== shareId))
+        setSharedUsers(prev => prev.filter(user => user.id !== confirmRemove.user.id))
         onUserRemoved?.()
       } else {
         console.error('Failed to remove user access')
@@ -78,7 +85,12 @@ export function SharedUsersList({ backupId, backupType, onUserRemoved }: SharedU
       console.error('Error removing user access:', error)
     } finally {
       setIsRemoving(null)
+      setConfirmRemove({ user: null as any, isOpen: false })
     }
+  }
+
+  const cancelRemoveUser = () => {
+    setConfirmRemove({ user: null as any, isOpen: false })
   }
 
   const formatDate = (dateString: string) => {
@@ -199,6 +211,50 @@ export function SharedUsersList({ backupId, backupType, onUserRemoved }: SharedU
           </div>
         ))}
       </div>
+
+      {/* Confirmation Modal */}
+      <Modal isOpen={confirmRemove.isOpen} onClose={cancelRemoveUser} title="Remove Access" size="sm">
+        <div className="space-y-4">
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              <ExclamationTriangleIcon className="h-6 w-6 text-yellow-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-medium text-gray-200">
+                Remove Access
+              </h3>
+              <div className="mt-2">
+                <p className="text-sm text-gray-400">
+                  Are you sure you want to remove access for{' '}
+                  <span className="font-medium text-gray-200">
+                    {confirmRemove.user && getUserDisplayName(confirmRemove.user)}
+                  </span>?
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  They will no longer be able to view or edit this {backupType === 'ai_prompt' ? 'prompt' : 'workflow'}.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              onClick={cancelRemoveUser}
+              className="btn-secondary"
+              disabled={isRemoving === confirmRemove.user?.id}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmRemoveUser}
+              disabled={isRemoving === confirmRemove.user?.id}
+              className="btn-primary bg-red-600 hover:bg-red-700"
+            >
+              {isRemoving === confirmRemove.user?.id ? 'Removing...' : 'Remove Access'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
