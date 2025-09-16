@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { Modal } from './Modal'
-import { DocumentTextIcon, ClipboardDocumentIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
+import { ShareModal } from './ShareModal'
+import { DocumentTextIcon, ClipboardDocumentIcon, ArrowDownTrayIcon, ShareIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
 interface N8NProjectBackup {
@@ -23,6 +24,7 @@ interface N8NBackupViewModalProps {
 
 export function N8NBackupViewModal({ isOpen, onClose, backup }: N8NBackupViewModalProps) {
   const [showJson, setShowJson] = useState(false)
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
   if (!backup) return null
 
@@ -36,6 +38,22 @@ export function N8NBackupViewModal({ isOpen, onClose, backup }: N8NBackupViewMod
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
+  }
+
+  const handleShare = async (recipientEmail: string) => {
+    const response = await fetch('/api/n8n-backups/share', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        backup_id: backup.id,
+        recipient_email: recipientEmail
+      })
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'Failed to share backup')
+    }
   }
 
   const copyToClipboard = async (text: string, label: string) => {
@@ -167,8 +185,15 @@ export function N8NBackupViewModal({ isOpen, onClose, backup }: N8NBackupViewMod
           )}
         </div>
 
-        {/* Close Button */}
-        <div className="flex justify-end pt-4 border-t border-dark-700">
+        {/* Footer */}
+        <div className="flex justify-between pt-4 border-t border-dark-700">
+          <button
+            onClick={() => setIsShareModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
+          >
+            <ShareIcon className="h-4 w-4" />
+            Share
+          </button>
           <button
             onClick={onClose}
             className="btn-primary"
@@ -177,6 +202,15 @@ export function N8NBackupViewModal({ isOpen, onClose, backup }: N8NBackupViewMod
           </button>
         </div>
       </div>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        onShare={handleShare}
+        title="Share N8N Workflow"
+        itemName="N8N workflow"
+      />
     </Modal>
   )
 }

@@ -1,7 +1,8 @@
 'use client'
 
 import { Modal } from './Modal'
-import { ArrowDownTrayIcon, DocumentTextIcon, LightBulbIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { ShareModal } from './ShareModal'
+import { ArrowDownTrayIcon, DocumentTextIcon, LightBulbIcon, PencilIcon, TrashIcon, ShareIcon } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 
@@ -26,6 +27,7 @@ interface AIPromptBackupViewModalProps {
 
 export function AIPromptBackupViewModal({ isOpen, onClose, backup, onEdit, onDelete }: AIPromptBackupViewModalProps) {
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
   if (!backup) return null
 
@@ -41,6 +43,22 @@ export function AIPromptBackupViewModal({ isOpen, onClose, backup, onEdit, onDel
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
+  }
+
+  const handleShare = async (recipientEmail: string) => {
+    const response = await fetch('/api/ai-backups/share', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        backup_id: backup.id,
+        recipient_email: recipientEmail
+      })
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'Failed to share backup')
+    }
   }
 
   const handleDelete = async () => {
@@ -145,6 +163,13 @@ export function AIPromptBackupViewModal({ isOpen, onClose, backup, onEdit, onDel
         {/* Footer */}
         <div className="flex justify-between pt-4">
           <div className="flex gap-2">
+            <button
+              onClick={() => setIsShareModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
+            >
+              <ShareIcon className="h-4 w-4" />
+              Share
+            </button>
             {onEdit && (
               <button
                 onClick={() => onEdit(backup)}
@@ -173,6 +198,15 @@ export function AIPromptBackupViewModal({ isOpen, onClose, backup, onEdit, onDel
           </button>
         </div>
       </div>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        onShare={handleShare}
+        title="Share AI Prompt Backup"
+        itemName="AI prompt backup"
+      />
     </Modal>
   )
 }
