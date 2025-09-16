@@ -14,7 +14,11 @@ import {
   PlusIcon,
   PencilIcon,
   ArrowLeftIcon,
-  UserIcon
+  UserIcon,
+  XMarkIcon,
+  TagIcon,
+  PaperClipIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline'
 import { 
   StarIcon as StarIconSolid,
@@ -88,6 +92,10 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
   const [showLabels, setShowLabels] = useState(false)
   const [labels, setLabels] = useState<any[]>([])
   const [selectedMail, setSelectedMail] = useState<Mail | null>(null)
+  const [showTagModal, setShowTagModal] = useState(false)
+  const [showFileUpload, setShowFileUpload] = useState(false)
+  const [attachments, setAttachments] = useState<any[]>([])
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   const folders = [
     { id: 'inbox', name: 'Inbox', icon: FOLDER_ICONS.inbox },
@@ -257,6 +265,115 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
 
   const handleBackToInbox = () => {
     setSelectedMail(null)
+    setIsFullscreen(false)
+  }
+
+  const updateMailProperty = async (mailId: string, property: string, value: any) => {
+    try {
+      const response = await fetch(`/api/mails/${mailId}/update`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [property]: value })
+      })
+
+      if (response.ok) {
+        // Update local state
+        setMails(mails.map(mail => 
+          mail.id === mailId 
+            ? { ...mail, [property]: value }
+            : mail
+        ))
+        
+        // Update selected mail if it's the same
+        if (selectedMail && selectedMail.id === mailId) {
+          setSelectedMail({ ...selectedMail, [property]: value })
+        }
+      } else {
+        console.error('Failed to update mail property')
+      }
+    } catch (error) {
+      console.error('Error updating mail property:', error)
+    }
+  }
+
+  const handleSpam = (mailId: string) => {
+    updateMailProperty(mailId, 'is_spam', true)
+  }
+
+  const handleDelete = (mailId: string) => {
+    updateMailProperty(mailId, 'is_trash', true)
+  }
+
+  const createTag = async (name: string, color: string) => {
+    try {
+      const response = await fetch('/api/mail-labels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, color })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setLabels([...labels, data.label])
+        return data.label
+      }
+    } catch (error) {
+      console.error('Error creating tag:', error)
+    }
+  }
+
+  const addTagToMail = async (mailId: string, tagName: string) => {
+    try {
+      // First ensure the tag exists
+      let tag = labels.find(l => l.name === tagName)
+      if (!tag) {
+        tag = await createTag(tagName, '#3B82F6')
+      }
+
+      // Get current mail labels
+      const mail = mails.find(m => m.id === mailId)
+      const currentLabels = mail?.labels || []
+      
+      if (!currentLabels.includes(tagName)) {
+        const newLabels = [...currentLabels, tagName]
+        updateMailProperty(mailId, 'labels', newLabels)
+      }
+    } catch (error) {
+      console.error('Error adding tag to mail:', error)
+    }
+  }
+
+  const removeTagFromMail = async (mailId: string, tagName: string) => {
+    try {
+      const mail = mails.find(m => m.id === mailId)
+      const currentLabels = mail?.labels || []
+      const newLabels = currentLabels.filter(label => label !== tagName)
+      updateMailProperty(mailId, 'labels', newLabels)
+    } catch (error) {
+      console.error('Error removing tag from mail:', error)
+    }
+  }
+
+  const uploadFile = async (file: File) => {
+    if (!selectedMail) return
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('mailId', selectedMail.id)
+
+      const response = await fetch('/api/mails/attachments', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setAttachments([...attachments, data.attachment])
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error)
+    }
   }
 
   return (
@@ -381,7 +498,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
         <div className="flex-1 overflow-y-auto">
           {selectedMail ? (
             /* Email View */
-            <div className={`${themeClasses.card} m-6 p-6 rounded-lg shadow-lg`}>
+            <div className={`${themeClasses.card} ${isFullscreen ? 'fixed inset-0 z-50 m-0 rounded-none' : 'm-6'} p-6 rounded-lg shadow-lg`}>
               <div className={`border-b ${theme.startsWith('light') ? 'border-gray-200' : 'border-gray-600'} pb-4 mb-6`}>
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
@@ -412,7 +529,8 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                         e.stopPropagation()
                         toggleStar(selectedMail.id, selectedMail.is_starred || false)
                       }}
-                      className="p-2 hover:bg-gray-100 rounded-full"
+                      className={`p-2 ${themeClasses.hover} rounded-full`}
+                      title="Star"
                     >
                       {(selectedMail.is_starred || false) ? (
                         <StarIconSolid className="h-5 w-5 text-yellow-500" />
@@ -425,13 +543,64 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                         e.stopPropagation()
                         toggleImportant(selectedMail.id, selectedMail.is_important || false)
                       }}
-                      className="p-2 hover:bg-gray-100 rounded-full"
+                      className={`p-2 ${themeClasses.hover} rounded-full`}
+                      title="Important"
                     >
                       {(selectedMail.is_important || false) ? (
                         <ExclamationTriangleIconSolid className="h-5 w-5 text-red-500" />
                       ) : (
                         <ExclamationTriangleIcon className="h-5 w-5 text-gray-400" />
                       )}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowTagModal(true)
+                      }}
+                      className={`p-2 ${themeClasses.hover} rounded-full`}
+                      title="Add Tag"
+                    >
+                      <TagIcon className="h-5 w-5 text-gray-400" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowFileUpload(true)
+                      }}
+                      className={`p-2 ${themeClasses.hover} rounded-full`}
+                      title="Attach File"
+                    >
+                      <PaperClipIcon className="h-5 w-5 text-gray-400" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setIsFullscreen(!isFullscreen)
+                      }}
+                      className={`p-2 ${themeClasses.hover} rounded-full`}
+                      title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                    >
+                      <EyeIcon className="h-5 w-5 text-gray-400" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleSpam(selectedMail.id)
+                      }}
+                      className={`p-2 ${themeClasses.hover} rounded-full`}
+                      title="Mark as Spam"
+                    >
+                      <ExclamationTriangleIcon className="h-5 w-5 text-orange-500" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDelete(selectedMail.id)
+                      }}
+                      className={`p-2 ${themeClasses.hover} rounded-full`}
+                      title="Delete"
+                    >
+                      <TrashIcon className="h-5 w-5 text-red-500" />
                     </button>
                   </div>
                 </div>
@@ -592,6 +761,113 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
           )}
         </div>
       </div>
+
+      {/* Tag Modal */}
+      {showTagModal && selectedMail && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className={`${themeClasses.card} p-6 rounded-lg shadow-xl max-w-md w-full mx-4`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={`text-lg font-semibold ${themeClasses.text}`}>Add Tag</h3>
+              <button
+                onClick={() => setShowTagModal(false)}
+                className={`p-1 ${themeClasses.hover} rounded-full`}
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.textSecondary} mb-2`}>
+                  Tag Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter tag name..."
+                  className={`w-full px-3 py-2 border rounded-lg ${themeClasses.input}`}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      const tagName = e.currentTarget.value.trim()
+                      if (tagName) {
+                        addTagToMail(selectedMail.id, tagName)
+                        setShowTagModal(false)
+                      }
+                    }
+                  }}
+                />
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                {labels.map((label) => (
+                  <button
+                    key={label.id}
+                    onClick={() => {
+                      addTagToMail(selectedMail.id, label.name)
+                      setShowTagModal(false)
+                    }}
+                    className={`px-3 py-1 rounded-full text-sm ${themeClasses.hover}`}
+                    style={{ backgroundColor: label.color, color: 'white' }}
+                  >
+                    {label.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* File Upload Modal */}
+      {showFileUpload && selectedMail && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className={`${themeClasses.card} p-6 rounded-lg shadow-xl max-w-md w-full mx-4`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={`text-lg font-semibold ${themeClasses.text}`}>Attach File</h3>
+              <button
+                onClick={() => setShowFileUpload(false)}
+                className={`p-1 ${themeClasses.hover} rounded-full`}
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <input
+                type="file"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    uploadFile(file)
+                    setShowFileUpload(false)
+                  }
+                }}
+                className={`w-full px-3 py-2 border rounded-lg ${themeClasses.input}`}
+                accept="*/*"
+              />
+              
+              {attachments.length > 0 && (
+                <div>
+                  <h4 className={`text-sm font-medium ${themeClasses.textSecondary} mb-2`}>Attachments</h4>
+                  <div className="space-y-2">
+                    {attachments.map((attachment) => (
+                      <div key={attachment.id} className="flex items-center justify-between p-2 bg-gray-100 rounded">
+                        <span className="text-sm">{attachment.filename}</span>
+                        <a
+                          href={attachment.downloadUrl}
+                          download
+                          className="text-blue-600 hover:text-blue-700 text-sm"
+                        >
+                          Download
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

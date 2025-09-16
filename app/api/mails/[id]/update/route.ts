@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 
-// PATCH - Update mail properties (star, important, labels, etc.)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -35,38 +33,101 @@ export async function PATCH(
     const { id } = params
     const updateData = await request.json()
 
-    // Validate that the user can update this mail
-    const { data: existingMail, error: fetchError } = await supabaseAdmin
+    // Validate update data
+    const allowedFields = ['is_read', 'is_starred', 'is_important', 'is_spam', 'is_trash', 'labels']
+    const updateFields: any = {}
+
+    // Process each field
+    if ('is_read' in updateData) {
+      updateFields.is_read = Boolean(updateData.is_read)
+      if (updateFields.is_read) {
+        updateFields.read_at = new Date().toISOString()
+      } else {
+        updateFields.read_at = null
+      }
+    }
+
+    if ('is_starred' in updateData) {
+      updateFields.is_starred = Boolean(updateData.is_starred)
+    }
+
+    if ('is_important' in updateData) {
+      updateFields.is_important = Boolean(updateData.is_important)
+    }
+
+    if ('is_spam' in updateData) {
+      updateFields.is_spam = Boolean(updateData.is_spam)
+    }
+
+    if ('is_trash' in updateData) {
+      updateFields.is_trash = Boolean(updateData.is_trash)
+    }
+
+    if ('labels' in updateData && Array.isArray(updateData.labels)) {
+      updateFields.labels = updateData.labels
+    }
+
+    if (Object.keys(updateFields).length === 0) {
+      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
+    }
+
+    // Get the current mail to check permissions
+    const { data: currentMail, error: fetchError } = await supabase
       .from('mails')
-      .select('id, sender_id, recipient_id')
+      .select('*')
       .eq('id', id)
       .single()
 
-    if (fetchError || !existingMail) {
+    if (fetchError || !currentMail) {
       return NextResponse.json({ error: 'Mail not found' }, { status: 404 })
     }
 
-    // Check if user is sender or recipient
-    if (existingMail.sender_id !== user.id && existingMail.recipient_id !== user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    // Check permissions based on the field being updated
+    let whereClause: any = { id }
+
+    if ('is_read' in updateData) {
+      // Only recipient can mark as read/unread
+      whereClause.recipient_id = user.id
+    } else {
+      // For other fields, both sender and recipient can update
+      whereClause = {
+        id,
+        or: `recipient_id.eq.${user.id},sender_id.eq.${user.id}`
+      }
     }
 
     // Update the mail
-    const { data: updatedMail, error: updateError } = await supabase
+    const { data: mail, error } = await supabase
       .from('mails')
-      .update(updateData)
-      .eq('id', id)
+      .update(updateFields)
+      .match(whereClause)
       .select('*')
       .single()
 
-    if (updateError) {
-      console.error('Error updating mail:', updateError)
-      return NextResponse.json({ error: 'Failed to update mail', details: updateError.message }, { status: 500 })
+    if (error) {
+      console.error('Error updating mail:', error)
+      return NextResponse.json({ 
+        error: 'Failed to update mail', 
+        details: error.message,
+        code: error.code 
+      }, { status: 500 })
     }
 
-    return NextResponse.json({ mail: updatedMail, message: 'Mail updated successfully' })
+    if (!mail) {
+      return NextResponse.json({ error: 'Mail not found or unauthorized' }, { status: 404 })
+    }
+
+    return NextResponse.json({ 
+      mail, 
+      message: 'Mail updated successfully',
+      updatedFields: Object.keys(updateFields)
+    })
+
   } catch (error) {
     console.error('Unexpected error in mail update PATCH:', error)
-    return NextResponse.json({ error: 'Internal server error', details: (error as Error).message }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Internal server error', 
+      details: (error as Error).message 
+    }, { status: 500 })
   }
 }

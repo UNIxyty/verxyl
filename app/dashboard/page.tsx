@@ -3,7 +3,8 @@
 import { DashboardLayout } from '@/components/DashboardLayout'
 import { useAuth } from '@/components/AuthProvider'
 import { useEffect, useState } from 'react'
-import { TicketIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
+import { useRouter } from 'next/navigation'
+import { TicketIcon, ClockIcon, CheckCircleIcon, EnvelopeIcon } from '@heroicons/react/24/outline'
 
 interface Ticket {
   id: string
@@ -18,6 +19,7 @@ interface Ticket {
 
 export default function DashboardPage() {
   const { user } = useAuth()
+  const router = useRouter()
   const [myTickets, setMyTickets] = useState<Ticket[]>([])
   const [allTickets, setAllTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
@@ -139,6 +141,41 @@ export default function DashboardPage() {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="card">
+          <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button
+              onClick={() => router.push('/create-ticket')}
+              className="flex items-center justify-center p-4 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+            >
+              <TicketIcon className="h-6 w-6 mr-2" />
+              Create Ticket
+            </button>
+            <button
+              onClick={() => router.push('/my-tickets')}
+              className="flex items-center justify-center p-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              <TicketIcon className="h-6 w-6 mr-2" />
+              My Tickets
+            </button>
+            <button
+              onClick={() => router.push('/inbox')}
+              className="flex items-center justify-center p-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+            >
+              <EnvelopeIcon className="h-6 w-6 mr-2" />
+              Inbox
+            </button>
+            <button
+              onClick={() => router.push('/completed')}
+              className="flex items-center justify-center p-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+            >
+              <CheckCircleIcon className="h-6 w-6 mr-2" />
+              Completed
+            </button>
           </div>
         </div>
 
