@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Modal } from './Modal'
 import { UserSelectShareModal } from './UserSelectShareModal'
+import { SharedUsersList } from './SharedUsersList'
 import { DocumentTextIcon, ClipboardDocumentIcon, ArrowDownTrayIcon, ShareIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
@@ -185,6 +186,16 @@ export function N8NBackupViewModal({ isOpen, onClose, backup }: N8NBackupViewMod
             </div>
           )}
         </div>
+
+        {/* Shared Users Section */}
+        <SharedUsersList 
+          backupId={backup.id} 
+          backupType="n8n_workflow"
+          onUserRemoved={() => {
+            // Optionally refresh or show notification
+            toast.success('User access removed successfully')
+          }}
+        />
 
         {/* Footer */}
         <div className="flex justify-between pt-4 border-t border-dark-700">

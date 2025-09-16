@@ -2,6 +2,7 @@
 
 import { Modal } from './Modal'
 import { UserSelectShareModal } from './UserSelectShareModal'
+import { SharedUsersList } from './SharedUsersList'
 import { ArrowDownTrayIcon, DocumentTextIcon, LightBulbIcon, PencilIcon, TrashIcon, ShareIcon } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
@@ -148,6 +149,16 @@ export function AIPromptBackupViewModal({ isOpen, onClose, backup, onEdit, onDel
             </div>
           </div>
         )}
+
+        {/* Shared Users Section */}
+        <SharedUsersList 
+          backupId={backup.id} 
+          backupType="ai_prompt"
+          onUserRemoved={() => {
+            // Optionally refresh or show notification
+            toast.success('User access removed successfully')
+          }}
+        />
 
         {/* Download Section */}
         <div>
