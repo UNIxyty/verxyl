@@ -6,7 +6,10 @@ export async function POST(request: NextRequest) {
     
     console.log('=== File Upload Test Debug ===')
     console.log('FormData entries:')
-    for (const [key, value] of formData.entries()) {
+    
+    // Convert FormData to array for iteration
+    const entries = Array.from(formData.entries())
+    for (const [key, value] of entries) {
       if (value instanceof File) {
         console.log(`${key}:`, {
           name: value.name,
