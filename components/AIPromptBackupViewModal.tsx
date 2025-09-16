@@ -48,78 +48,71 @@ export function AIPromptBackupViewModal({ isOpen, onClose, backup }: AIPromptBac
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="AI Prompt Details" size="xl">
-      <div className="flex flex-col h-full">
-        {/* Header */}
-        <div className="border-b border-dark-700 pb-4 mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <LightBulbIcon className="h-6 w-6 text-yellow-500" />
-              <span className="text-lg font-medium text-white">{backup.ai_model}</span>
-            </div>
-            <button
-              onClick={downloadPrompt}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
-            >
-              <ArrowDownTrayIcon className="h-5 w-5" />
-              Download as TXT
-            </button>
+    <Modal isOpen={isOpen} onClose={onClose} title={backup.ai_model} size="xl">
+      <div className="space-y-6">
+        {/* Header Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h4 className="text-sm font-medium text-gray-300 mb-1">Created</h4>
+            <p className="text-gray-200">{formatDate(backup.created_at)}</p>
           </div>
-          <div className="text-sm text-gray-400">
-            Created: {formatDate(backup.created_at)}
+          <div>
+            <h4 className="text-sm font-medium text-gray-300 mb-1">AI Model</h4>
+            <p className="text-gray-200">{backup.ai_model}</p>
           </div>
-          {backup.updated_at !== backup.created_at && (
-            <div className="text-sm text-gray-400">
-              Updated: {formatDate(backup.updated_at)}
-            </div>
-          )}
         </div>
 
-        {/* Main Content - Full Height */}
-        <div className="flex-1 overflow-auto space-y-6">
-          {/* Prompt Text */}
+        {/* Prompt Text Section */}
+        <div>
+          <h4 className="text-sm font-medium text-gray-300 mb-1">Prompt Text</h4>
+          <div className="bg-dark-700 rounded-lg p-4 mt-2">
+            <pre className="text-gray-200 whitespace-pre-wrap text-sm leading-relaxed">
+              {backup.prompt_text}
+            </pre>
+          </div>
+        </div>
+
+        {/* Output Logic Section */}
+        {backup.output_logic && (
           <div>
-            <h3 className="text-lg font-medium text-gray-300 mb-4 flex items-center gap-2">
-              <DocumentTextIcon className="h-5 w-5" />
-              Prompt Text
-            </h3>
-            <div className="bg-dark-700 rounded-lg p-6">
-              <pre className="text-gray-200 whitespace-pre-wrap text-base leading-relaxed font-mono">
-                {backup.prompt_text}
+            <h4 className="text-sm font-medium text-gray-300 mb-1">Output Logic</h4>
+            <div className="bg-dark-700 rounded-lg p-4 mt-2">
+              <pre className="text-gray-200 text-xs">
+                {JSON.stringify(backup.output_logic, null, 2)}
               </pre>
             </div>
           </div>
+        )}
 
-          {/* Output Logic */}
-          {backup.output_logic && (
-            <div>
-              <h3 className="text-lg font-medium text-gray-300 mb-4">Output Logic</h3>
-              <div className="bg-dark-700 rounded-lg p-6">
-                <pre className="text-gray-200 text-sm font-mono">
-                  {JSON.stringify(backup.output_logic, null, 2)}
-                </pre>
-              </div>
+        {/* Output Result Section */}
+        {backup.output_result && (
+          <div>
+            <h4 className="text-sm font-medium text-gray-300 mb-1">Output Result</h4>
+            <div className="bg-dark-700 rounded-lg p-4 mt-2">
+              <pre className="text-gray-200 text-xs">
+                {JSON.stringify(backup.output_result, null, 2)}
+              </pre>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Output Result */}
-          {backup.output_result && (
-            <div>
-              <h3 className="text-lg font-medium text-gray-300 mb-4">Output Result</h3>
-              <div className="bg-dark-700 rounded-lg p-6">
-                <pre className="text-gray-200 text-sm font-mono">
-                  {JSON.stringify(backup.output_result, null, 2)}
-                </pre>
-              </div>
-            </div>
-          )}
+        {/* Download Section */}
+        <div>
+          <h4 className="text-sm font-medium text-gray-300 mb-1">Download</h4>
+          <button
+            onClick={downloadPrompt}
+            className="text-blue-400 hover:text-blue-300 font-medium flex items-center gap-2 mt-2"
+          >
+            <ArrowDownTrayIcon className="h-4 w-4" />
+            Download as TXT
+          </button>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end pt-6 border-t border-dark-700 mt-6">
+        <div className="flex justify-end pt-4">
           <button
             onClick={onClose}
-            className="btn-secondary px-6 py-2"
+            className="btn-primary px-6 py-2"
           >
             Close
           </button>
