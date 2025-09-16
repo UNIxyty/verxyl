@@ -5,7 +5,6 @@ import { N8NProjectBackupModal } from '@/components/N8NProjectBackupModal'
 import { N8NBackupViewModal } from '@/components/N8NBackupViewModal'
 import { useAuth } from '@/components/AuthProvider'
 import { useEffect, useState } from 'react'
-import { getN8NProjectBackups } from '@/lib/database'
 import { PlusIcon, EyeIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
 import { N8NIcon } from '@/components/N8NIcon'
 
@@ -38,8 +37,13 @@ export default function N8NBackupsPage() {
     if (!user) return
 
     try {
-      const backupsData = await getN8NProjectBackups(user.id)
-      setBackups(backupsData)
+      const response = await fetch('/api/n8n-backups')
+      if (response.ok) {
+        const data = await response.json()
+        setBackups(data.backups || [])
+      } else {
+        console.error('Failed to load N8N project backups:', response.status)
+      }
     } catch (error) {
       console.error('Error loading N8N project backups:', error)
     } finally {

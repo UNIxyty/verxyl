@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { Modal } from './Modal'
 import { FilePicker } from './FilePicker'
-import { createN8NProjectBackup } from '@/lib/database'
 import { useAuth } from './AuthProvider'
 import toast from 'react-hot-toast'
 
@@ -53,13 +52,21 @@ export function N8NProjectBackupModal({ isOpen, onClose, onSuccess }: N8NProject
         filename: selectedFile.name
       }
 
-      await createN8NProjectBackup({
-        user_id: user.id,
-        project_name: data.project_name,
-        workflow_json: workflowWithFilename,
-        previous_version_id: null,
-        description: data.description || null,
+      const response = await fetch('/api/n8n-backups', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          project_name: data.project_name,
+          workflow_json: workflowWithFilename,
+          description: data.description || null,
+        }),
       })
+
+      if (!response.ok) {
+        throw new Error('Failed to create backup')
+      }
 
       toast.success('N8N Project backup saved successfully!')
       reset()
