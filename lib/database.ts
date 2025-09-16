@@ -149,6 +149,11 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
       const { dateTicket, timeTicket } = extractDateTime(data.deadline)
       
       console.log('Sending webhook for ticket creation')
+      
+      // Get user notification settings for the ticket creator
+      const { getUserNotificationSettings } = await import('./new-webhook')
+      const notificationSettings = await getUserNotificationSettings(data.created_by)
+      
       const webhookResult = await sendNewWebhook({
         action: 'ticket_created',
         timestamp: new Date().toISOString(),
@@ -166,7 +171,16 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
         worker_name: getUserFullName(data.assigned_user),
         admin_id: data.assigned_to,
         admin_email: getUserEmail(data.assigned_user),
-        admin_name: getUserFullName(data.assigned_user)
+        admin_name: getUserFullName(data.assigned_user),
+        user_id: data.created_by,
+        // Add notification settings as direct parameters
+        newTicket: notificationSettings?.newTicket,
+        deleted_ticket: notificationSettings?.deleted_ticket,
+        in_work_ticket: notificationSettings?.in_work_ticket,
+        updatetTicket: notificationSettings?.updatetTicket,
+        solvedTicket: notificationSettings?.solvedTicket,
+        sharedWorkflow: notificationSettings?.sharedWorkflow,
+        sharedPrompt: notificationSettings?.sharedPrompt
       })
 
       console.log('Webhook result:', webhookResult)
@@ -234,6 +248,10 @@ export const updateTicket = async (id: string, updates: TicketUpdate): Promise<T
         console.log('Skipping webhook - no status change detected')
       } else {
       
+      // Get user notification settings for the ticket creator
+      const { getUserNotificationSettings } = await import('./new-webhook')
+      const notificationSettings = await getUserNotificationSettings(data.created_by)
+      
       const webhookResult = await sendNewWebhook({
         action: webhookAction === 'in_work' ? 'ticket_in_work' : 'ticket_updated',
         timestamp: new Date().toISOString(),
@@ -252,7 +270,16 @@ export const updateTicket = async (id: string, updates: TicketUpdate): Promise<T
         worker_name: getUserFullName(data.assigned_user),
         admin_id: data.assigned_to,
         admin_email: getUserEmail(data.assigned_user),
-        admin_name: getUserFullName(data.assigned_user)
+        admin_name: getUserFullName(data.assigned_user),
+        user_id: data.created_by,
+        // Add notification settings as direct parameters
+        newTicket: notificationSettings?.newTicket,
+        deleted_ticket: notificationSettings?.deleted_ticket,
+        in_work_ticket: notificationSettings?.in_work_ticket,
+        updatetTicket: notificationSettings?.updatetTicket,
+        solvedTicket: notificationSettings?.solvedTicket,
+        sharedWorkflow: notificationSettings?.sharedWorkflow,
+        sharedPrompt: notificationSettings?.sharedPrompt
       })
 
       console.log('Webhook result:', webhookResult)
@@ -378,6 +405,11 @@ export const completeTicket = async (id: string, solutionData: any): Promise<Tic
       const { dateTicket, timeTicket } = extractDateTime(data.deadline)
       
       console.log('Sending webhook for ticket completion')
+      
+      // Get user notification settings for the ticket creator
+      const { getUserNotificationSettings } = await import('./new-webhook')
+      const notificationSettings = await getUserNotificationSettings(data.created_by)
+      
       const webhookResult = await sendNewWebhook({
         action: 'ticket_solved',
         timestamp: new Date().toISOString(),
@@ -396,7 +428,16 @@ export const completeTicket = async (id: string, solutionData: any): Promise<Tic
         worker_name: getUserFullName(data.assigned_user),
         admin_id: data.assigned_to,
         admin_email: getUserEmail(data.assigned_user),
-        admin_name: getUserFullName(data.assigned_user)
+        admin_name: getUserFullName(data.assigned_user),
+        user_id: data.created_by,
+        // Add notification settings as direct parameters
+        newTicket: notificationSettings?.newTicket,
+        deleted_ticket: notificationSettings?.deleted_ticket,
+        in_work_ticket: notificationSettings?.in_work_ticket,
+        updatetTicket: notificationSettings?.updatetTicket,
+        solvedTicket: notificationSettings?.solvedTicket,
+        sharedWorkflow: notificationSettings?.sharedWorkflow,
+        sharedPrompt: notificationSettings?.sharedPrompt
       })
 
       console.log('Webhook result:', webhookResult)
@@ -452,6 +493,11 @@ export const editTicket = async (id: string, updates: TicketUpdate): Promise<Tic
       const { dateTicket, timeTicket } = extractDateTime(data.deadline)
       
       console.log('Sending webhook for ticket update')
+      
+      // Get user notification settings for the ticket creator
+      const { getUserNotificationSettings } = await import('./new-webhook')
+      const notificationSettings = await getUserNotificationSettings(data.created_by)
+      
       const webhookResult = await sendNewWebhook({
         action: 'ticket_updated',
         timestamp: new Date().toISOString(),
@@ -468,7 +514,16 @@ export const editTicket = async (id: string, updates: TicketUpdate): Promise<Tic
         worker_name: getUserFullName(data.assigned_user),
         admin_id: data.assigned_to,
         admin_email: getUserEmail(data.assigned_user),
-        admin_name: getUserFullName(data.assigned_user)
+        admin_name: getUserFullName(data.assigned_user),
+        user_id: data.created_by,
+        // Add notification settings as direct parameters
+        newTicket: notificationSettings?.newTicket,
+        deleted_ticket: notificationSettings?.deleted_ticket,
+        in_work_ticket: notificationSettings?.in_work_ticket,
+        updatetTicket: notificationSettings?.updatetTicket,
+        solvedTicket: notificationSettings?.solvedTicket,
+        sharedWorkflow: notificationSettings?.sharedWorkflow,
+        sharedPrompt: notificationSettings?.sharedPrompt
       })
 
       console.log('Webhook result:', webhookResult)
@@ -520,6 +575,11 @@ export const deleteTicket = async (id: string): Promise<boolean> => {
       const { dateTicket, timeTicket } = extractDateTime(ticketData.deadline)
       
       console.log('Sending webhook for ticket deletion')
+      
+      // Get user notification settings for the ticket creator
+      const { getUserNotificationSettings } = await import('./new-webhook')
+      const notificationSettings = await getUserNotificationSettings(ticketData.created_by)
+      
       const webhookResult = await sendNewWebhook({
         action: 'ticket_deleted',
         timestamp: new Date().toISOString(),
@@ -537,7 +597,16 @@ export const deleteTicket = async (id: string): Promise<boolean> => {
         worker_name: getUserFullName(ticketData.assigned_user),
         admin_id: ticketData.assigned_to,
         admin_email: getUserEmail(ticketData.assigned_user),
-        admin_name: getUserFullName(ticketData.assigned_user)
+        admin_name: getUserFullName(ticketData.assigned_user),
+        user_id: ticketData.created_by,
+        // Add notification settings as direct parameters
+        newTicket: notificationSettings?.newTicket,
+        deleted_ticket: notificationSettings?.deleted_ticket,
+        in_work_ticket: notificationSettings?.in_work_ticket,
+        updatetTicket: notificationSettings?.updatetTicket,
+        solvedTicket: notificationSettings?.solvedTicket,
+        sharedWorkflow: notificationSettings?.sharedWorkflow,
+        sharedPrompt: notificationSettings?.sharedPrompt
       })
 
       console.log('Webhook result:', webhookResult)

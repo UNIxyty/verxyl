@@ -126,6 +126,10 @@ export async function PATCH(
 
     // Send new webhook for role change
     try {
+      // Get user notification settings for the target user
+      const { getUserNotificationSettings } = await import('@/lib/new-webhook')
+      const notificationSettings = await getUserNotificationSettings(targetUserId)
+      
       await sendNewWebhook({
         action: 'role_changed',
         timestamp: new Date().toISOString(),
@@ -137,7 +141,17 @@ export async function PATCH(
         user_name: updatedUser.full_name || updatedUser.email,
         roleChanged: true,
         prevRole: targetUser.role,
-        currentRole: role
+        currentRole: role,
+        // Add notification settings as new body structure for user webhooks
+        notificationBody: notificationSettings ? {
+          newTicket: notificationSettings.newTicket,
+          deleted_ticket: notificationSettings.deleted_ticket,
+          in_work_ticket: notificationSettings.in_work_ticket,
+          updatetTicket: notificationSettings.updatetTicket,
+          solvedTicket: notificationSettings.solvedTicket,
+          sharedWorkflow: notificationSettings.sharedWorkflow,
+          sharedPrompt: notificationSettings.sharedPrompt
+        } : undefined
       })
     } catch (webhookError) {
       console.error('New webhook error for role change:', webhookError)

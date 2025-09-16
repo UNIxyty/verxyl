@@ -79,6 +79,15 @@ interface NewWebhookPayload {
     sharedWorkflow?: boolean
     sharedPrompt?: boolean
   }
+  
+  // Direct notification parameters for ticket webhooks
+  newTicket?: boolean
+  deleted_ticket?: boolean
+  in_work_ticket?: boolean
+  updatetTicket?: boolean
+  solvedTicket?: boolean
+  sharedWorkflow?: boolean
+  sharedPrompt?: boolean
 }
 
 // Helper function to get user notification settings
