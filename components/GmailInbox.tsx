@@ -33,21 +33,24 @@ interface User {
 
 interface Mail {
   id: string
-  subject: string
-  content: string
   sender_id: string
   recipient_id: string
+  subject: string
+  content: string
   is_read: boolean
-  is_draft: boolean
+  is_draft?: boolean
   is_starred?: boolean
   is_important?: boolean
   is_spam?: boolean
   is_trash?: boolean
   labels?: string[]
+  mail_type: string
+  related_id: string | null
+  related_type: string | null
   created_at: string
-  read_at?: string
-  sender?: User
-  recipient?: User
+  read_at: string | null
+  sender: User
+  recipient: User
 }
 
 interface GmailInboxProps {
@@ -386,12 +389,12 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
   }
 
   const getSenderName = (mail: Mail) => {
-    if (mail.sender?.full_name) return mail.sender.full_name
-    return mail.sender?.email || 'Unknown'
+    if (mail.sender.full_name) return mail.sender.full_name
+    return mail.sender.email || 'Unknown'
   }
 
   const getSenderRole = (mail: Mail) => {
-    return mail.sender?.role || 'user'
+    return mail.sender.role || 'user'
   }
 
   return (
@@ -529,13 +532,13 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                       <div className="flex items-center gap-2">
                         <UserIcon className="h-4 w-4 text-gray-400" />
                         <span className="text-gray-300">
-                          From: {selectedMail.sender?.full_name || selectedMail.sender?.email}
+                          From: {selectedMail.sender.full_name || selectedMail.sender.email}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <UserIcon className="h-4 w-4 text-gray-400" />
                         <span className="text-gray-300">
-                          To: {selectedMail.recipient?.full_name || selectedMail.recipient?.email}
+                          To: {selectedMail.recipient.full_name || selectedMail.recipient.email}
                         </span>
                       </div>
                       <span className="text-gray-400">
