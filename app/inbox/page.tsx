@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@/components/AuthProvider'
+import { DashboardLayout } from '@/components/DashboardLayout'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
@@ -258,7 +259,7 @@ export default function InboxPage() {
   }
 
   return (
-    <div className="h-screen bg-gray-50">
+    <DashboardLayout>
       <GmailInbox
         onCompose={() => setIsComposeOpen(true)}
         onViewMail={handleViewMail}
@@ -284,6 +285,6 @@ export default function InboxPage() {
         userId={selectedUserId}
         onSendMail={handleSendMailToUser}
       />
-    </div>
+    </DashboardLayout>
   )
 }

@@ -19,7 +19,6 @@ import {
   PaperClipIcon,
   EyeIcon
 } from '@heroicons/react/24/outline'
-import Logo from './Logo'
 import NotificationBell from './NotificationBell'
 import { 
   StarIcon as StarIconSolid,
@@ -101,7 +100,6 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
     subject: '',
     content: ''
   })
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [selectedFolder, setSelectedFolder] = useState('inbox')
 
   const folders = [
@@ -400,69 +398,40 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
   }
 
   return (
-    <div className="flex h-screen bg-dark-900">
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 btn-primary rounded-lg"
-      >
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-
-      {/* Back to Dashboard Button */}
-      <button
-        onClick={() => router.push('/dashboard')}
-        className="lg:hidden fixed top-4 right-4 z-50 p-2 btn-secondary rounded-lg"
-        title="Back to Dashboard"
-      >
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-      </button>
-
-      {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:relative inset-y-0 left-0 z-40 w-64 bg-dark-800 border-r border-dark-700 flex flex-col transition-transform duration-300 ease-in-out`}>
-        {/* Compose Button */}
-        <div className="p-4">
+    <div className="flex flex-col h-full bg-dark-900">
+      {/* Folder Navigation Bar */}
+      <div className="bg-dark-800 border-b border-dark-700 px-6 py-3">
+        <div className="flex items-center gap-2 overflow-x-auto">
+          {folders.map((folder) => {
+            const Icon = folder.icon
+            return (
+              <button
+                key={folder.id}
+                onClick={() => setSelectedFolder(folder.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                  selectedFolder === folder.id
+                    ? 'bg-primary-600 text-white font-medium'
+                    : 'text-gray-400 hover:bg-dark-700 hover:text-gray-200'
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{folder.name}</span>
+                <span className="text-xs bg-dark-600 px-2 py-1 rounded-full">
+                  {folderCounts[folder.id as keyof typeof folderCounts]}
+                </span>
+              </button>
+            )
+          })}
           <button
             onClick={() => setShowCompose(true)}
-            className="w-full btn-primary flex items-center justify-center gap-2"
+            className="flex items-center gap-2 px-4 py-2 btn-primary rounded-lg ml-4"
           >
-            <PlusIcon className="h-5 w-5" />
+            <PlusIcon className="h-4 w-4" />
             Compose
           </button>
         </div>
-
-        {/* Folders */}
-        <div className="flex-1 overflow-y-auto">
-          <nav className="px-2">
-            {folders.map((folder) => {
-              const Icon = folder.icon
-              return (
-                <button
-                  key={folder.id}
-                  onClick={() => setSelectedFolder(folder.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2 text-left rounded-lg transition-colors ${
-                    selectedFolder === folder.id
-                      ? 'bg-primary-600 text-white font-medium'
-                      : 'text-gray-400 hover:bg-dark-700 hover:text-gray-200'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Icon className="h-5 w-5" />
-                    <span>{folder.name}</span>
-                  </div>
-                  <span className="text-xs text-gray-500">
-                    {folderCounts[folder.id as keyof typeof folderCounts]}
-                  </span>
-                </button>
-              )
-            })}
-          </nav>
-        </div>
       </div>
+
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
@@ -470,18 +439,6 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
         <div className="bg-dark-800 border-b border-dark-700 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button onClick={() => router.push('/dashboard')} className="flex items-center gap-2">
-                <Logo className="h-7" />
-              </button>
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="flex items-center gap-2 px-3 py-2 btn-secondary rounded-lg"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                Dashboard
-              </button>
               {selectedMail && (
                 <button
                   onClick={handleBackToInbox}
@@ -511,27 +468,12 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                 </div>
               )}
               <NotificationBell onNavigate={router.push} />
-              <button
-                onClick={() => setShowCompose(true)}
-                className="flex items-center gap-2 px-3 py-2 btn-primary rounded-lg"
-              >
-                <PlusIcon className="h-4 w-4" />
-                Compose
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Mobile Backdrop */}
-        {sidebarOpen && (
-          <div 
-            className="lg:hidden fixed inset-0 z-30 bg-black bg-opacity-50"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto lg:ml-0">
+        <div className="flex-1 overflow-y-auto">
           {selectedMail ? (
             /* Email View - Fullscreen or Half Screen */
             <div className={`card ${isFullscreen ? 'fixed inset-0 z-50 m-0 rounded-none' : 'm-2 lg:m-6 min-h-[80vh]'} p-4 lg:p-6 rounded-lg shadow-lg`}>
