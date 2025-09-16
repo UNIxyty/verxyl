@@ -121,13 +121,13 @@ export function Navigation() {
       {isMobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setIsMobileMenuOpen(false)}>
           <div className="bg-dark-800 border-r border-dark-700 w-56 min-h-screen flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between h-16 px-6 border-b border-dark-700">
+            <div className="flex items-center justify-center h-16 px-6 border-b border-dark-700 relative">
               <button onClick={() => router.push('/dashboard')} className="flex items-center gap-2">
                 <Logo className="h-8" />
               </button>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+                className="absolute right-6 p-1 text-gray-400 hover:text-gray-200 transition-colors"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
@@ -197,7 +197,7 @@ export function Navigation() {
 
       {/* Desktop Navigation */}
       <nav className="hidden lg:flex bg-dark-800 border-r border-dark-700 w-56 min-h-screen flex-col fixed left-0 top-0 z-40">
-        <div className="flex items-center h-14 px-4 border-b border-dark-700">
+        <div className="flex items-center justify-center h-14 px-4 border-b border-dark-700">
           <button onClick={() => router.push('/dashboard')} className="flex items-center gap-2">
             <Logo className="h-7" />
           </button>
