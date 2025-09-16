@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useTheme } from './ThemeProvider'
 import { 
   EnvelopeIcon, 
   PaperAirplaneIcon, 
@@ -10,7 +12,9 @@ import {
   TrashIcon,
   MagnifyingGlassIcon,
   PlusIcon,
-  PencilIcon
+  PencilIcon,
+  ArrowLeftIcon,
+  UserIcon
 } from '@heroicons/react/24/outline'
 import { 
   StarIcon as StarIconSolid,
@@ -73,6 +77,8 @@ const FOLDER_COUNTS = {
 }
 
 export default function GmailInbox({ onCompose, onViewMail, onUserClick }: GmailInboxProps) {
+  const router = useRouter()
+  const { theme } = useTheme()
   const [selectedFolder, setSelectedFolder] = useState('inbox')
   const [mails, setMails] = useState<Mail[]>([])
   const [loading, setLoading] = useState(true)
@@ -81,6 +87,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
   const [folderCounts, setFolderCounts] = useState(FOLDER_COUNTS)
   const [showLabels, setShowLabels] = useState(false)
   const [labels, setLabels] = useState<any[]>([])
+  const [selectedMail, setSelectedMail] = useState<Mail | null>(null)
 
   const folders = [
     { id: 'inbox', name: 'Inbox', icon: FOLDER_ICONS.inbox },
@@ -91,6 +98,25 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
     { id: 'spam', name: 'Spam', icon: FOLDER_ICONS.spam },
     { id: 'trash', name: 'Trash', icon: FOLDER_ICONS.trash }
   ]
+
+  // Get theme-based classes
+  const getThemeClasses = () => {
+    const isLight = theme.startsWith('light')
+    return {
+      bg: isLight ? 'bg-gray-50' : 'bg-gray-900',
+      sidebar: isLight ? 'bg-white border-r border-gray-200' : 'bg-gray-800 border-r border-gray-700',
+      header: isLight ? 'bg-white border-b border-gray-200' : 'bg-gray-800 border-b border-gray-700',
+      card: isLight ? 'bg-white border border-gray-200' : 'bg-gray-800 border border-gray-700',
+      text: isLight ? 'text-gray-900' : 'text-white',
+      textSecondary: isLight ? 'text-gray-600' : 'text-gray-300',
+      textMuted: isLight ? 'text-gray-500' : 'text-gray-400',
+      hover: isLight ? 'hover:bg-gray-50' : 'hover:bg-gray-700',
+      input: isLight ? 'bg-white border-gray-300 text-gray-900' : 'bg-gray-700 border-gray-600 text-white',
+      button: isLight ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'
+    }
+  }
+
+  const themeClasses = getThemeClasses()
 
   useEffect(() => {
     loadMails()
@@ -224,15 +250,24 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
     }
   }
 
+  const handleMailClick = (mail: Mail) => {
+    setSelectedMail(mail)
+    onViewMail(mail)
+  }
+
+  const handleBackToInbox = () => {
+    setSelectedMail(null)
+  }
+
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className={`flex h-screen ${themeClasses.bg}`}>
       {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
+      <div className={`w-64 ${themeClasses.sidebar} flex flex-col`}>
         {/* Compose Button */}
         <div className="p-4">
           <button
             onClick={onCompose}
-            className="w-full bg-primary-600 hover:bg-primary-700 text-white px-4 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
           >
             <PlusIcon className="h-5 w-5" />
             Compose
@@ -252,8 +287,8 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                   onClick={() => setSelectedFolder(folder.id)}
                   className={`w-full flex items-center justify-between px-3 py-2 text-left rounded-lg transition-colors ${
                     selectedFolder === folder.id
-                      ? 'bg-primary-50 text-primary-700 font-medium'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-blue-50 text-blue-700 font-medium'
+                      : `${themeClasses.textSecondary} ${themeClasses.hover}`
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -307,39 +342,129 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className={`${themeClasses.header} px-6 py-4`}>
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-gray-900 capitalize">
-              {selectedFolder}
-            </h1>
+            <div className="flex items-center gap-4">
+              {selectedMail && (
+                <button
+                  onClick={handleBackToInbox}
+                  className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  <ArrowLeftIcon className="h-5 w-5" />
+                  <span>Back to Inbox</span>
+                </button>
+              )}
+              <h1 className={`text-xl font-semibold ${themeClasses.text} capitalize`}>
+                {selectedMail ? selectedMail.subject : selectedFolder}
+              </h1>
+            </div>
             
             {/* Search */}
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search mail..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent w-80"
-                />
+            {!selectedMail && (
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <MagnifyingGlassIcon className={`h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 ${themeClasses.textMuted}`} />
+                  <input
+                    type="text"
+                    placeholder="Search mail..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className={`pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-80 ${themeClasses.input}`}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Mail List */}
+        {/* Content Area */}
         <div className="flex-1 overflow-y-auto">
-          {loading ? (
+          {selectedMail ? (
+            /* Email View */
+            <div className={`${themeClasses.card} m-6 p-6 rounded-lg`}>
+              <div className="border-b border-gray-200 pb-4 mb-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <h2 className={`text-2xl font-bold ${themeClasses.text} mb-2`}>
+                      {selectedMail.subject}
+                    </h2>
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <UserIcon className="h-4 w-4 text-gray-400" />
+                        <span className={themeClasses.textSecondary}>
+                          From: {selectedMail.sender?.full_name || selectedMail.sender?.email}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <UserIcon className="h-4 w-4 text-gray-400" />
+                        <span className={themeClasses.textSecondary}>
+                          To: {selectedMail.recipient?.full_name || selectedMail.recipient?.email}
+                        </span>
+                      </div>
+                      <span className={themeClasses.textMuted}>
+                        {new Date(selectedMail.created_at).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleStar(selectedMail.id, selectedMail.is_starred || false)
+                      }}
+                      className="p-2 hover:bg-gray-100 rounded-full"
+                    >
+                      {(selectedMail.is_starred || false) ? (
+                        <StarIconSolid className="h-5 w-5 text-yellow-500" />
+                      ) : (
+                        <StarIcon className="h-5 w-5 text-gray-400" />
+                      )}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleImportant(selectedMail.id, selectedMail.is_important || false)
+                      }}
+                      className="p-2 hover:bg-gray-100 rounded-full"
+                    >
+                      {(selectedMail.is_important || false) ? (
+                        <ExclamationTriangleIconSolid className="h-5 w-5 text-red-500" />
+                      ) : (
+                        <ExclamationTriangleIcon className="h-5 w-5 text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div className={`${themeClasses.text} leading-relaxed whitespace-pre-wrap`}>
+                {selectedMail.content}
+              </div>
+              
+              {selectedMail.labels && selectedMail.labels.length > 0 && (
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <div className="flex flex-wrap gap-2">
+                    {selectedMail.labels.map((label, index) => (
+                      <span
+                        key={index}
+                        className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
+                      >
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : loading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : mails.length === 0 ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
-                <EnvelopeIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No mails in {selectedFolder}</p>
+                <EnvelopeIcon className={`h-12 w-12 ${themeClasses.textMuted} mx-auto mb-4`} />
+                <p className={themeClasses.textMuted}>No mails in {selectedFolder}</p>
               </div>
             </div>
           ) : (
@@ -348,8 +473,8 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                 <div
                   key={mail.id}
                   onClick={() => handleMailClick(mail)}
-                  className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                    !mail.is_read ? 'bg-blue-50 border-l-4 border-l-primary-500' : ''
+                  className={`p-4 ${themeClasses.hover} cursor-pointer transition-colors ${
+                    !mail.is_read ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
                   }`}
                 >
                   <div className="flex items-center gap-4">
@@ -365,7 +490,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                         }
                       }}
                       onClick={(e) => e.stopPropagation()}
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
 
                     {/* Star */}
@@ -374,7 +499,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                         e.stopPropagation()
                         toggleStar(mail.id, mail.is_starred || false)
                       }}
-                      className="p-1 hover:bg-gray-200 rounded"
+                      className={`p-1 ${themeClasses.hover} rounded`}
                     >
                       {(mail.is_starred || false) ? (
                         <StarIconSolid className="h-4 w-4 text-yellow-500" />
@@ -389,7 +514,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                         e.stopPropagation()
                         toggleImportant(mail.id, mail.is_important || false)
                       }}
-                      className="p-1 hover:bg-gray-200 rounded"
+                      className={`p-1 ${themeClasses.hover} rounded`}
                     >
                       {(mail.is_important || false) ? (
                         <ExclamationTriangleIconSolid className="h-4 w-4 text-red-500" />
@@ -401,20 +526,20 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                     {/* Sender */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className={`font-medium ${!mail.is_read ? 'text-gray-900' : 'text-gray-700'}`}>
+                        <span className={`font-medium ${!mail.is_read ? themeClasses.text : themeClasses.textSecondary}`}>
                           {getSenderName(mail)}
                         </span>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        <span className={`text-xs ${themeClasses.textMuted} bg-gray-100 px-2 py-1 rounded`}>
                           {getSenderRole(mail)}
                         </span>
                         {!mail.is_read && (
-                          <div className="w-2 h-2 bg-primary-600 rounded-full"></div>
+                          <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                         )}
                       </div>
-                      <p className={`text-sm truncate ${!mail.is_read ? 'text-gray-900' : 'text-gray-600'}`}>
+                      <p className={`text-sm truncate ${!mail.is_read ? themeClasses.text : themeClasses.textSecondary}`}>
                         {mail.subject}
                       </p>
-                      <p className="text-xs text-gray-500 truncate">
+                      <p className={`text-xs ${themeClasses.textMuted} truncate`}>
                         {mail.content.substring(0, 100)}...
                       </p>
                     </div>
@@ -439,7 +564,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                     )}
 
                     {/* Date */}
-                    <div className="text-sm text-gray-500">
+                    <div className={`text-sm ${themeClasses.textMuted}`}>
                       {formatDate(mail.created_at)}
                     </div>
                   </div>
