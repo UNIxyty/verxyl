@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Modal } from './Modal'
-import { ShareModal } from './ShareModal'
+import { UserSelectShareModal } from './UserSelectShareModal'
 import { DocumentTextIcon, ClipboardDocumentIcon, ArrowDownTrayIcon, ShareIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
@@ -204,7 +204,7 @@ export function N8NBackupViewModal({ isOpen, onClose, backup }: N8NBackupViewMod
       </div>
 
       {/* Share Modal */}
-      <ShareModal
+      <UserSelectShareModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         onShare={handleShare}

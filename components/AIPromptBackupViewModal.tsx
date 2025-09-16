@@ -1,7 +1,7 @@
 'use client'
 
 import { Modal } from './Modal'
-import { ShareModal } from './ShareModal'
+import { UserSelectShareModal } from './UserSelectShareModal'
 import { ArrowDownTrayIcon, DocumentTextIcon, LightBulbIcon, PencilIcon, TrashIcon, ShareIcon } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
@@ -200,7 +200,7 @@ export function AIPromptBackupViewModal({ isOpen, onClose, backup, onEdit, onDel
       </div>
 
       {/* Share Modal */}
-      <ShareModal
+      <UserSelectShareModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         onShare={handleShare}
