@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       .from('users')
       .select('id, email, full_name, avatar_url, role')
       .neq('id', user.id)
-      .order('full_name', { ascending: true, nullsLast: true })
+      .order('full_name', { ascending: true, nullsFirst: false })
       .limit(limit)
 
     if (error) {
