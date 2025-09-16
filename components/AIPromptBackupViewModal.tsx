@@ -48,7 +48,7 @@ export function AIPromptBackupViewModal({ isOpen, onClose, backup }: AIPromptBac
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="AI Prompt Details" size="full">
+    <Modal isOpen={isOpen} onClose={onClose} title="AI Prompt Details" size="xl">
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="border-b border-dark-700 pb-4 mb-6">
