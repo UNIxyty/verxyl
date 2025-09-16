@@ -410,6 +410,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
       if (response.ok) {
         setShowCompose(false)
         setComposeData({ recipient: '', recipient_id: '', subject: '', content: '' })
+        setSelectedFiles([])
         window.location.reload()
         alert('Draft saved!')
       } else {
@@ -605,6 +606,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                             subject: selectedMail.subject.startsWith('Re: ') ? selectedMail.subject : `Re: ${selectedMail.subject}`,
                             content: `\n\n--- Original Message ---\nFrom: ${selectedMail.sender.full_name || selectedMail.sender.email}\nDate: ${new Date(selectedMail.created_at).toLocaleString()}\n\n${selectedMail.content}\n`
                           })
+                          setSelectedFiles([])
                         }}
                         className="p-2 hover:bg-dark-700 rounded-full"
                         title="Reply"
