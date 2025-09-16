@@ -165,7 +165,7 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
       {/* Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        className="relative p-2 text-gray-400 hover:text-gray-200 hover:bg-dark-700 rounded-lg transition-colors"
       >
         {unreadCount > 0 ? (
           <BellIconSolid className="h-6 w-6 text-primary-600" />
@@ -183,15 +183,15 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+        <div className="absolute right-0 mt-2 w-80 bg-dark-800 rounded-lg shadow-lg border border-dark-700 z-50">
           {/* Header */}
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-dark-700">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+              <h3 className="text-lg font-semibold text-white">Notifications</h3>
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                  className="text-sm text-primary-400 hover:text-primary-300 font-medium"
                 >
                   Mark all read
                 </button>
@@ -203,21 +203,21 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
           <div className="max-h-96 overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mx-auto"></div>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500 mx-auto"></div>
               </div>
             ) : notifications.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                <BellIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+              <div className="p-4 text-center text-gray-400">
+                <BellIcon className="h-8 w-8 mx-auto mb-2 text-gray-500" />
                 <p>No notifications</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-200">
+              <div className="divide-y divide-dark-700">
                 {notifications.map((notification) => (
                   <button
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
-                    className={`w-full p-4 text-left hover:bg-gray-50 transition-colors ${
-                      !notification.is_read ? 'bg-blue-50 border-l-4 border-l-primary-500' : ''
+                    className={`w-full p-4 text-left hover:bg-dark-700 transition-colors ${
+                      !notification.is_read ? 'bg-dark-700 border-l-4 border-l-primary-500' : ''
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -228,10 +228,10 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
                       
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <p className={`font-medium text-sm ${!notification.is_read ? 'text-gray-900' : 'text-gray-700'}`}>
+                        <p className={`font-medium text-sm ${!notification.is_read ? 'text-white' : 'text-gray-300'}`}>
                           {notification.title}
                         </p>
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                        <p className="text-sm text-gray-400 mt-1 line-clamp-2">
                           {notification.message}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
@@ -241,7 +241,7 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
                       
                       {/* Unread indicator */}
                       {!notification.is_read && (
-                        <div className="w-2 h-2 bg-primary-600 rounded-full mt-2"></div>
+                        <div className="w-2 h-2 bg-primary-500 rounded-full mt-2"></div>
                       )}
                     </div>
                   </button>
@@ -252,13 +252,13 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="p-3 border-t border-gray-200">
+            <div className="p-3 border-t border-dark-700">
               <button
                 onClick={() => {
                   onNavigate('/notifications')
                   setIsOpen(false)
                 }}
-                className="w-full text-center text-sm text-primary-600 hover:text-primary-700 font-medium"
+                className="w-full text-center text-sm text-primary-400 hover:text-primary-300 font-medium"
               >
                 View all notifications
               </button>

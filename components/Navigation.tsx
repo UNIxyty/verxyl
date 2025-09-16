@@ -106,19 +106,16 @@ export function Navigation() {
           <button onClick={() => router.push('/dashboard')} className="flex items-center gap-2">
             <Logo className="h-7" />
           </button>
-          <div className="flex items-center gap-2">
-            <NotificationBell onNavigate={router.push} />
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 text-gray-400 hover:text-gray-200 transition-colors"
-            >
-              {isMobileMenuOpen ? (
-                <XMarkIcon className="h-6 w-6" />
-              ) : (
-                <Bars3Icon className="h-6 w-6" />
-              )}
-            </button>
-          </div>
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 text-gray-400 hover:text-gray-200 transition-colors"
+          >
+            {isMobileMenuOpen ? (
+              <XMarkIcon className="h-6 w-6" />
+            ) : (
+              <Bars3Icon className="h-6 w-6" />
+            )}
+          </button>
         </div>
       </div>
 
@@ -157,35 +154,8 @@ export function Navigation() {
             </div>
             
             <div className="p-4 border-t border-dark-700">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  {user.user_metadata?.avatar_url ? (
-                    <img
-                      src={user.user_metadata.avatar_url}
-                      alt="Profile"
-                      className="h-8 w-8 rounded-full"
-                    />
-                  ) : (
-                    <div className="h-8 w-8 rounded-full bg-primary-600 flex items-center justify-center">
-                      <span className="text-sm font-medium text-white">
-                        {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-200 truncate">
-                      {user.user_metadata?.full_name || 'User'}
-                    </p>
-                    <p className="text-xs text-gray-400 truncate">
-                      {user.email}
-                    </p>
-                    {userRole && typeof userRole === 'string' && userRole.length > 0 && (
-                      <p className="text-xs text-primary-400 truncate">
-                        {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
-                      </p>
-                    )}
-                  </div>
-                </div>
+              <div className="flex items-center justify-between mb-3">
+                <NotificationBell onNavigate={router.push} />
                 <button
                   onClick={signOut}
                   className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
@@ -194,6 +164,34 @@ export function Navigation() {
                   <ArrowRightOnRectangleIcon className="h-5 w-5" />
                 </button>
               </div>
+              <div className="flex items-center space-x-3">
+                {user.user_metadata?.avatar_url ? (
+                  <img
+                    src={user.user_metadata.avatar_url}
+                    alt="Profile"
+                    className="h-8 w-8 rounded-full"
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-primary-600 flex items-center justify-center">
+                    <span className="text-sm font-medium text-white">
+                      {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-200 truncate">
+                    {user.user_metadata?.full_name || 'User'}
+                  </p>
+                  <p className="text-xs text-gray-400 truncate">
+                    {user.email}
+                  </p>
+                  {userRole && typeof userRole === 'string' && userRole.length > 0 && (
+                    <p className="text-xs text-primary-400 truncate">
+                      {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -201,11 +199,10 @@ export function Navigation() {
 
       {/* Desktop Navigation */}
       <nav className="hidden lg:flex bg-dark-800 border-r border-dark-700 w-56 min-h-screen flex-col fixed left-0 top-0 z-40">
-        <div className="flex items-center justify-between h-14 px-4 border-b border-dark-700">
+        <div className="flex items-center h-14 px-4 border-b border-dark-700">
           <button onClick={() => router.push('/dashboard')} className="flex items-center gap-2">
             <Logo className="h-7" />
           </button>
-          <NotificationBell onNavigate={router.push} />
         </div>
         
         <div className="flex-1 px-2 py-3 space-y-1">
@@ -227,35 +224,8 @@ export function Navigation() {
         </div>
         
         <div className="p-3 border-t border-dark-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              {user.user_metadata?.avatar_url ? (
-                <img
-                  src={user.user_metadata.avatar_url}
-                  alt="Profile"
-                  className="h-7 w-7 rounded-full"
-                />
-              ) : (
-                <div className="h-7 w-7 rounded-full bg-primary-600 flex items-center justify-center">
-                  <span className="text-xs font-medium text-white">
-                    {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}
-                  </span>
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-gray-200 truncate">
-                  {user.user_metadata?.full_name || 'User'}
-                </p>
-                <p className="text-xs text-gray-400 truncate">
-                  {user.email}
-                </p>
-                {userRole && typeof userRole === 'string' && userRole.length > 0 && (
-                  <p className="text-xs text-primary-400 truncate">
-                    {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
-                  </p>
-                )}
-              </div>
-            </div>
+          <div className="flex items-center justify-between mb-2">
+            <NotificationBell onNavigate={router.push} />
             <button
               onClick={signOut}
               className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
@@ -263,6 +233,34 @@ export function Navigation() {
             >
               <ArrowRightOnRectangleIcon className="h-5 w-5" />
             </button>
+          </div>
+          <div className="flex items-center space-x-2">
+            {user.user_metadata?.avatar_url ? (
+              <img
+                src={user.user_metadata.avatar_url}
+                alt="Profile"
+                className="h-7 w-7 rounded-full"
+              />
+            ) : (
+              <div className="h-7 w-7 rounded-full bg-primary-600 flex items-center justify-center">
+                <span className="text-xs font-medium text-white">
+                  {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}
+                </span>
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-200 truncate">
+                {user.user_metadata?.full_name || 'User'}
+              </p>
+              <p className="text-xs text-gray-400 truncate">
+                {user.email}
+              </p>
+              {userRole && typeof userRole === 'string' && userRole.length > 0 && (
+                <p className="text-xs text-primary-400 truncate">
+                  {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </nav>

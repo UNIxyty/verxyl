@@ -19,7 +19,6 @@ import {
   PaperClipIcon,
   EyeIcon
 } from '@heroicons/react/24/outline'
-import NotificationBell from './NotificationBell'
 import { 
   StarIcon as StarIconSolid,
   ExclamationTriangleIcon as ExclamationTriangleIconSolid
@@ -400,23 +399,23 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
   return (
     <div className="flex flex-col h-full bg-dark-900">
       {/* Folder Navigation Bar */}
-      <div className="bg-dark-800 border-b border-dark-700 px-6 py-3">
-        <div className="flex items-center gap-2 overflow-x-auto">
+      <div className="bg-dark-800 border-b border-dark-700 px-4 sm:px-6 py-3">
+        <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
           {folders.map((folder) => {
             const Icon = folder.icon
             return (
               <button
                 key={folder.id}
                 onClick={() => setSelectedFolder(folder.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg transition-colors whitespace-nowrap text-sm ${
                   selectedFolder === folder.id
                     ? 'bg-primary-600 text-white font-medium'
                     : 'text-gray-400 hover:bg-dark-700 hover:text-gray-200'
                 }`}
               >
                 <Icon className="h-4 w-4" />
-                <span>{folder.name}</span>
-                <span className="text-xs bg-dark-600 px-2 py-1 rounded-full">
+                <span className="hidden sm:inline">{folder.name}</span>
+                <span className="text-xs bg-dark-600 px-1 sm:px-2 py-1 rounded-full">
                   {folderCounts[folder.id as keyof typeof folderCounts]}
                 </span>
               </button>
@@ -424,10 +423,10 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
           })}
           <button
             onClick={() => setShowCompose(true)}
-            className="flex items-center gap-2 px-4 py-2 btn-primary rounded-lg ml-4"
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 btn-primary rounded-lg ml-2 sm:ml-4 text-sm"
           >
             <PlusIcon className="h-4 w-4" />
-            Compose
+            <span className="hidden sm:inline">Compose</span>
           </button>
         </div>
       </div>
@@ -436,38 +435,38 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="bg-dark-800 border-b border-dark-700 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="bg-dark-800 border-b border-dark-700 px-4 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
               {selectedMail && (
                 <button
                   onClick={handleBackToInbox}
-                  className="flex items-center gap-2 text-primary-400 hover:text-primary-300 transition-colors"
+                  className="flex items-center gap-1 sm:gap-2 text-primary-400 hover:text-primary-300 transition-colors text-sm sm:text-base"
                 >
-                  <ArrowLeftIcon className="h-5 w-5" />
-                  <span>Back to Inbox</span>
+                  <ArrowLeftIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="hidden sm:inline">Back to Inbox</span>
+                  <span className="sm:hidden">Back</span>
                 </button>
               )}
-              <h1 className="text-xl font-semibold text-white capitalize">
+              <h1 className="text-lg sm:text-xl font-semibold text-white capitalize truncate">
                 {selectedMail ? selectedMail.subject : selectedFolder}
               </h1>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               {/* Search */}
               {!selectedMail && (
-                <div className="relative">
-                  <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <div className="relative flex-1 sm:flex-none">
+                  <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search mail..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2 input rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent w-80"
+                    className="pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 input rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent w-full sm:w-80 text-sm"
                   />
                 </div>
               )}
-              <NotificationBell onNavigate={router.push} />
             </div>
           </div>
         </div>
