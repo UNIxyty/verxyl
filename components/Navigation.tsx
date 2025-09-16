@@ -17,9 +17,12 @@ import {
   ShieldCheckIcon,
   Bars3Icon,
   XMarkIcon,
-  InboxIcon
+  InboxIcon,
+  FolderIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline'
 import Logo from './Logo'
+import NotificationBell from './NotificationBell'
 
 export function Navigation() {
   const { user, signOut } = useAuth()
@@ -35,6 +38,8 @@ export function Navigation() {
     { name: 'Sent Tickets', href: '/sent-tickets', icon: PaperAirplaneIcon, roles: ['admin', 'worker'] },
     { name: 'Completed Tickets', href: '/completed', icon: CheckCircleIcon, roles: ['admin', 'worker', 'viewer'] },
     { name: 'Inbox', href: '/inbox', icon: InboxIcon, roles: ['admin', 'worker', 'viewer'] },
+    { name: 'Projects', href: '/projects', icon: FolderIcon, roles: ['admin', 'worker', 'viewer'] },
+    { name: 'Invoices', href: '/invoices', icon: DocumentTextIcon, roles: ['admin', 'worker'] },
     { name: 'AI Prompts', href: '/ai-backups', icon: LightBulbIcon, roles: ['admin', 'worker'] },
     { name: 'N8N Projects', href: '/n8n-backups', icon: CogIcon, roles: ['admin', 'worker'] },
     { name: 'Admin', href: '/admin', icon: ShieldCheckIcon, roles: ['admin'] },
@@ -101,16 +106,19 @@ export function Navigation() {
           <button onClick={() => router.push('/dashboard')} className="flex items-center gap-2">
             <Logo className="h-7" />
           </button>
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 text-gray-400 hover:text-gray-200 transition-colors"
-          >
-            {isMobileMenuOpen ? (
-              <XMarkIcon className="h-6 w-6" />
-            ) : (
-              <Bars3Icon className="h-6 w-6" />
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <NotificationBell onNavigate={router.push} />
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 text-gray-400 hover:text-gray-200 transition-colors"
+            >
+              {isMobileMenuOpen ? (
+                <XMarkIcon className="h-6 w-6" />
+              ) : (
+                <Bars3Icon className="h-6 w-6" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -197,6 +205,7 @@ export function Navigation() {
           <button onClick={() => router.push('/dashboard')} className="flex items-center gap-2">
             <Logo className="h-7" />
           </button>
+          <NotificationBell onNavigate={router.push} />
         </div>
         
         <div className="flex-1 px-2 py-3 space-y-1">
