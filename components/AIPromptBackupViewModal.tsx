@@ -1,7 +1,9 @@
 'use client'
 
 import { Modal } from './Modal'
-import { ArrowDownTrayIcon, DocumentTextIcon, LightBulbIcon } from '@heroicons/react/24/outline'
+import { ArrowDownTrayIcon, DocumentTextIcon, LightBulbIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { useState } from 'react'
+import toast from 'react-hot-toast'
 
 interface AIPromptBackup {
   id: string
@@ -18,9 +20,13 @@ interface AIPromptBackupViewModalProps {
   isOpen: boolean
   onClose: () => void
   backup: AIPromptBackup | null
+  onEdit?: (backup: AIPromptBackup) => void
+  onDelete?: (backupId: string) => void
 }
 
-export function AIPromptBackupViewModal({ isOpen, onClose, backup }: AIPromptBackupViewModalProps) {
+export function AIPromptBackupViewModal({ isOpen, onClose, backup, onEdit, onDelete }: AIPromptBackupViewModalProps) {
+  const [isDeleting, setIsDeleting] = useState(false)
+
   if (!backup) return null
 
   const downloadPrompt = () => {
@@ -35,6 +41,34 @@ export function AIPromptBackupViewModal({ isOpen, onClose, backup }: AIPromptBac
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
+  }
+
+  const handleDelete = async () => {
+    if (!onDelete) return
+    
+    if (!confirm('Are you sure you want to delete this AI prompt backup? This action cannot be undone.')) {
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/ai-backups?id=${backup.id}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        toast.success('AI prompt backup deleted successfully!')
+        onDelete(backup.id)
+        onClose()
+      } else {
+        toast.error('Failed to delete backup')
+      }
+    } catch (error) {
+      console.error('Error deleting backup:', error)
+      toast.error('Failed to delete backup')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   const formatDate = (dateString: string) => {
@@ -109,10 +143,31 @@ export function AIPromptBackupViewModal({ isOpen, onClose, backup }: AIPromptBac
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end pt-4">
+        <div className="flex justify-between pt-4">
+          <div className="flex gap-2">
+            {onEdit && (
+              <button
+                onClick={() => onEdit(backup)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+              >
+                <PencilIcon className="h-4 w-4" />
+                Edit
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors disabled:opacity-50"
+              >
+                <TrashIcon className="h-4 w-4" />
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            )}
+          </div>
           <button
             onClick={onClose}
-            className="btn-primary px-6 py-2"
+            className="btn-secondary px-6 py-2"
           >
             Close
           </button>

@@ -96,3 +96,105 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export async function PUT(request: NextRequest) {
+  try {
+    const cookieStore = cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+        },
+      }
+    )
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { id, prompt_text, ai_model, output_logic, output_result } = body
+
+    if (!id) {
+      return NextResponse.json({ error: 'Backup ID is required' }, { status: 400 })
+    }
+
+    // Update AI prompt backup
+    const { data: backup, error } = await supabaseAdmin
+      .from('ai_prompt_backups')
+      .update({
+        prompt_text: prompt_text || undefined,
+        ai_model: ai_model || undefined,
+        output_logic: output_logic || undefined,
+        output_result: output_result || undefined,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error updating AI prompt backup:', error)
+      return NextResponse.json({ error: 'Failed to update backup' }, { status: 500 })
+    }
+
+    return NextResponse.json({ backup })
+
+  } catch (error) {
+    console.error('Error in AI backups PUT:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const cookieStore = cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+        },
+      }
+    )
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({ error: 'Backup ID is required' }, { status: 400 })
+    }
+
+    // Delete AI prompt backup
+    const { error } = await supabaseAdmin
+      .from('ai_prompt_backups')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id)
+
+    if (error) {
+      console.error('Error deleting AI prompt backup:', error)
+      return NextResponse.json({ error: 'Failed to delete backup' }, { status: 500 })
+    }
+
+    return NextResponse.json({ message: 'Backup deleted successfully' })
+
+  } catch (error) {
+    console.error('Error in AI backups DELETE:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
