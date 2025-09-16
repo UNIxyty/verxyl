@@ -102,7 +102,7 @@ export function Navigation() {
       <div className="lg:hidden bg-dark-800 border-b border-dark-700 px-4 py-3">
         <div className="flex items-center justify-between">
           <button onClick={() => router.push('/dashboard')} className="flex items-center gap-2">
-            <Logo className="h-7" />
+            <Logo className="h-9" />
           </button>
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -123,7 +123,7 @@ export function Navigation() {
           <div className="bg-dark-800 border-r border-dark-700 w-56 min-h-screen flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-center h-16 px-6 border-b border-dark-700 relative">
               <button onClick={() => router.push('/dashboard')} className="flex items-center gap-2">
-                <Logo className="h-8" />
+                <Logo className="h-10" />
               </button>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -199,7 +199,7 @@ export function Navigation() {
       <nav className="hidden lg:flex bg-dark-800 border-r border-dark-700 w-56 min-h-screen flex-col fixed left-0 top-0 z-40">
         <div className="flex items-center justify-center h-14 px-4 border-b border-dark-700">
           <button onClick={() => router.push('/dashboard')} className="flex items-center gap-2">
-            <Logo className="h-7" />
+            <Logo className="h-9" />
           </button>
         </div>
         

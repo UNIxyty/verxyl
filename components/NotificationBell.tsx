@@ -120,8 +120,6 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
         return '🎫'
       case 'role_changed':
         return '👤'
-      case 'mail_received':
-        return '📧'
       case 'project_created':
         return '📁'
       case 'invoice_created':
@@ -138,8 +136,6 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
         return 'text-blue-600'
       case 'role_changed':
         return 'text-purple-600'
-      case 'mail_received':
-        return 'text-green-600'
       case 'project_created':
         return 'text-orange-600'
       case 'invoice_created':

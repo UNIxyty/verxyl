@@ -17,7 +17,6 @@ type NotificationKey =
   | 'in_work_ticket'
   | 'shared_ai_backup'
   | 'shared_n8n_workflow'
-  | 'new_mail'
 
 type NotificationSettings = Record<NotificationKey, boolean>
 
@@ -42,8 +41,7 @@ export default function SettingsPage() {
     solved_ticket: true,
     in_work_ticket: true,
     shared_ai_backup: true,
-    shared_n8n_workflow: true,
-    new_mail: true
+    shared_n8n_workflow: true
   })
   const [isNotificationLoading, setIsNotificationLoading] = useState(false)
   const [isNotificationSaving, setIsNotificationSaving] = useState(false)
@@ -382,8 +380,7 @@ export default function SettingsPage() {
                     { key: 'solved_ticket', label: 'Solved Ticket', description: 'When a ticket is marked as solved' },
                     { key: 'in_work_ticket', label: 'In Work Ticket', description: 'When work starts on a ticket' },
                     { key: 'shared_ai_backup', label: 'Shared AI Backup', description: 'When an AI backup is shared with you' },
-                    { key: 'shared_n8n_workflow', label: 'Shared N8N Workflow', description: 'When an N8N workflow is shared with you' },
-                    { key: 'new_mail', label: 'New Mail', description: 'When you receive a new internal mail' }
+                    { key: 'shared_n8n_workflow', label: 'Shared N8N Workflow', description: 'When an N8N workflow is shared with you' }
                   ].map((setting) => (
                     <div key={setting.key} className="flex items-center justify-between p-3 bg-dark-700 rounded-lg">
                       <div className="flex-1">
