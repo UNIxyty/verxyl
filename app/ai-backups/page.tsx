@@ -2,10 +2,10 @@
 
 import { DashboardLayout } from '@/components/DashboardLayout'
 import { AIPromptBackupModal } from '@/components/AIPromptBackupModal'
+import { AIPromptBackupViewModal } from '@/components/AIPromptBackupViewModal'
 import { useAuth } from '@/components/AuthProvider'
 import { useEffect, useState } from 'react'
-import { getAIPromptBackups } from '@/lib/database'
-import { LightBulbIcon, PlusIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
+import { LightBulbIcon, PlusIcon, DocumentTextIcon, EyeIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
 
 interface AIPromptBackup {
   id: string
@@ -23,6 +23,8 @@ export default function AIBackupsPage() {
   const [backups, setBackups] = useState<AIPromptBackup[]>([])
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [selectedBackup, setSelectedBackup] = useState<AIPromptBackup | null>(null)
   const [expandedBackup, setExpandedBackup] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<'date' | 'title'>('date')
 
@@ -36,8 +38,13 @@ export default function AIBackupsPage() {
     if (!user) return
 
     try {
-      const backupsData = await getAIPromptBackups(user.id)
-      setBackups(backupsData)
+      const response = await fetch('/api/ai-backups')
+      if (response.ok) {
+        const data = await response.json()
+        setBackups(data.backups || [])
+      } else {
+        console.error('Failed to load AI prompt backups:', response.status)
+      }
     } catch (error) {
       console.error('Error loading AI prompt backups:', error)
     } finally {
@@ -47,6 +54,28 @@ export default function AIBackupsPage() {
 
   const handleSuccess = () => {
     loadBackups()
+  }
+
+  const downloadPrompt = (backup: AIPromptBackup) => {
+    const promptData = {
+      id: backup.id,
+      prompt_text: backup.prompt_text,
+      ai_model: backup.ai_model,
+      output_logic: backup.output_logic,
+      output_result: backup.output_result,
+      created_at: backup.created_at,
+      updated_at: backup.updated_at
+    }
+
+    const dataStr = JSON.stringify(promptData, null, 2)
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
+    
+    const exportFileDefaultName = `ai-prompt-${backup.ai_model}-${new Date(backup.created_at).toISOString().split('T')[0]}.json`
+    
+    const linkElement = document.createElement('a')
+    linkElement.setAttribute('href', dataUri)
+    linkElement.setAttribute('download', exportFileDefaultName)
+    linkElement.click()
   }
 
   const toggleExpanded = (backupId: string) => {
@@ -175,9 +204,29 @@ export default function AIBackupsPage() {
                   
                   <div className="flex items-center justify-between text-xs text-gray-400">
                     <span>{formatDate(backup.created_at)}</span>
-                    <button className="text-primary-400 hover:text-primary-300 font-medium">
-                      View Details
-                    </button>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedBackup(backup)
+                          setIsViewModalOpen(true)
+                        }}
+                        className="text-primary-400 hover:text-primary-300 font-medium flex items-center gap-1"
+                      >
+                        <EyeIcon className="h-3 w-3" />
+                        View
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          downloadPrompt(backup)
+                        }}
+                        className="text-green-400 hover:text-green-300 font-medium flex items-center gap-1"
+                      >
+                        <ArrowDownTrayIcon className="h-3 w-3" />
+                        Download
+                      </button>
+                    </div>
                   </div>
 
                   {expandedBackup === backup.id && (
@@ -237,6 +286,12 @@ export default function AIBackupsPage() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSuccess={handleSuccess}
+        />
+
+        <AIPromptBackupViewModal
+          isOpen={isViewModalOpen}
+          onClose={() => setIsViewModalOpen(false)}
+          backup={selectedBackup}
         />
       </div>
     </DashboardLayout>

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { Modal } from './Modal'
-import { createAIPromptBackup, getAIPromptBackups } from '@/lib/database'
 import { useAuth } from './AuthProvider'
 import toast from 'react-hot-toast'
 import Editor from '@monaco-editor/react'
@@ -49,8 +48,11 @@ export function AIPromptBackupModal({ isOpen, onClose, onSuccess }: AIPromptBack
     if (!user) return
 
     try {
-      const backups = await getAIPromptBackups(user.id)
-      setPreviousBackups(backups)
+      const response = await fetch('/api/ai-backups')
+      if (response.ok) {
+        const data = await response.json()
+        setPreviousBackups(data.backups || [])
+      }
     } catch (error) {
       console.error('Error loading previous backups:', error)
     }
@@ -61,14 +63,23 @@ export function AIPromptBackupModal({ isOpen, onClose, onSuccess }: AIPromptBack
 
     setLoading(true)
     try {
-      await createAIPromptBackup({
-        user_id: user.id,
-        prompt_text: data.prompt_text,
-        ai_model: data.ai_model,
-        previous_version_id: data.previous_version_id || null,
-        output_logic: outputLogic ? JSON.parse(outputLogic) : null,
-        output_result: outputResult ? JSON.parse(outputResult) : null,
+      const response = await fetch('/api/ai-backups', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt_text: data.prompt_text,
+          ai_model: data.ai_model,
+          previous_version_id: data.previous_version_id || null,
+          output_logic: outputLogic ? JSON.parse(outputLogic) : null,
+          output_result: outputResult ? JSON.parse(outputResult) : null,
+        }),
       })
+
+      if (!response.ok) {
+        throw new Error('Failed to create backup')
+      }
 
       toast.success('AI Prompt backup saved successfully!')
       reset()
