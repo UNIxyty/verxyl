@@ -142,16 +142,10 @@ export async function PATCH(
         roleChanged: true,
         prevRole: targetUser.role,
         currentRole: role,
-        // Add notification settings as new body structure for user webhooks
-        notificationBody: notificationSettings ? {
-          newTicket: notificationSettings.newTicket,
-          deleted_ticket: notificationSettings.deleted_ticket,
-          in_work_ticket: notificationSettings.in_work_ticket,
-          updatetTicket: notificationSettings.updatetTicket,
-          solvedTicket: notificationSettings.solvedTicket,
-          sharedWorkflow: notificationSettings.sharedWorkflow,
-          sharedPrompt: notificationSettings.sharedPrompt
-        } : undefined
+        // Add notifications object for user webhooks
+        notifications: {
+          rolechange: true
+        }
       })
     } catch (webhookError) {
       console.error('New webhook error for role change:', webhookError)

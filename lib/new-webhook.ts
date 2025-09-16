@@ -89,6 +89,11 @@ interface NewWebhookPayload {
   sharedWorkflow?: boolean
   sharedPrompt?: boolean
   
+  // Notifications object for user webhooks
+  notifications?: {
+    rolechange?: boolean
+  }
+  
   // Sharing-related fields
   backup_id?: string
   backup_title?: string
@@ -207,11 +212,25 @@ export async function sendNewWebhook(payload: NewWebhookPayload): Promise<{ succ
       timestamp: new Date().toISOString()
     }
     
-    // Add notification settings if user_id is available
-    if (payload.user_id) {
+    // Add notification settings based on webhook type (only if not already provided)
+    if (payload.user_id && !payload.notifications && !payload.newTicket) {
       const notificationSettings = await getUserNotificationSettings(payload.user_id)
       if (notificationSettings) {
-        fullPayload.notificationBody = notificationSettings
+        if (isUserAction) {
+          // For user webhooks (role_changed), add notifications object
+          fullPayload.notifications = {
+            rolechange: true // You can make this configurable based on notification settings
+          }
+        } else if (isTicketAction) {
+          // For ticket webhooks, add direct notification parameters
+          fullPayload.newTicket = notificationSettings.newTicket
+          fullPayload.deleted_ticket = notificationSettings.deleted_ticket
+          fullPayload.in_work_ticket = notificationSettings.in_work_ticket
+          fullPayload.updatetTicket = notificationSettings.updatetTicket
+          fullPayload.solvedTicket = notificationSettings.solvedTicket
+          fullPayload.sharedWorkflow = notificationSettings.sharedWorkflow
+          fullPayload.sharedPrompt = notificationSettings.sharedPrompt
+        }
       }
     }
     
