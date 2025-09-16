@@ -108,11 +108,14 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
       header: isLight ? 'bg-white border-b border-gray-200' : 'bg-gray-800 border-b border-gray-700',
       card: isLight ? 'bg-white border border-gray-200' : 'bg-gray-800 border border-gray-700',
       text: isLight ? 'text-gray-900' : 'text-white',
-      textSecondary: isLight ? 'text-gray-600' : 'text-gray-300',
-      textMuted: isLight ? 'text-gray-500' : 'text-gray-400',
-      hover: isLight ? 'hover:bg-gray-50' : 'hover:bg-gray-700',
+      textSecondary: isLight ? 'text-gray-700' : 'text-gray-300',
+      textMuted: isLight ? 'text-gray-600' : 'text-gray-400',
+      hover: isLight ? 'hover:bg-gray-100' : 'hover:bg-gray-700',
       input: isLight ? 'bg-white border-gray-300 text-gray-900' : 'bg-gray-700 border-gray-600 text-white',
-      button: isLight ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'
+      button: 'bg-blue-600 hover:bg-blue-700 text-white',
+      mailItem: isLight ? 'bg-white hover:bg-gray-50' : 'bg-gray-800 hover:bg-gray-700',
+      mailItemUnread: isLight ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'bg-blue-900/20 border-l-4 border-l-blue-400',
+      divider: isLight ? 'divide-gray-200' : 'divide-gray-700'
     }
   }
 
@@ -307,7 +310,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
             <div className="mt-6 px-4">
               <button
                 onClick={() => setShowLabels(!showLabels)}
-                className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-2"
+                className={`text-sm ${themeClasses.textSecondary} ${themeClasses.hover} flex items-center gap-2`}
               >
                 <span>Labels</span>
                 <span className={`transform transition-transform ${showLabels ? 'rotate-180' : ''}`}>
@@ -320,7 +323,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                   {labels.map((label) => (
                     <button
                       key={label.id}
-                      className="w-full flex items-center gap-2 px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded"
+                      className={`w-full flex items-center gap-2 px-3 py-1 text-sm ${themeClasses.textSecondary} ${themeClasses.hover} rounded`}
                     >
                       <div 
                         className="w-3 h-3 rounded-full" 
@@ -378,8 +381,8 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
         <div className="flex-1 overflow-y-auto">
           {selectedMail ? (
             /* Email View */
-            <div className={`${themeClasses.card} m-6 p-6 rounded-lg`}>
-              <div className="border-b border-gray-200 pb-4 mb-6">
+            <div className={`${themeClasses.card} m-6 p-6 rounded-lg shadow-lg`}>
+              <div className={`border-b ${theme.startsWith('light') ? 'border-gray-200' : 'border-gray-600'} pb-4 mb-6`}>
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <h2 className={`text-2xl font-bold ${themeClasses.text} mb-2`}>
@@ -439,12 +442,16 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
               </div>
               
               {selectedMail.labels && selectedMail.labels.length > 0 && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
+                <div className={`mt-6 pt-4 border-t ${theme.startsWith('light') ? 'border-gray-200' : 'border-gray-600'}`}>
                   <div className="flex flex-wrap gap-2">
                     {selectedMail.labels.map((label, index) => (
                       <span
                         key={index}
-                        className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
+                        className={`text-xs px-2 py-1 rounded ${
+                          theme.startsWith('light') 
+                            ? 'bg-gray-100 text-gray-600' 
+                            : 'bg-gray-700 text-gray-300'
+                        }`}
                       >
                         {label}
                       </span>
@@ -462,16 +469,22 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
               <div className="text-center">
                 <EnvelopeIcon className={`h-12 w-12 ${themeClasses.textMuted} mx-auto mb-4`} />
                 <p className={themeClasses.textMuted}>No mails in {selectedFolder}</p>
+                <button 
+                  onClick={onCompose}
+                  className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Compose New Mail
+                </button>
               </div>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className={`divide-y ${themeClasses.divider}`}>
               {mails.map((mail) => (
                 <div
                   key={mail.id}
                   onClick={() => handleMailClick(mail)}
-                  className={`p-4 ${themeClasses.hover} cursor-pointer transition-colors ${
-                    !mail.is_read ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                  className={`p-4 cursor-pointer transition-colors ${
+                    !mail.is_read ? themeClasses.mailItemUnread : themeClasses.mailItem
                   }`}
                 >
                   <div className="flex items-center gap-4">
@@ -526,7 +539,11 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                         <span className={`font-medium ${!mail.is_read ? themeClasses.text : themeClasses.textSecondary}`}>
                           {getSenderName(mail)}
                         </span>
-                        <span className={`text-xs ${themeClasses.textMuted} bg-gray-100 px-2 py-1 rounded`}>
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          theme.startsWith('light') 
+                            ? 'bg-gray-100 text-gray-600' 
+                            : 'bg-gray-700 text-gray-300'
+                        }`}>
                           {getSenderRole(mail)}
                         </span>
                         {!mail.is_read && (
@@ -547,13 +564,17 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                         {mail.labels.slice(0, 2).map((label, index) => (
                           <span
                             key={index}
-                            className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
+                            className={`text-xs px-2 py-1 rounded ${
+                              theme.startsWith('light') 
+                                ? 'bg-gray-100 text-gray-600' 
+                                : 'bg-gray-700 text-gray-300'
+                            }`}
                           >
                             {label}
                           </span>
                         ))}
                         {mail.labels.length > 2 && (
-                          <span className="text-xs text-gray-500">
+                          <span className={`text-xs ${themeClasses.textMuted}`}>
                             +{mail.labels.length - 2}
                           </span>
                         )}
