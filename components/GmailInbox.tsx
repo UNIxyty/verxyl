@@ -96,6 +96,13 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
   const [showFileUpload, setShowFileUpload] = useState(false)
   const [attachments, setAttachments] = useState<any[]>([])
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [showCompose, setShowCompose] = useState(false)
+  const [composeData, setComposeData] = useState({
+    recipient: '',
+    subject: '',
+    content: ''
+  })
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const folders = [
     { id: 'inbox', name: 'Inbox', icon: FOLDER_ICONS.inbox },
@@ -121,6 +128,8 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
       hover: isLight ? 'hover:bg-gray-100' : 'hover:bg-gray-700',
       input: isLight ? 'bg-white border-gray-300 text-gray-900' : 'bg-gray-700 border-gray-600 text-white',
       button: 'bg-blue-600 hover:bg-blue-700 text-white',
+      buttonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white',
+      buttonSecondary: isLight ? 'bg-gray-200 hover:bg-gray-300 text-gray-800' : 'bg-gray-700 hover:bg-gray-600 text-gray-200',
       mailItem: isLight ? 'bg-white hover:bg-gray-50' : 'bg-gray-800 hover:bg-gray-700',
       mailItemUnread: isLight ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'bg-blue-900/20 border-l-4 border-l-blue-400',
       divider: isLight ? 'divide-gray-200' : 'divide-gray-700'
@@ -376,14 +385,88 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
     }
   }
 
+  const sendEmail = async () => {
+    try {
+      // Find recipient by email
+      const recipientResponse = await fetch(`/api/users/search?email=${encodeURIComponent(composeData.recipient)}`)
+      if (!recipientResponse.ok) {
+        alert('Recipient not found')
+        return
+      }
+      
+      const recipientData = await recipientResponse.json()
+      const recipient = recipientData.user
+
+      const response = await fetch('/api/mails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipient_id: recipient.id,
+          subject: composeData.subject,
+          content: composeData.content
+        })
+      })
+
+      if (response.ok) {
+        setShowCompose(false)
+        setComposeData({ recipient: '', subject: '', content: '' })
+        // Refresh mails
+        window.location.reload()
+        alert('Email sent successfully!')
+      } else {
+        alert('Failed to send email')
+      }
+    } catch (error) {
+      console.error('Error sending email:', error)
+      alert('Error sending email')
+    }
+  }
+
+  const saveDraft = async () => {
+    try {
+      const response = await fetch('/api/mails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: composeData.subject,
+          content: composeData.content,
+          is_draft: true
+        })
+      })
+
+      if (response.ok) {
+        setShowCompose(false)
+        setComposeData({ recipient: '', subject: '', content: '' })
+        // Refresh mails
+        window.location.reload()
+        alert('Draft saved!')
+      } else {
+        alert('Failed to save draft')
+      }
+    } catch (error) {
+      console.error('Error saving draft:', error)
+      alert('Error saving draft')
+    }
+  }
+
   return (
     <div className={`flex h-screen ${themeClasses.bg}`}>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-lg"
+      >
+        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
       {/* Sidebar */}
-      <div className={`w-64 ${themeClasses.sidebar} flex flex-col`}>
+      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:relative inset-y-0 left-0 z-40 w-64 ${themeClasses.sidebar} flex flex-col transition-transform duration-300 ease-in-out`}>
         {/* Compose Button */}
         <div className="p-4">
           <button
-            onClick={onCompose}
+            onClick={() => setShowCompose(true)}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
           >
             <PlusIcon className="h-5 w-5" />
@@ -494,11 +577,19 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
           </div>
         </div>
 
+        {/* Mobile Backdrop */}
+        {sidebarOpen && (
+          <div 
+            className="lg:hidden fixed inset-0 z-30 bg-black bg-opacity-50"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto lg:ml-0">
           {selectedMail ? (
             /* Email View */
-            <div className={`${themeClasses.card} ${isFullscreen ? 'fixed inset-0 z-50 m-0 rounded-none' : 'm-6'} p-6 rounded-lg shadow-lg`}>
+            <div className={`${themeClasses.card} ${isFullscreen ? 'fixed inset-0 z-50 m-0 rounded-none' : 'm-2 lg:m-6'} p-4 lg:p-6 rounded-lg shadow-lg`}>
               <div className={`border-b ${theme.startsWith('light') ? 'border-gray-200' : 'border-gray-600'} pb-4 mb-6`}>
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
@@ -523,7 +614,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 lg:gap-2 flex-wrap">
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
@@ -771,6 +862,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
               <button
                 onClick={() => setShowTagModal(false)}
                 className={`p-1 ${themeClasses.hover} rounded-full`}
+                autoFocus
               >
                 <XMarkIcon className="h-5 w-5" />
               </button>
@@ -785,6 +877,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                   type="text"
                   placeholder="Enter tag name..."
                   className={`w-full px-3 py-2 border rounded-lg ${themeClasses.input}`}
+                  autoFocus
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       const tagName = e.currentTarget.value.trim()
@@ -812,6 +905,28 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                   </button>
                 ))}
               </div>
+              
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowTagModal(false)}
+                  className={`px-4 py-2 ${themeClasses.buttonSecondary} rounded-lg`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    const input = document.querySelector('input[type="text"]') as HTMLInputElement
+                    const tagName = input?.value.trim()
+                    if (tagName) {
+                      addTagToMail(selectedMail.id, tagName)
+                      setShowTagModal(false)
+                    }
+                  }}
+                  className={`px-4 py-2 ${themeClasses.buttonPrimary} rounded-lg`}
+                >
+                  Add Tag
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -826,32 +941,39 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
               <button
                 onClick={() => setShowFileUpload(false)}
                 className={`p-1 ${themeClasses.hover} rounded-full`}
+                autoFocus
               >
                 <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
             
             <div className="space-y-4">
-              <input
-                type="file"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) {
-                    uploadFile(file)
-                    setShowFileUpload(false)
-                  }
-                }}
-                className={`w-full px-3 py-2 border rounded-lg ${themeClasses.input}`}
-                accept="*/*"
-              />
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.textSecondary} mb-2`}>
+                  Select File
+                </label>
+                <input
+                  type="file"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      uploadFile(file)
+                      setShowFileUpload(false)
+                    }
+                  }}
+                  className={`w-full px-3 py-2 border rounded-lg ${themeClasses.input}`}
+                  accept="*/*"
+                  autoFocus
+                />
+              </div>
               
               {attachments.length > 0 && (
                 <div>
                   <h4 className={`text-sm font-medium ${themeClasses.textSecondary} mb-2`}>Attachments</h4>
                   <div className="space-y-2">
                     {attachments.map((attachment) => (
-                      <div key={attachment.id} className="flex items-center justify-between p-2 bg-gray-100 rounded">
-                        <span className="text-sm">{attachment.filename}</span>
+                      <div key={attachment.id} className={`flex items-center justify-between p-2 ${themeClasses.card} rounded`}>
+                        <span className={`text-sm ${themeClasses.text}`}>{attachment.filename}</span>
                         <a
                           href={attachment.downloadUrl}
                           download
@@ -864,6 +986,98 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                   </div>
                 </div>
               )}
+              
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowFileUpload(false)}
+                  className={`px-4 py-2 ${themeClasses.buttonSecondary} rounded-lg`}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Compose Modal */}
+      {showCompose && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className={`${themeClasses.card} p-6 rounded-lg shadow-xl max-w-2xl w-full mx-4`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={`text-lg font-semibold ${themeClasses.text}`}>Compose Email</h3>
+              <button
+                onClick={() => setShowCompose(false)}
+                className={`p-1 ${themeClasses.hover} rounded-full`}
+                autoFocus
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.textSecondary} mb-2`}>
+                  To
+                </label>
+                <input
+                  type="email"
+                  placeholder="Enter recipient email..."
+                  value={composeData.recipient}
+                  onChange={(e) => setComposeData({...composeData, recipient: e.target.value})}
+                  className={`w-full px-3 py-2 border rounded-lg ${themeClasses.input}`}
+                  autoFocus
+                />
+              </div>
+              
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.textSecondary} mb-2`}>
+                  Subject
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter subject..."
+                  value={composeData.subject}
+                  onChange={(e) => setComposeData({...composeData, subject: e.target.value})}
+                  className={`w-full px-3 py-2 border rounded-lg ${themeClasses.input}`}
+                />
+              </div>
+              
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.textSecondary} mb-2`}>
+                  Message
+                </label>
+                <textarea
+                  placeholder="Enter your message..."
+                  value={composeData.content}
+                  onChange={(e) => setComposeData({...composeData, content: e.target.value})}
+                  rows={8}
+                  className={`w-full px-3 py-2 border rounded-lg ${themeClasses.input} resize-none`}
+                />
+              </div>
+              
+              <div className="flex justify-between">
+                <button
+                  onClick={saveDraft}
+                  className={`px-4 py-2 ${themeClasses.buttonSecondary} rounded-lg`}
+                >
+                  Save Draft
+                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowCompose(false)}
+                    className={`px-4 py-2 ${themeClasses.buttonSecondary} rounded-lg`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={sendEmail}
+                    className={`px-4 py-2 ${themeClasses.buttonPrimary} rounded-lg`}
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
