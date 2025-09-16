@@ -1,5 +1,5 @@
 interface NewWebhookPayload {
-  action: 'ticket_created' | 'ticket_updated' | 'ticket_solved' | 'ticket_deleted' | 'ticket_in_work' | 'role_changed' | 'new_mail' | 'project_created' | 'project_updated' | 'project_completed' | 'invoice_created' | 'invoice_sent' | 'invoice_paid' | 'notification_settings_changed'
+  action: 'ticket_created' | 'ticket_updated' | 'ticket_solved' | 'ticket_deleted' | 'ticket_in_work' | 'role_changed' | 'new_mail' | 'project_created' | 'project_updated' | 'project_completed' | 'invoice_created' | 'invoice_sent' | 'invoice_paid' | 'notification_settings_changed' | 'sharedWorkflow' | 'sharedPrompt'
   timestamp: string
   
   // Common fields
@@ -88,6 +88,15 @@ interface NewWebhookPayload {
   solvedTicket?: boolean
   sharedWorkflow?: boolean
   sharedPrompt?: boolean
+  
+  // Sharing-related fields
+  backup_id?: string
+  backup_title?: string
+  backup_type?: 'ai_prompt' | 'n8n_workflow'
+  shared_by_id?: string
+  shared_by_email?: string
+  shared_by_name?: string
+  access_role?: 'viewer' | 'editor'
 }
 
 // Helper function to get user notification settings
@@ -142,7 +151,7 @@ export async function sendNewWebhook(payload: NewWebhookPayload): Promise<{ succ
       .single()
     
     // Determine which path to use based on action type
-    const isTicketAction = ['ticket_created', 'ticket_updated', 'ticket_solved', 'ticket_deleted', 'ticket_in_work'].includes(payload.action)
+    const isTicketAction = ['ticket_created', 'ticket_updated', 'ticket_solved', 'ticket_deleted', 'ticket_in_work', 'sharedWorkflow', 'sharedPrompt'].includes(payload.action)
     const isUserAction = ['role_changed'].includes(payload.action)
     const isMailAction = ['new_mail'].includes(payload.action)
     const isProjectAction = ['project_created', 'project_updated', 'project_completed'].includes(payload.action)
