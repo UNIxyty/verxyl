@@ -559,6 +559,24 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                     >
                       <EyeIcon className="h-5 w-5 text-gray-400" />
                     </button>
+                    {selectedMail.recipient_id === selectedMail.sender_id ? null : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowCompose(true)
+                          // Set reply data for compose modal
+                          setComposeData({
+                            recipient: selectedMail.sender.email,
+                            subject: selectedMail.subject.startsWith('Re: ') ? selectedMail.subject : `Re: ${selectedMail.subject}`,
+                            content: `\n\n--- Original Message ---\nFrom: ${selectedMail.sender.full_name || selectedMail.sender.email}\nDate: ${new Date(selectedMail.created_at).toLocaleString()}\n\n${selectedMail.content}\n`
+                          })
+                        }}
+                        className="p-2 hover:bg-dark-700 rounded-full"
+                        title="Reply"
+                      >
+                        <PaperAirplaneIcon className="h-5 w-5 text-blue-400" />
+                      </button>
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation()

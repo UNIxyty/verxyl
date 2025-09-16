@@ -38,9 +38,10 @@ interface ComposeModalProps {
   isOpen: boolean
   onClose: () => void
   onSent: () => void
+  replyTo?: Mail | null
 }
 
-function ComposeModal({ isOpen, onClose, onSent }: ComposeModalProps) {
+function ComposeModal({ isOpen, onClose, onSent, replyTo }: ComposeModalProps) {
   const [loading, setLoading] = useState(false)
   const [sending, setSending] = useState(false)
   const [formData, setFormData] = useState({
@@ -48,6 +49,23 @@ function ComposeModal({ isOpen, onClose, onSent }: ComposeModalProps) {
     subject: '',
     content: ''
   })
+
+  // Initialize form data when replyTo changes
+  useEffect(() => {
+    if (replyTo) {
+      setFormData({
+        recipient_id: replyTo.sender_id,
+        subject: replyTo.subject.startsWith('Re: ') ? replyTo.subject : `Re: ${replyTo.subject}`,
+        content: `\n\n--- Original Message ---\nFrom: ${replyTo.sender.full_name || replyTo.sender.email}\nDate: ${new Date(replyTo.created_at).toLocaleString()}\n\n${replyTo.content}\n`
+      })
+    } else {
+      setFormData({
+        recipient_id: '',
+        subject: '',
+        content: ''
+      })
+    }
+  }, [replyTo])
 
   const handleSend = async () => {
     if (!formData.recipient_id || !formData.subject || !formData.content) {
@@ -151,10 +169,12 @@ interface MailViewModalProps {
   onClose: () => void
   mail: Mail | null
   onUserClick: (user: User) => void
+  onReply?: (mail: Mail) => void
 }
 
-function MailViewModal({ isOpen, onClose, mail, onUserClick }: MailViewModalProps) {
+function MailViewModal({ isOpen, onClose, mail, onUserClick, onReply }: MailViewModalProps) {
   const { user: currentUser } = useAuth()
+  const [isReplying, setIsReplying] = useState(false)
 
   if (!mail) return null
 
@@ -169,6 +189,14 @@ function MailViewModal({ isOpen, onClose, mail, onUserClick }: MailViewModalProp
   }
 
   const isReceived = currentUser?.id === mail.recipient_id
+  const canReply = isReceived && !mail.is_draft
+
+  const handleReply = () => {
+    if (mail && onReply) {
+      onClose()
+      onReply(mail)
+    }
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Mail Details" size="lg">
@@ -219,7 +247,17 @@ function MailViewModal({ isOpen, onClose, mail, onUserClick }: MailViewModalProp
           <p className="text-gray-200 whitespace-pre-wrap">{mail.content}</p>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-between">
+          <div>
+            {canReply && (
+              <button
+                onClick={handleReply}
+                className="btn-primary mr-3"
+              >
+                Reply
+              </button>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="btn-secondary"
@@ -240,6 +278,7 @@ export default function InboxPage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false)
+  const [replyToMail, setReplyToMail] = useState<Mail | null>(null)
 
   const handleUserClick = (clickedUser: User) => {
     setSelectedUserId(clickedUser.id)
@@ -258,6 +297,11 @@ export default function InboxPage() {
     setIsViewModalOpen(true)
   }
 
+  const handleReply = (mail: Mail) => {
+    setReplyToMail(mail)
+    setIsComposeOpen(true)
+  }
+
   return (
     <DashboardLayout>
       <GmailInbox
@@ -268,8 +312,15 @@ export default function InboxPage() {
 
       <ComposeModal
         isOpen={isComposeOpen}
-        onClose={() => setIsComposeOpen(false)}
-        onSent={() => window.location.reload()}
+        onClose={() => {
+          setIsComposeOpen(false)
+          setReplyToMail(null)
+        }}
+        onSent={() => {
+          window.location.reload()
+          setReplyToMail(null)
+        }}
+        replyTo={replyToMail}
       />
 
       <MailViewModal
@@ -277,6 +328,7 @@ export default function InboxPage() {
         onClose={() => setIsViewModalOpen(false)}
         mail={selectedMail}
         onUserClick={handleUserClick}
+        onReply={handleReply}
       />
 
       <UserProfileModal
