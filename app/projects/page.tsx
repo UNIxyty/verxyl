@@ -15,7 +15,6 @@ import {
 } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 import { Modal } from '@/components/Modal'
-import { UserSelector } from '@/components/UserSelector'
 
 interface User {
   id: string
@@ -131,13 +130,15 @@ function CreateProjectModal({ isOpen, onClose, onCreated }: CreateProjectModalPr
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Assign To
             </label>
-            <UserSelector
+            <select
               value={formData.assigned_to}
-              onChange={(value) => setFormData({ ...formData, assigned_to: value as string })}
-              placeholder="Select user..."
+              onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
               disabled={loading}
-              className="w-full"
-            />
+              className="input w-full"
+            >
+              <option value="">Select user...</option>
+              {/* Add user options here if needed */}
+            </select>
           </div>
 
           <div>

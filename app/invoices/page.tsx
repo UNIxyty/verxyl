@@ -16,7 +16,6 @@ import {
 } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 import { Modal } from '@/components/Modal'
-import { UserSelector } from '@/components/UserSelector'
 
 interface User {
   id: string
@@ -166,13 +165,15 @@ function CreateInvoiceModal({ isOpen, onClose, onCreated }: CreateInvoiceModalPr
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Client
             </label>
-            <UserSelector
+            <select
               value={formData.client_id}
-              onChange={(value) => setFormData({ ...formData, client_id: value as string })}
-              placeholder="Select client..."
+              onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
               disabled={loading}
-              className="w-full"
-            />
+              className="input w-full"
+            >
+              <option value="">Select client...</option>
+              {/* Add client options here if needed */}
+            </select>
           </div>
 
           <div>
