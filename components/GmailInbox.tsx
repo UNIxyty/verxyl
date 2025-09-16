@@ -213,12 +213,6 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
     }
   }
 
-  const handleMailClick = async (mail: Mail) => {
-    if (!mail.is_read) {
-      await markAsRead(mail.id, false)
-    }
-    onViewMail(mail)
-  }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -250,7 +244,10 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
     }
   }
 
-  const handleMailClick = (mail: Mail) => {
+  const handleMailClick = async (mail: Mail) => {
+    if (!mail.is_read) {
+      await markAsRead(mail.id, true)
+    }
     setSelectedMail(mail)
     onViewMail(mail)
   }
