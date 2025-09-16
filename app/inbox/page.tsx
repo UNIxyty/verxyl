@@ -25,6 +25,12 @@ interface Mail {
   subject: string
   content: string
   is_read: boolean
+  is_draft?: boolean
+  is_starred?: boolean
+  is_important?: boolean
+  is_spam?: boolean
+  is_trash?: boolean
+  labels?: string[]
   mail_type: string
   related_id: string | null
   related_type: string | null
