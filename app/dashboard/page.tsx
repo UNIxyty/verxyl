@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/components/DashboardLayout'
 import { useAuth } from '@/components/AuthProvider'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { TicketIcon, ClockIcon, CheckCircleIcon, EnvelopeIcon } from '@heroicons/react/24/outline'
+import { TicketIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
 
 interface Ticket {
   id: string
@@ -161,13 +161,6 @@ export default function DashboardPage() {
             >
               <TicketIcon className="h-6 w-6 mr-2" />
               My Tickets
-            </button>
-            <button
-              onClick={() => router.push('/inbox')}
-              className="flex items-center justify-center p-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-            >
-              <EnvelopeIcon className="h-6 w-6 mr-2" />
-              Inbox
             </button>
             <button
               onClick={() => router.push('/completed')}

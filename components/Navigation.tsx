@@ -17,7 +17,6 @@ import {
   ShieldCheckIcon,
   Bars3Icon,
   XMarkIcon,
-  InboxIcon,
   FolderIcon,
   DocumentTextIcon
 } from '@heroicons/react/24/outline'
@@ -37,7 +36,6 @@ export function Navigation() {
     { name: 'My Tickets', href: '/my-tickets', icon: TicketIcon, roles: ['admin', 'worker', 'viewer'] },
     { name: 'Sent Tickets', href: '/sent-tickets', icon: PaperAirplaneIcon, roles: ['admin', 'worker'] },
     { name: 'Completed Tickets', href: '/completed', icon: CheckCircleIcon, roles: ['admin', 'worker', 'viewer'] },
-    { name: 'Inbox', href: '/inbox', icon: InboxIcon, roles: ['admin', 'worker', 'viewer'] },
     { name: 'Projects', href: '/projects', icon: FolderIcon, roles: ['admin', 'worker', 'viewer'] },
     { name: 'Invoices', href: '/invoices', icon: DocumentTextIcon, roles: ['admin', 'worker'] },
     { name: 'AI Prompts', href: '/ai-backups', icon: LightBulbIcon, roles: ['admin', 'worker'] },

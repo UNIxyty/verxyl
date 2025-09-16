@@ -1,311 +1,247 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { DashboardLayout } from '@/components/DashboardLayout'
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import toast from 'react-hot-toast'
+import { UserIcon } from '@heroicons/react/24/outline'
 import { Modal } from '@/components/Modal'
-import { UserSelector } from '@/components/UserSelector'
-import { UserProfileModal } from '@/components/UserProfileModal'
-import GmailInbox from '@/components/GmailInbox'
-import { UserIcon, PaperClipIcon } from '@heroicons/react/24/outline'
 
-interface User {
+interface Message {
   id: string
-  email: string
-  full_name: string | null
-  role: string
-}
-
-interface MailAttachment {
-  id: string
-  mail_id: string
-  filename: string
-  file_path: string
-  file_size: number
-  mime_type: string
-  created_at: string
-}
-
-interface Mail {
-  id: string
-  sender_id: string
-  recipient_id: string
   subject: string
   content: string
-  is_read: boolean
-  is_draft?: boolean
-  is_starred?: boolean
-  is_important?: boolean
-  is_spam?: boolean
-  is_trash?: boolean
-  labels?: string[]
-  mail_type: string
-  related_id: string | null
-  related_type: string | null
+  sender_id: string
+  recipient_id: string
   created_at: string
   read_at: string | null
-  sender: User
-  recipient: User
-  attachments?: MailAttachment[]
+  sender: {
+    id: string
+    email: string
+    full_name: string | null
+  }
+  recipient: {
+    id: string
+    email: string
+    full_name: string | null
+  }
 }
 
-interface ComposeModalProps {
+interface MessageViewModalProps {
   isOpen: boolean
   onClose: () => void
-  onSent: () => void
-  replyTo?: Mail | null
+  message: Message | null
+  onUserClick: (userId: string) => void
 }
 
-function ComposeModal({ isOpen, onClose, onSent, replyTo }: ComposeModalProps) {
-  const [loading, setLoading] = useState(false)
-  const [sending, setSending] = useState(false)
-  const [formData, setFormData] = useState({
-    recipient_id: '',
-    subject: '',
-    content: ''
-  })
+interface UserProfileModalProps {
+  isOpen: boolean
+  onClose: () => void
+  userId: string | null
+}
 
-  // Initialize form data when replyTo changes
+export default function InboxPage() {
+  const { user } = useAuth()
+  const router = useRouter()
+  const [messages, setMessages] = useState<Message[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null)
+  const [isUserProfileOpen, setIsUserProfileOpen] = useState(false)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+
   useEffect(() => {
-    if (replyTo) {
-      setFormData({
-        recipient_id: replyTo.sender_id,
-        subject: replyTo.subject.startsWith('Re: ') ? replyTo.subject : `Re: ${replyTo.subject}`,
-        content: `\n\n--- Original Message ---\nFrom: ${replyTo.sender.full_name || replyTo.sender.email}\nDate: ${new Date(replyTo.created_at).toLocaleString()}\n\n${replyTo.content}\n`
-      })
-    } else {
-      setFormData({
-        recipient_id: '',
-        subject: '',
-        content: ''
-      })
-    }
-  }, [replyTo])
-
-  const handleSend = async () => {
-    if (!formData.recipient_id || !formData.subject || !formData.content) {
-      toast.error('Please fill in all fields')
+    if (!user) {
+      router.push('/login')
       return
     }
 
-    setSending(true)
-    try {
-      const response = await fetch('/api/mails', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      })
+    fetchMessages()
+  }, [user, router])
 
-      if (response.ok) {
-        toast.success('Mail sent successfully!')
-        setFormData({ recipient_id: '', subject: '', content: '' })
-        onSent()
-        onClose()
-      } else {
-        const errorData = await response.json()
-        toast.error(errorData.error || 'Failed to send mail')
+  const fetchMessages = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/messages')
+      if (!response.ok) {
+        throw new Error('Failed to fetch messages')
       }
+      const data = await response.json()
+      setMessages(data.messages || [])
     } catch (error) {
-      console.error('Error sending mail:', error)
-      toast.error('Failed to send mail')
+      console.error('Error fetching messages:', error)
+      setError(error instanceof Error ? error.message : 'An error occurred')
     } finally {
-      setSending(false)
+      setLoading(false)
     }
   }
 
+  const handleViewMessage = (message: Message) => {
+    setSelectedMessage(message)
+    setIsViewModalOpen(true)
+    
+    // Mark as read if not already read
+    if (!message.read_at) {
+      markAsRead(message.id)
+    }
+  }
+
+  const markAsRead = async (messageId: string) => {
+    try {
+      await fetch(`/api/messages/${messageId}/read`, {
+        method: 'PATCH'
+      })
+      // Update local state
+      setMessages(messages.map(msg => 
+        msg.id === messageId ? { ...msg, read_at: new Date().toISOString() } : msg
+      ))
+    } catch (error) {
+      console.error('Error marking message as read:', error)
+    }
+  }
+
+  const handleUserClick = (userId: string) => {
+    setSelectedUserId(userId)
+    setIsUserProfileOpen(true)
+  }
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading your messages...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="text-red-400 mb-4">
+              <UserIcon className="h-12 w-12 mx-auto" />
+            </div>
+            <h2 className="text-xl font-semibold text-white mb-2">Error Loading Messages</h2>
+            <p className="text-gray-400 mb-4">{error}</p>
+            <button
+              onClick={fetchMessages}
+              className="btn-primary"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Compose Mail" size="lg">
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            To:
-          </label>
-          <UserSelector
-            value={formData.recipient_id}
-            onChange={(value) => setFormData({ ...formData, recipient_id: value as string })}
-            placeholder="Select recipient..."
-            disabled={sending}
-            className="w-full"
-          />
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Messages</h1>
+            <p className="text-gray-400">Messages sent to you by other users</p>
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Subject:
-          </label>
-          <input
-            type="text"
-            value={formData.subject}
-            onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-            className="input w-full"
-            placeholder="Enter subject..."
-            disabled={sending}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Message:
-          </label>
-          <textarea
-            rows={6}
-            value={formData.content}
-            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-            className="textarea w-full"
-            placeholder="Type your message..."
-            disabled={sending}
-          />
-        </div>
-
-        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn-secondary btn-mobile"
-            disabled={sending}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSend}
-            className="btn-primary btn-mobile"
-            disabled={sending}
-          >
-            {sending ? 'Sending...' : 'Send Mail'}
-          </button>
-        </div>
+        {messages.length === 0 ? (
+          <div className="text-center py-12">
+            <UserIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-white mb-2">No messages yet</h3>
+            <p className="text-gray-400">You haven't received any messages from other users.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {messages
+              .filter(message => message.recipient_id === user?.id)
+              .map((message) => (
+                <div
+                  key={message.id}
+                  onClick={() => handleViewMessage(message)}
+                  className="bg-dark-800 hover:bg-dark-700 rounded-lg p-4 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleUserClick(message.sender_id)
+                          }}
+                          className="font-medium text-white hover:text-primary-400 transition-colors"
+                        >
+                          {message.sender.full_name || message.sender.email}
+                        </button>
+                        <span className="text-gray-400">•</span>
+                        <span className="text-sm text-gray-400">
+                          {new Date(message.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <h3 className="font-medium text-white mb-1">{message.subject}</h3>
+                      <p className="text-gray-400 text-sm line-clamp-2">
+                        {message.content.substring(0, 100)}
+                        {message.content.length > 100 && '...'}
+                      </p>
+                    </div>
+                    {!message.read_at && (
+                      <div className="w-2 h-2 bg-primary-500 rounded-full ml-4"></div>
+                    )}
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
       </div>
-    </Modal>
+
+      <MessageViewModal
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        message={selectedMessage}
+        onUserClick={handleUserClick}
+      />
+
+      <UserProfileModal
+        isOpen={isUserProfileOpen}
+        onClose={() => setIsUserProfileOpen(false)}
+        userId={selectedUserId}
+      />
+    </DashboardLayout>
   )
 }
 
-interface MailViewModalProps {
-  isOpen: boolean
-  onClose: () => void
-  mail: Mail | null
-  onUserClick: (user: User) => void
-  onReply?: (mail: Mail) => void
-}
-
-function MailViewModal({ isOpen, onClose, mail, onUserClick, onReply }: MailViewModalProps) {
-  const { user: currentUser } = useAuth()
-  const [isReplying, setIsReplying] = useState(false)
-
-  if (!mail) return null
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
-  const isReceived = currentUser?.id === mail.recipient_id
-  const canReply = isReceived && !mail.is_draft
-
-  const handleReply = () => {
-    if (mail && onReply) {
-      onClose()
-      onReply(mail)
-    }
-  }
+function MessageViewModal({ isOpen, onClose, message, onUserClick }: MessageViewModalProps) {
+  if (!message) return null
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Mail Details" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title="Message Details" size="lg">
       <div className="space-y-4">
-        {/* Mail Header */}
-        <div className="border-b border-gray-700 pb-4">
-          <h3 className="text-lg font-semibold text-white mb-2">{mail.subject}</h3>
-          
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 text-sm text-gray-400">
-            <div className="flex items-center gap-2">
-              <span className="font-medium">From:</span>
-              <button
-                onClick={() => onUserClick(mail.sender)}
-                className="text-primary-400 hover:text-primary-300 flex items-center gap-1"
-              >
-                <UserIcon className="h-4 w-4" />
-                {mail.sender.full_name || mail.sender.email} ({mail.sender.role})
-              </button>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <span className="font-medium">To:</span>
-              <button
-                onClick={() => onUserClick(mail.recipient)}
-                className="text-primary-400 hover:text-primary-300 flex items-center gap-1"
-              >
-                <UserIcon className="h-4 w-4" />
-                {mail.recipient.full_name || mail.recipient.email} ({mail.recipient.role})
-              </button>
-            </div>
-            
-            <div>
-              <span className="font-medium">Sent:</span> {formatDate(mail.created_at)}
-            </div>
+        <div className="border-b border-dark-700 pb-4">
+          <div className="flex items-center justify-between mb-2">
+            <button
+              onClick={() => onUserClick(message.sender_id)}
+              className="font-medium text-white hover:text-primary-400 transition-colors"
+            >
+              {message.sender.full_name || message.sender.email}
+            </button>
+            <span className="text-sm text-gray-400">
+              {new Date(message.created_at).toLocaleString()}
+            </span>
           </div>
-
-          {mail.mail_type !== 'message' && (
-            <div className="mt-2">
-              <span className="badge badge-low">
-                {mail.mail_type.replace('_', ' ')}
-              </span>
-            </div>
-          )}
+          <h2 className="text-lg font-semibold text-white">{message.subject}</h2>
         </div>
 
-        {/* Mail Content */}
-        <div className="bg-dark-700 rounded-lg p-4">
-          <p className="text-gray-200 whitespace-pre-wrap">{mail.content}</p>
+        <div className="prose prose-invert max-w-none">
+          <div className="text-gray-300 whitespace-pre-wrap">{message.content}</div>
         </div>
 
-        {/* Attachments */}
-        {mail.attachments && mail.attachments.length > 0 && (
-          <div className="mt-4">
-            <h4 className="text-sm font-medium text-gray-300 mb-3">Attachments</h4>
-            <div className="space-y-2">
-              {mail.attachments.map((attachment) => (
-                <div key={attachment.id} className="flex items-center justify-between bg-dark-700 rounded-lg p-3">
-                  <div className="flex items-center gap-3">
-                    <PaperClipIcon className="h-5 w-5 text-gray-400" />
-                    <div>
-                      <p className="text-sm text-white">{attachment.filename}</p>
-                      <p className="text-xs text-gray-400">
-                        {(attachment.file_size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      // Download attachment
-                      window.open(`/api/mails/attachments/${attachment.id}/download`, '_blank')
-                    }}
-                    className="btn-primary text-sm px-3 py-1"
-                  >
-                    Download
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="flex justify-between">
-          <div>
-            {canReply && (
-              <button
-                onClick={handleReply}
-                className="btn-primary mr-3"
-              >
-                Reply
-              </button>
-            )}
-          </div>
+        <div className="flex justify-end">
           <button
             onClick={onClose}
             className="btn-secondary"
@@ -318,73 +254,75 @@ function MailViewModal({ isOpen, onClose, mail, onUserClick, onReply }: MailView
   )
 }
 
-export default function InboxPage() {
-  const { user } = useAuth()
-  const router = useRouter()
-  const [isComposeOpen, setIsComposeOpen] = useState(false)
-  const [selectedMail, setSelectedMail] = useState<Mail | null>(null)
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
-  const [isUserProfileOpen, setIsUserProfileOpen] = useState(false)
-  const [replyToMail, setReplyToMail] = useState<Mail | null>(null)
+function UserProfileModal({ isOpen, onClose, userId }: UserProfileModalProps) {
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
 
-  const handleUserClick = (clickedUser: User) => {
-    setSelectedUserId(clickedUser.id)
-    setIsUserProfileOpen(true)
+  useEffect(() => {
+    if (isOpen && userId) {
+      fetchUser()
+    }
+  }, [isOpen, userId])
+
+  const fetchUser = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/users/${userId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setUser(data.user)
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleSendMailToUser = (userId: string) => {
-    setIsUserProfileOpen(false)
-    setIsComposeOpen(true)
-    // Pre-select the user in compose modal
-    // This would need to be passed to the compose modal
-  }
-
-  const handleViewMail = (mail: Mail) => {
-    setSelectedMail(mail)
-    setIsViewModalOpen(true)
-  }
-
-  const handleReply = (mail: Mail) => {
-    setReplyToMail(mail)
-    setIsComposeOpen(true)
-  }
+  if (!isOpen) return null
 
   return (
-    <DashboardLayout>
-      <GmailInbox
-        onCompose={() => setIsComposeOpen(true)}
-        onViewMail={handleViewMail}
-        onUserClick={handleUserClick}
-      />
-
-      <ComposeModal
-        isOpen={isComposeOpen}
-        onClose={() => {
-          setIsComposeOpen(false)
-          setReplyToMail(null)
-        }}
-        onSent={() => {
-          window.location.reload()
-          setReplyToMail(null)
-        }}
-        replyTo={replyToMail}
-      />
-
-      <MailViewModal
-        isOpen={isViewModalOpen}
-        onClose={() => setIsViewModalOpen(false)}
-        mail={selectedMail}
-        onUserClick={handleUserClick}
-        onReply={handleReply}
-      />
-
-      <UserProfileModal
-        isOpen={isUserProfileOpen}
-        onClose={() => setIsUserProfileOpen(false)}
-        userId={selectedUserId}
-        onSendMail={handleSendMailToUser}
-      />
-    </DashboardLayout>
+    <Modal isOpen={isOpen} onClose={onClose} title="User Profile">
+      <div className="space-y-4">
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading user profile...</p>
+          </div>
+        ) : user ? (
+          <>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center">
+                <UserIcon className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-medium text-white">{user.full_name || 'Unknown User'}</h3>
+                <p className="text-sm text-gray-400">{user.email}</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div>
+                <span className="text-sm text-gray-400">Role:</span>
+                <span className="ml-2 text-sm text-white capitalize">{user.role}</span>
+              </div>
+              <div>
+                <span className="text-sm text-gray-400">Status:</span>
+                <span className="ml-2 text-sm text-white capitalize">{user.approval_status}</span>
+              </div>
+              <div>
+                <span className="text-sm text-gray-400">Joined:</span>
+                <span className="ml-2 text-sm text-white">
+                  {new Date(user.created_at).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-400">User not found</p>
+          </div>
+        )}
+      </div>
+    </Modal>
   )
 }
