@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/database'
+import { supabaseAdmin } from '@/lib/supabase'
 
 // GET - Search users by email
 export async function GET(request: NextRequest) {
