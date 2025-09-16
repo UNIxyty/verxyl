@@ -16,7 +16,7 @@ interface User {
 interface UserSelectShareModalProps {
   isOpen: boolean
   onClose: () => void
-  onShare: (recipientEmail: string) => Promise<void>
+  onShare: (recipientEmail: string, accessRole: string) => Promise<void>
   title: string
   itemName: string
 }
@@ -24,6 +24,7 @@ interface UserSelectShareModalProps {
 export function UserSelectShareModal({ isOpen, onClose, onShare, title, itemName }: UserSelectShareModalProps) {
   const [users, setUsers] = useState<User[]>([])
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [accessRole, setAccessRole] = useState<'viewer' | 'editor'>('viewer')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -79,8 +80,8 @@ export function UserSelectShareModal({ isOpen, onClose, onShare, title, itemName
 
     setIsSharing(true)
     try {
-      await onShare(selectedUser.email)
-      toast.success(`Successfully shared ${itemName} with ${selectedUser.email}`)
+      await onShare(selectedUser.email, accessRole)
+      toast.success(`Successfully shared ${itemName} with ${selectedUser.email} as ${accessRole}`)
       handleClose()
     } catch (error) {
       console.error('Error sharing:', error)
@@ -92,6 +93,7 @@ export function UserSelectShareModal({ isOpen, onClose, onShare, title, itemName
 
   const handleClose = () => {
     setSelectedUser(null)
+    setAccessRole('viewer')
     setSearchQuery('')
     setIsDropdownOpen(false)
     onClose()
@@ -249,10 +251,51 @@ export function UserSelectShareModal({ isOpen, onClose, onShare, title, itemName
           )}
         </div>
 
+        {/* Access Role Selection */}
+        {selectedUser && (
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Access Level
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setAccessRole('viewer')}
+                className={`p-3 rounded-lg border transition-colors ${
+                  accessRole === 'viewer'
+                    ? 'border-green-500 bg-green-900/20 text-green-200'
+                    : 'border-gray-600 bg-dark-700 text-gray-300 hover:bg-gray-600'
+                }`}
+                disabled={isSharing}
+              >
+                <div className="text-center">
+                  <div className="text-lg mb-1">👁️</div>
+                  <div className="text-sm font-medium">Viewer</div>
+                  <div className="text-xs opacity-75">Read-only access</div>
+                </div>
+              </button>
+              <button
+                onClick={() => setAccessRole('editor')}
+                className={`p-3 rounded-lg border transition-colors ${
+                  accessRole === 'editor'
+                    ? 'border-blue-500 bg-blue-900/20 text-blue-200'
+                    : 'border-gray-600 bg-dark-700 text-gray-300 hover:bg-gray-600'
+                }`}
+                disabled={isSharing}
+              >
+                <div className="text-center">
+                  <div className="text-lg mb-1">✏️</div>
+                  <div className="text-sm font-medium">Editor</div>
+                  <div className="text-xs opacity-75">Can modify</div>
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* User Count Info */}
         <div className="text-sm text-gray-400">
           {selectedUser ? (
-            <p>Ready to share with selected user</p>
+            <p>Ready to share with selected user as {accessRole}</p>
           ) : (
             <p>{users.length} users available for sharing</p>
           )}

@@ -40,13 +40,14 @@ export function N8NBackupViewModal({ isOpen, onClose, backup }: N8NBackupViewMod
     URL.revokeObjectURL(url)
   }
 
-  const handleShare = async (recipientEmail: string) => {
+  const handleShare = async (recipientEmail: string, accessRole: string) => {
     const response = await fetch('/api/n8n-backups/share', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         backup_id: backup.id,
-        recipient_email: recipientEmail
+        recipient_email: recipientEmail,
+        access_role: accessRole
       })
     })
 

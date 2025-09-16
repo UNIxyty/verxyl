@@ -30,10 +30,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { backup_id, recipient_email } = body
+    const { backup_id, recipient_email, access_role = 'viewer' } = body
 
     if (!backup_id || !recipient_email) {
       return NextResponse.json({ error: 'Backup ID and recipient email are required' }, { status: 400 })
+    }
+
+    // Validate access role
+    if (!['viewer', 'editor'].includes(access_role)) {
+      return NextResponse.json({ error: 'Access role must be either "viewer" or "editor"' }, { status: 400 })
     }
 
     // Verify the backup exists and belongs to the user
@@ -78,6 +83,7 @@ export async function POST(request: NextRequest) {
         backup_id: backup_id,
         owner_id: user.id,
         recipient_id: recipient.id,
+        access_role: access_role,
         shared_at: new Date().toISOString()
       })
       .select()
