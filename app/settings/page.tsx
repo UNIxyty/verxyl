@@ -4,19 +4,20 @@ import { DashboardLayout } from '@/components/DashboardLayout'
 import { ThemePicker } from '@/components/ThemePicker'
 import { useTheme } from '@/components/ThemeProvider'
 import { useAuth } from '@/components/AuthProvider'
+import { ToggleSwitch } from '@/components/ToggleSwitch'
 import { useEffect, useState } from 'react'
 import { Cog6ToothIcon, PaintBrushIcon, ShieldCheckIcon, CheckCircleIcon, XCircleIcon, BellIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
-// Notification types
+// Notification types - updated to match webhook structure
 type NotificationKey =
-  | 'new_ticket'
-  | 'updated_ticket'
+  | 'newTicket'
   | 'deleted_ticket'
-  | 'solved_ticket'
   | 'in_work_ticket'
-  | 'shared_ai_backup'
-  | 'shared_n8n_workflow'
+  | 'updatetTicket'
+  | 'solvedTicket'
+  | 'sharedWorkflow'
+  | 'sharedPrompt'
 
 type NotificationSettings = Record<NotificationKey, boolean>
 
@@ -35,13 +36,13 @@ export default function SettingsPage() {
 
   // Notification settings
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
-    new_ticket: true,
-    updated_ticket: true,
+    newTicket: true,
     deleted_ticket: true,
-    solved_ticket: true,
     in_work_ticket: true,
-    shared_ai_backup: true,
-    shared_n8n_workflow: true
+    updatetTicket: true,
+    solvedTicket: true,
+    sharedWorkflow: true,
+    sharedPrompt: true
   })
   const [isNotificationLoading, setIsNotificationLoading] = useState(false)
   const [isNotificationSaving, setIsNotificationSaving] = useState(false)
@@ -372,34 +373,31 @@ export default function SettingsPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   {[
-                    { key: 'new_ticket', label: 'New Ticket', description: 'When a new ticket is created' },
-                    { key: 'updated_ticket', label: 'Updated Ticket', description: 'When a ticket is updated' },
+                    { key: 'newTicket', label: 'New Ticket', description: 'When a new ticket is created' },
                     { key: 'deleted_ticket', label: 'Deleted Ticket', description: 'When a ticket is deleted' },
-                    { key: 'solved_ticket', label: 'Solved Ticket', description: 'When a ticket is marked as solved' },
                     { key: 'in_work_ticket', label: 'In Work Ticket', description: 'When work starts on a ticket' },
-                    { key: 'shared_ai_backup', label: 'Shared AI Backup', description: 'When an AI backup is shared with you' },
-                    { key: 'shared_n8n_workflow', label: 'Shared N8N Workflow', description: 'When an N8N workflow is shared with you' }
+                    { key: 'updatetTicket', label: 'Updated Ticket', description: 'When a ticket is updated' },
+                    { key: 'solvedTicket', label: 'Solved Ticket', description: 'When a ticket is marked as solved' },
+                    { key: 'sharedWorkflow', label: 'Shared N8N Workflow', description: 'When an N8N workflow is shared with you' },
+                    { key: 'sharedPrompt', label: 'Shared AI Prompt', description: 'When an AI prompt is shared with you' }
                   ].map((setting) => (
-                    <div key={setting.key} className="flex items-center justify-between p-3 bg-dark-700 rounded-lg">
+                    <div key={setting.key} className="flex items-center justify-between p-4 bg-dark-700 rounded-lg border border-gray-600">
                       <div className="flex-1">
-                        <label className="text-sm font-medium text-gray-200">
+                        <h4 className="text-sm font-medium text-gray-200 mb-1">
                           {setting.label}
-                        </label>
-                        <p className="text-xs text-gray-400 mt-1">
+                        </h4>
+                        <p className="text-xs text-gray-400">
                           {setting.description}
                         </p>
                       </div>
-                      <div className="flex items-center ml-4">
-                        <input
-                          type="checkbox"
-                          checked={notificationSettings[setting.key as NotificationKey]}
-                          onChange={(e) => handleNotificationChange(setting.key as NotificationKey, e.target.checked)}
-                          disabled={isNotificationSaving}
-                          className="w-4 h-4 text-primary-600 bg-dark-600 border-gray-500 rounded focus:ring-primary-500 focus:ring-2"
-                        />
-                      </div>
+                      <ToggleSwitch
+                        checked={notificationSettings[setting.key as NotificationKey]}
+                        onChange={(checked) => handleNotificationChange(setting.key as NotificationKey, checked)}
+                        disabled={isNotificationSaving}
+                        size="md"
+                      />
                     </div>
                   ))}
                 </div>

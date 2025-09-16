@@ -44,13 +44,13 @@ export async function GET(request: NextRequest) {
 
     // Return default settings if none exist
     const defaultSettings = {
-      new_ticket: true,
-      updated_ticket: true,
+      newTicket: true,
       deleted_ticket: true,
-      solved_ticket: true,
       in_work_ticket: true,
-      shared_ai_backup: true,
-      shared_n8n_workflow: true
+      updatetTicket: true,
+      solvedTicket: true,
+      sharedWorkflow: true,
+      sharedPrompt: true
     }
 
     return NextResponse.json({ 

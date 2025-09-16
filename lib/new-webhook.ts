@@ -68,6 +68,57 @@ interface NewWebhookPayload {
   // Notification settings fields
   notification_type?: string
   notification_enabled?: boolean
+  
+  // Notification body with settings
+  notificationBody?: {
+    newTicket?: boolean
+    deleted_ticket?: boolean
+    in_work_ticket?: boolean
+    updatetTicket?: boolean
+    solvedTicket?: boolean
+    sharedWorkflow?: boolean
+    sharedPrompt?: boolean
+  }
+}
+
+// Helper function to get user notification settings
+export async function getUserNotificationSettings(userId: string): Promise<{
+  newTicket: boolean
+  deleted_ticket: boolean
+  in_work_ticket: boolean
+  updatetTicket: boolean
+  solvedTicket: boolean
+  sharedWorkflow: boolean
+  sharedPrompt: boolean
+} | null> {
+  try {
+    const { supabaseAdmin } = await import('./supabase')
+    
+    const { data: settings, error } = await supabaseAdmin
+      .from('notification_settings')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+    
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error fetching user notification settings:', error)
+      return null
+    }
+    
+    // Return default settings if none exist
+    return settings || {
+      newTicket: true,
+      deleted_ticket: true,
+      in_work_ticket: true,
+      updatetTicket: true,
+      solvedTicket: true,
+      sharedWorkflow: true,
+      sharedPrompt: true
+    }
+  } catch (error) {
+    console.error('Error in getUserNotificationSettings:', error)
+    return null
+  }
 }
 
 export async function sendNewWebhook(payload: NewWebhookPayload): Promise<{ success: boolean; error?: string }> {
@@ -132,10 +183,18 @@ export async function sendNewWebhook(payload: NewWebhookPayload): Promise<{ succ
     console.log('Sending new webhook to:', webhookUrl)
     console.log('Webhook payload:', payload)
     
-    // Add timestamp
+    // Add timestamp and notification settings if user_id is available
     const fullPayload = {
       ...payload,
       timestamp: new Date().toISOString()
+    }
+    
+    // Add notification settings if user_id is available
+    if (payload.user_id) {
+      const notificationSettings = await getUserNotificationSettings(payload.user_id)
+      if (notificationSettings) {
+        fullPayload.notificationBody = notificationSettings
+      }
     }
     
     // Send webhook request
