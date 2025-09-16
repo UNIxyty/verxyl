@@ -212,27 +212,18 @@ export async function sendNewWebhook(payload: NewWebhookPayload): Promise<{ succ
       timestamp: new Date().toISOString()
     }
     
-    // Add notification settings based on webhook type (only if not already provided)
-    if (payload.user_id && !payload.notifications && !payload.newTicket) {
+    // Add notification settings for user webhooks (role_changed) if not already provided
+    if (isUserAction && payload.user_id && !payload.notifications) {
       const notificationSettings = await getUserNotificationSettings(payload.user_id)
       if (notificationSettings) {
-        if (isUserAction) {
-          // For user webhooks (role_changed), add notifications object
-          fullPayload.notifications = {
-            rolechange: true // You can make this configurable based on notification settings
-          }
-        } else if (isTicketAction) {
-          // For ticket webhooks, add direct notification parameters
-          fullPayload.newTicket = notificationSettings.newTicket
-          fullPayload.deleted_ticket = notificationSettings.deleted_ticket
-          fullPayload.in_work_ticket = notificationSettings.in_work_ticket
-          fullPayload.updatetTicket = notificationSettings.updatetTicket
-          fullPayload.solvedTicket = notificationSettings.solvedTicket
-          fullPayload.sharedWorkflow = notificationSettings.sharedWorkflow
-          fullPayload.sharedPrompt = notificationSettings.sharedPrompt
+        // For user webhooks (role_changed), add notifications object
+        fullPayload.notifications = {
+          rolechange: true // You can make this configurable based on notification settings
         }
       }
     }
+    
+    // Note: Ticket webhooks already include notification settings from database.ts
     
     console.log('Full payload being sent:', fullPayload)
     
