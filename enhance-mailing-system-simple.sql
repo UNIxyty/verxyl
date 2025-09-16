@@ -1,4 +1,4 @@
--- Enhance mailing system with Gmail-like features
+-- Enhanced mailing system with Gmail-like features (Simple version with RLS disabled)
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- Add new columns to mails table for Gmail-like features
@@ -82,102 +82,12 @@ CREATE TABLE IF NOT EXISTS invoices (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- Enable RLS on new tables
-ALTER TABLE mail_labels ENABLE ROW LEVEL SECURITY;
-ALTER TABLE mail_attachments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
-ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
-
--- RLS Policies for mail_labels
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can manage their own mail labels' AND tablename = 'mail_labels') THEN
-    CREATE POLICY "Users can manage their own mail labels" ON mail_labels
-      FOR ALL USING (auth.uid()::text = user_id::text);
-  END IF;
-END $$;
-
--- RLS Policies for mail_attachments
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can view attachments of their mails' AND tablename = 'mail_attachments') THEN
-    CREATE POLICY "Users can view attachments of their mails" ON mail_attachments
-      FOR SELECT USING (
-        EXISTS (
-          SELECT 1 FROM mails 
-          WHERE mails.id = mail_attachments.mail_id 
-          AND (mails.sender_id::text = auth.uid()::text OR mails.recipient_id::text = auth.uid()::text)
-        )
-      );
-  END IF;
-END $$;
-
--- RLS Policies for notifications
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can view their own notifications' AND tablename = 'notifications') THEN
-    CREATE POLICY "Users can view their own notifications" ON notifications
-      FOR SELECT USING (auth.uid()::text = user_id::text);
-  END IF;
-END $$;
-
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can update their own notifications' AND tablename = 'notifications') THEN
-    CREATE POLICY "Users can update their own notifications" ON notifications
-      FOR UPDATE USING (auth.uid()::text = user_id::text);
-  END IF;
-END $$;
-
--- RLS Policies for projects
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can view projects they created or are assigned to' AND tablename = 'projects') THEN
-    CREATE POLICY "Users can view projects they created or are assigned to" ON projects
-      FOR SELECT USING (
-        auth.uid()::text = created_by::text OR 
-        auth.uid()::text = assigned_to::text
-      );
-  END IF;
-END $$;
-
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can create projects' AND tablename = 'projects') THEN
-    CREATE POLICY "Users can create projects" ON projects
-      FOR INSERT WITH CHECK (auth.uid()::text = created_by::text);
-  END IF;
-END $$;
-
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can update projects they created or are assigned to' AND tablename = 'projects') THEN
-    CREATE POLICY "Users can update projects they created or are assigned to" ON projects
-      FOR UPDATE USING (
-        auth.uid()::text = created_by::text OR 
-        auth.uid()::text = assigned_to::text
-      );
-  END IF;
-END $$;
-
--- RLS Policies for invoices
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can view invoices they created or are client of' AND tablename = 'invoices') THEN
-    CREATE POLICY "Users can view invoices they created or are client of" ON invoices
-      FOR SELECT USING (
-        auth.uid()::text = created_by::text OR 
-        auth.uid()::text = client_id::text
-      );
-  END IF;
-END $$;
-
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can create invoices' AND tablename = 'invoices') THEN
-    CREATE POLICY "Users can create invoices" ON invoices
-      FOR INSERT WITH CHECK (auth.uid()::text = created_by::text);
-  END IF;
-END $$;
-
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can update invoices they created' AND tablename = 'invoices') THEN
-    CREATE POLICY "Users can update invoices they created" ON invoices
-      FOR UPDATE USING (auth.uid()::text = created_by::text);
-  END IF;
-END $$;
+-- Disable RLS on new tables for simplicity
+ALTER TABLE mail_labels DISABLE ROW LEVEL SECURITY;
+ALTER TABLE mail_attachments DISABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications DISABLE ROW LEVEL SECURITY;
+ALTER TABLE projects DISABLE ROW LEVEL SECURITY;
+ALTER TABLE invoices DISABLE ROW LEVEL SECURITY;
 
 -- Indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_mails_is_draft ON mails(is_draft);
@@ -196,7 +106,16 @@ CREATE INDEX IF NOT EXISTS idx_invoices_created_by ON invoices(created_by);
 CREATE INDEX IF NOT EXISTS idx_invoices_client_id ON invoices(client_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
 
--- Triggers for updated_at
+-- Function to update updated_at timestamp (if it doesn't exist)
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = TIMEZONE('utc'::text, NOW());
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Triggers for updated_at (with proper syntax)
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_projects_updated_at' AND tgrelid = 'projects'::regclass) THEN
     CREATE TRIGGER update_projects_updated_at 
@@ -212,3 +131,12 @@ DO $$ BEGIN
       FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
   END IF;
 END $$;
+
+-- Check table creation status
+SELECT 
+  schemaname, 
+  tablename, 
+  rowsecurity 
+FROM pg_tables 
+WHERE tablename IN ('mail_labels', 'mail_attachments', 'notifications', 'projects', 'invoices', 'mails')
+ORDER BY tablename;
