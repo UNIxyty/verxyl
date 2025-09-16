@@ -8,6 +8,7 @@ import { Modal } from '@/components/Modal'
 import { UserSelector } from '@/components/UserSelector'
 import { UserProfileModal } from '@/components/UserProfileModal'
 import GmailInbox from '@/components/GmailInbox'
+import { UserIcon } from '@heroicons/react/24/outline'
 
 interface User {
   id: string
