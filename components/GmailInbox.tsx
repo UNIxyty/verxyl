@@ -23,6 +23,7 @@ import {
   StarIcon as StarIconSolid,
   ExclamationTriangleIcon as ExclamationTriangleIconSolid
 } from '@heroicons/react/24/solid'
+import { UserSelector } from './UserSelector'
 
 interface User {
   id: string
@@ -96,6 +97,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
   const [showCompose, setShowCompose] = useState(false)
   const [composeData, setComposeData] = useState({
     recipient: '',
+    recipient_id: '',
     subject: '',
     content: ''
   })
@@ -328,20 +330,16 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
 
   const sendEmail = async () => {
     try {
-      const recipientResponse = await fetch(`/api/users/search?email=${encodeURIComponent(composeData.recipient)}`)
-      if (!recipientResponse.ok) {
-        alert('Recipient not found')
+      if (!composeData.recipient_id || !composeData.subject || !composeData.content) {
+        alert('Please fill in all fields')
         return
       }
-      
-      const recipientData = await recipientResponse.json()
-      const recipient = recipientData.user
 
       const response = await fetch('/api/mails', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          recipient_id: recipient.id,
+          recipient_id: composeData.recipient_id,
           subject: composeData.subject,
           content: composeData.content
         })
@@ -349,7 +347,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
 
       if (response.ok) {
         setShowCompose(false)
-        setComposeData({ recipient: '', subject: '', content: '' })
+        setComposeData({ recipient: '', recipient_id: '', subject: '', content: '' })
         window.location.reload()
         alert('Email sent successfully!')
       } else {
@@ -375,7 +373,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
 
       if (response.ok) {
         setShowCompose(false)
-        setComposeData({ recipient: '', subject: '', content: '' })
+        setComposeData({ recipient: '', recipient_id: '', subject: '', content: '' })
         window.location.reload()
         alert('Draft saved!')
       } else {
@@ -567,6 +565,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                           // Set reply data for compose modal
                           setComposeData({
                             recipient: selectedMail.sender.email,
+                            recipient_id: selectedMail.sender_id,
                             subject: selectedMail.subject.startsWith('Re: ') ? selectedMail.subject : `Re: ${selectedMail.subject}`,
                             content: `\n\n--- Original Message ---\nFrom: ${selectedMail.sender.full_name || selectedMail.sender.email}\nDate: ${new Date(selectedMail.created_at).toLocaleString()}\n\n${selectedMail.content}\n`
                           })
@@ -908,13 +907,11 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   To
                 </label>
-                <input
-                  type="email"
-                  placeholder="Enter recipient email..."
-                  value={composeData.recipient}
-                  onChange={(e) => setComposeData({...composeData, recipient: e.target.value})}
-                  className="w-full px-3 py-2 input rounded-lg"
-                  autoFocus
+                <UserSelector
+                  value={composeData.recipient_id}
+                  onChange={(value) => setComposeData({...composeData, recipient_id: value as string})}
+                  placeholder="Select recipient..."
+                  className="w-full"
                 />
               </div>
               
@@ -942,6 +939,34 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                   rows={8}
                   className="w-full px-3 py-2 input rounded-lg resize-none"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Attachments
+                </label>
+                <div className="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center hover:border-gray-500 transition-colors">
+                  <input
+                    type="file"
+                    multiple
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || [])
+                      // Handle file uploads here
+                      console.log('Selected files:', files)
+                    }}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <label htmlFor="file-upload" className="cursor-pointer">
+                    <PaperClipIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-400 text-sm">
+                      Click to upload files or drag and drop
+                    </p>
+                    <p className="text-gray-500 text-xs mt-1">
+                      PDF, DOC, DOCX, TXT, JPG, PNG up to 10MB each
+                    </p>
+                  </label>
+                </div>
               </div>
               
               <div className="flex justify-between">
