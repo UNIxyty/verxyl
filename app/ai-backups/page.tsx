@@ -5,7 +5,7 @@ import { AIPromptBackupModal } from '@/components/AIPromptBackupModal'
 import { AIPromptBackupViewModal } from '@/components/AIPromptBackupViewModal'
 import { useAuth } from '@/components/AuthProvider'
 import { useEffect, useState } from 'react'
-import { LightBulbIcon, PlusIcon, DocumentTextIcon, EyeIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
+import { LightBulbIcon, PlusIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
 
 interface AIPromptBackup {
   id: string
@@ -25,7 +25,6 @@ export default function AIBackupsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [selectedBackup, setSelectedBackup] = useState<AIPromptBackup | null>(null)
-  const [expandedBackup, setExpandedBackup] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<'date' | 'title'>('date')
 
   useEffect(() => {
@@ -70,9 +69,6 @@ export default function AIBackupsPage() {
     URL.revokeObjectURL(url)
   }
 
-  const toggleExpanded = (backupId: string) => {
-    setExpandedBackup(expandedBackup === backupId ? null : backupId)
-  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -178,7 +174,10 @@ export default function AIBackupsPage() {
                 : backup.prompt_text
               
               return (
-                <div key={backup.id} className="card hover:bg-dark-700 transition-colors cursor-pointer" onClick={() => toggleExpanded(backup.id)}>
+                <div key={backup.id} className="card hover:bg-dark-700 transition-colors cursor-pointer" onClick={() => {
+                  setSelectedBackup(backup)
+                  setIsViewModalOpen(true)
+                }}>
                   <div className="flex items-start justify-between mb-3">
                     <DocumentTextIcon className="h-6 w-6 text-primary-400 flex-shrink-0" />
                     <span className="text-xs font-medium text-primary-400 bg-primary-900 px-2 py-1 rounded">
@@ -196,78 +195,11 @@ export default function AIBackupsPage() {
                   
                   <div className="flex items-center justify-between text-xs text-gray-400">
                     <span>{formatDate(backup.created_at)}</span>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setSelectedBackup(backup)
-                          setIsViewModalOpen(true)
-                        }}
-                        className="text-primary-400 hover:text-primary-300 font-medium flex items-center gap-1"
-                      >
-                        <EyeIcon className="h-3 w-3" />
-                        View
-                      </button>
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          downloadPrompt(backup)
-                        }}
-                        className="text-green-400 hover:text-green-300 font-medium flex items-center gap-1"
-                      >
-                        <ArrowDownTrayIcon className="h-3 w-3" />
-                        Download
-                      </button>
-                    </div>
+                    <span className="text-primary-400 hover:text-primary-300 font-medium">
+                      Click to view
+                    </span>
                   </div>
 
-                  {expandedBackup === backup.id && (
-                    <div className="mt-4 pt-4 border-t border-dark-700">
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-300 mb-2">Full Prompt:</h4>
-                          <div className="bg-dark-700 rounded-lg p-3">
-                            <p className="text-gray-200 whitespace-pre-wrap text-sm">
-                              {backup.prompt_text}
-                            </p>
-                          </div>
-                        </div>
-
-                        {backup.output_logic && (
-                          <div>
-                            <h4 className="text-sm font-medium text-gray-300 mb-2">Output Logic:</h4>
-                            <div className="bg-dark-700 rounded-lg p-3">
-                              <pre className="text-gray-200 text-xs whitespace-pre-wrap">
-                                {JSON.stringify(backup.output_logic, null, 2)}
-                              </pre>
-                            </div>
-                          </div>
-                        )}
-
-                        {backup.output_result && (
-                          <div>
-                            <h4 className="text-sm font-medium text-gray-300 mb-2">Output Result:</h4>
-                            <div className="bg-dark-700 rounded-lg p-3">
-                              <pre className="text-gray-200 text-xs whitespace-pre-wrap">
-                                {JSON.stringify(backup.output_result, null, 2)}
-                              </pre>
-                            </div>
-                          </div>
-                        )}
-
-                        {backup.previous_version_id && (
-                          <div>
-                            <h4 className="text-sm font-medium text-gray-300 mb-2">Previous Version:</h4>
-                            <div className="bg-dark-700 rounded-lg p-3">
-                              <p className="text-gray-200 text-xs">
-                                This backup is based on a previous version
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )
             })}
