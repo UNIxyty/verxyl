@@ -1,96 +1,120 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 
-// GET - Fetch user's notification settings
-export async function GET() {
+// Use service role for admin operations
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+// GET - Fetch notification settings for a user
+export async function GET(request: NextRequest) {
   try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const cookieStore = cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+        },
+      }
+    )
 
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Get user's notification settings
     const { data: settings, error } = await supabaseAdmin
       .from('notification_settings')
       .select('*')
       .eq('user_id', user.id)
       .single()
 
-    if (error && error.code !== 'PGRST116') {
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
       console.error('Error fetching notification settings:', error)
       return NextResponse.json({ error: 'Failed to fetch notification settings' }, { status: 500 })
     }
 
-    // If no settings exist, return default settings
-    if (!settings) {
-      const defaultSettings = {
-        user_id: user.id,
-        new_ticket: true,
-        updated_ticket: true,
-        deleted_ticket: true,
-        solved_ticket: true,
-        in_work_ticket: true,
-        shared_ai_backup: true,
-        shared_n8n_workflow: true,
-        new_mail: true
-      }
-      return NextResponse.json({ settings: defaultSettings })
+    // Return default settings if none exist
+    const defaultSettings = {
+      new_ticket: true,
+      updated_ticket: true,
+      deleted_ticket: true,
+      solved_ticket: true,
+      in_work_ticket: true,
+      shared_ai_backup: true,
+      shared_n8n_workflow: true
     }
 
-    return NextResponse.json({ settings })
+    return NextResponse.json({ 
+      settings: settings || defaultSettings 
+    })
+
   } catch (error) {
-    console.error('Unexpected error in notification settings GET:', error)
+    console.error('Error in notification settings GET:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-// POST/PUT - Update user's notification settings
+// POST - Save notification settings for a user
 export async function POST(request: NextRequest) {
   try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-    }
-
-    const settingsData = await request.json()
-
-    // Validate the settings data
-    const validKeys = [
-      'new_ticket', 'updated_ticket', 'deleted_ticket', 'solved_ticket', 
-      'in_work_ticket', 'shared_ai_backup', 'shared_n8n_workflow', 'new_mail'
-    ] as const
-
-    const filteredSettings: Record<string, boolean> = {}
-    for (const key of validKeys) {
-      if (key in settingsData && typeof settingsData[key] === 'boolean') {
-        filteredSettings[key] = settingsData[key]
+    const cookieStore = cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+        },
       }
+    )
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (Object.keys(filteredSettings).length === 0) {
-      return NextResponse.json({ error: 'No valid settings provided' }, { status: 400 })
+    const body = await request.json()
+    const settings = body
+
+    // Validate settings object
+    if (!settings || typeof settings !== 'object') {
+      return NextResponse.json({ error: 'Invalid settings object' }, { status: 400 })
     }
 
     // Upsert notification settings
-    const { data: settings, error } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from('notification_settings')
       .upsert({
         user_id: user.id,
-        ...filteredSettings,
+        ...settings,
         updated_at: new Date().toISOString()
       })
-      .select('*')
+      .select()
       .single()
 
     if (error) {
-      console.error('Error updating notification settings:', error)
-      return NextResponse.json({ error: 'Failed to update notification settings' }, { status: 500 })
+      console.error('Error saving notification settings:', error)
+      return NextResponse.json({ error: 'Failed to save notification settings' }, { status: 500 })
     }
 
-    return NextResponse.json({ settings, message: 'Notification settings updated successfully' })
+    return NextResponse.json({ 
+      message: 'Notification settings saved successfully',
+      settings: data
+    })
+
   } catch (error) {
-    console.error('Unexpected error in notification settings POST:', error)
+    console.error('Error in notification settings POST:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
