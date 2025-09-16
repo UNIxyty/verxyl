@@ -102,7 +102,14 @@ export async function GET(request: NextRequest) {
       query = query.contains('labels', [label])
     }
 
-    const { data: mails, error } = await query.order('created_at', { ascending: false })
+    const { data: mails, error } = await query
+      .order('created_at', { ascending: false })
+      .select(`
+        *,
+        sender:users!mails_sender_id_fkey(*),
+        recipient:users!mails_recipient_id_fkey(*),
+        attachments:mail_attachments(*)
+      `)
 
     if (error) {
       console.error('Error fetching mails:', error)

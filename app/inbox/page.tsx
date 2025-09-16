@@ -9,13 +9,23 @@ import { Modal } from '@/components/Modal'
 import { UserSelector } from '@/components/UserSelector'
 import { UserProfileModal } from '@/components/UserProfileModal'
 import GmailInbox from '@/components/GmailInbox'
-import { UserIcon } from '@heroicons/react/24/outline'
+import { UserIcon, PaperClipIcon } from '@heroicons/react/24/outline'
 
 interface User {
   id: string
   email: string
   full_name: string | null
   role: string
+}
+
+interface MailAttachment {
+  id: string
+  mail_id: string
+  filename: string
+  file_path: string
+  file_size: number
+  mime_type: string
+  created_at: string
 }
 
 interface Mail {
@@ -38,6 +48,7 @@ interface Mail {
   read_at: string | null
   sender: User
   recipient: User
+  attachments?: MailAttachment[]
 }
 
 interface ComposeModalProps {
@@ -252,6 +263,37 @@ function MailViewModal({ isOpen, onClose, mail, onUserClick, onReply }: MailView
         <div className="bg-dark-700 rounded-lg p-4">
           <p className="text-gray-200 whitespace-pre-wrap">{mail.content}</p>
         </div>
+
+        {/* Attachments */}
+        {mail.attachments && mail.attachments.length > 0 && (
+          <div className="mt-4">
+            <h4 className="text-sm font-medium text-gray-300 mb-3">Attachments</h4>
+            <div className="space-y-2">
+              {mail.attachments.map((attachment) => (
+                <div key={attachment.id} className="flex items-center justify-between bg-dark-700 rounded-lg p-3">
+                  <div className="flex items-center gap-3">
+                    <PaperClipIcon className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-white">{attachment.filename}</p>
+                      <p className="text-xs text-gray-400">
+                        {(attachment.file_size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      // Download attachment
+                      window.open(`/api/mails/attachments/${attachment.id}/download`, '_blank')
+                    }}
+                    className="btn-primary text-sm px-3 py-1"
+                  >
+                    Download
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-between">
           <div>

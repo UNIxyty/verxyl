@@ -32,6 +32,16 @@ interface User {
   role: string
 }
 
+interface MailAttachment {
+  id: string
+  mail_id: string
+  filename: string
+  file_path: string
+  file_size: number
+  mime_type: string
+  created_at: string
+}
+
 interface Mail {
   id: string
   sender_id: string
@@ -52,6 +62,7 @@ interface Mail {
   read_at: string | null
   sender: User
   recipient: User
+  attachments?: MailAttachment[]
 }
 
 interface GmailInboxProps {
@@ -101,6 +112,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
     subject: '',
     content: ''
   })
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [selectedFolder, setSelectedFolder] = useState('inbox')
 
   const folders = [
@@ -164,7 +176,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
 
   const markAsRead = async (mailId: string, isRead: boolean) => {
     try {
-      const response = await fetch(`/api/mails/${mailId}/read`, {
+      const response = await fetch(`/api/mails/${mailId}/update`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_read: isRead })
@@ -335,6 +347,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
         return
       }
 
+      // First, send the email
       const response = await fetch('/api/mails', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -345,14 +358,37 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
         })
       })
 
-      if (response.ok) {
-        setShowCompose(false)
-        setComposeData({ recipient: '', recipient_id: '', subject: '', content: '' })
-        window.location.reload()
-        alert('Email sent successfully!')
-      } else {
+      if (!response.ok) {
         alert('Failed to send email')
+        return
       }
+
+      const emailData = await response.json()
+      const mailId = emailData.mail.id
+
+      // Upload files if any
+      if (selectedFiles.length > 0) {
+        for (const file of selectedFiles) {
+          const formData = new FormData()
+          formData.append('file', file)
+          formData.append('mailId', mailId)
+
+          const uploadResponse = await fetch('/api/mails/attachments', {
+            method: 'POST',
+            body: formData
+          })
+
+          if (!uploadResponse.ok) {
+            console.error('Failed to upload file:', file.name)
+          }
+        }
+      }
+
+      setShowCompose(false)
+      setComposeData({ recipient: '', recipient_id: '', subject: '', content: '' })
+      setSelectedFiles([])
+      window.location.reload()
+      alert('Email sent successfully!')
     } catch (error) {
       console.error('Error sending email:', error)
       alert('Error sending email')
@@ -603,6 +639,37 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
               <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">
                 {selectedMail.content}
               </div>
+
+              {/* Attachments */}
+              {selectedMail.attachments && selectedMail.attachments.length > 0 && (
+                <div className="mt-6 pt-4 border-t border-dark-700">
+                  <h4 className="text-sm font-medium text-gray-300 mb-3">Attachments</h4>
+                  <div className="space-y-2">
+                    {selectedMail.attachments.map((attachment) => (
+                      <div key={attachment.id} className="flex items-center justify-between bg-dark-700 rounded-lg p-3">
+                        <div className="flex items-center gap-3">
+                          <PaperClipIcon className="h-5 w-5 text-gray-400" />
+                          <div>
+                            <p className="text-sm text-white">{attachment.filename}</p>
+                            <p className="text-xs text-gray-400">
+                              {(attachment.file_size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            // Download attachment
+                            window.open(`/api/mails/attachments/${attachment.id}/download`, '_blank')
+                          }}
+                          className="btn-primary text-sm px-3 py-1"
+                        >
+                          Download
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               {selectedMail.labels && selectedMail.labels.length > 0 && (
                 <div className="mt-6 pt-4 border-t border-dark-700">
@@ -951,8 +1018,7 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                     multiple
                     onChange={(e) => {
                       const files = Array.from(e.target.files || [])
-                      // Handle file uploads here
-                      console.log('Selected files:', files)
+                      setSelectedFiles(files)
                     }}
                     className="hidden"
                     id="file-upload"
@@ -967,6 +1033,33 @@ export default function GmailInbox({ onCompose, onViewMail, onUserClick }: Gmail
                     </p>
                   </label>
                 </div>
+                
+                {/* Selected Files Display */}
+                {selectedFiles.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between bg-dark-700 rounded-lg p-3">
+                        <div className="flex items-center gap-3">
+                          <PaperClipIcon className="h-5 w-5 text-gray-400" />
+                          <div>
+                            <p className="text-sm text-white">{file.name}</p>
+                            <p className="text-xs text-gray-400">
+                              {(file.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSelectedFiles(selectedFiles.filter((_, i) => i !== index))
+                          }}
+                          className="text-gray-400 hover:text-red-400 transition-colors"
+                        >
+                          <XMarkIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               
               <div className="flex justify-between">
