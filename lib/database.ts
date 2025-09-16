@@ -154,6 +154,8 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
       const { getUserNotificationSettings } = await import('./new-webhook')
       const notificationSettings = await getUserNotificationSettings(data.created_by)
       
+      console.log('Notification settings for user:', data.created_by, notificationSettings)
+      
       const webhookResult = await sendNewWebhook({
         action: 'ticket_created',
         timestamp: new Date().toISOString(),

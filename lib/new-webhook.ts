@@ -234,6 +234,8 @@ export async function sendNewWebhook(payload: NewWebhookPayload): Promise<{ succ
       }
     }
     
+    console.log('Full payload being sent:', fullPayload)
+    
     // Send webhook request
     const response = await fetch(webhookUrl, {
       method: 'POST',
