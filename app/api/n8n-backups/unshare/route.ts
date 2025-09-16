@@ -47,7 +47,8 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check if the current user is the owner of the backup
-    if (shareRecord.backup.user_id !== user.id) {
+    const backup = shareRecord.backup as { id: string; user_id: string }
+    if (backup.user_id !== user.id) {
       return NextResponse.json({ error: 'You can only remove access to your own backups' }, { status: 403 })
     }
 
