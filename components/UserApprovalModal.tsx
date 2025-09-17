@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { XMarkIcon, CheckIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
+import { RoleChooser } from './RoleChooser'
 
 interface User {
   id: string
@@ -160,20 +161,11 @@ export function UserApprovalModal({ user, isOpen, onClose, onUserUpdated }: User
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Assign Role
               </label>
-              <select
+              <RoleChooser
                 value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value as any)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="worker">Worker</option>
-                <option value="viewer">Viewer</option>
-                <option value="admin">Admin</option>
-              </select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {selectedRole === 'admin' && 'Full system access, can manage users and webhook settings'}
-                {selectedRole === 'worker' && 'Can create and manage tickets, cannot access admin functions'}
-                {selectedRole === 'viewer' && 'Read-only access to tickets only'}
-              </p>
+                onChange={setSelectedRole}
+                size="md"
+              />
             </div>
           )}
 
