@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { supabaseAdmin } from '@/lib/supabase'
+import { sendUserWebhook } from '@/lib/database'
 
 export async function PATCH(
   request: NextRequest,
@@ -123,6 +124,23 @@ export async function PATCH(
 
     const updatedUser = updatedUsers[0]
 
+    // Send webhook for role change
+    try {
+      console.log('Sending webhook for user role change...')
+      await sendUserWebhook(targetUserId, 'role_changed', {
+        old_role: targetUser.role,
+        new_role: role,
+        changed_by: {
+          id: user.id,
+          email: currentUserData.email,
+          name: currentUserData.full_name
+        },
+        changed_at: new Date().toISOString()
+      })
+      console.log('User role change webhook sent successfully')
+    } catch (webhookError) {
+      console.error('Webhook error (non-blocking):', webhookError)
+    }
 
     return NextResponse.json({
       success: true,

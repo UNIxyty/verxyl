@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { sendUserWebhook } from '@/lib/database'
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     // Check if user is admin
     const { data: adminUser, error: adminError } = await supabase
       .from('users')
-      .select('role, approval_status')
+      .select('role, approval_status, email, full_name')
       .eq('id', user.id)
       .single()
 
@@ -56,6 +57,22 @@ export async function POST(request: NextRequest) {
         console.error('Approve user error:', updateError)
         return NextResponse.json({ error: 'Failed to approve user', details: updateError.message }, { status: 500 })
       }
+
+      // Send webhook for user approval
+      try {
+        console.log('Sending webhook for user approval...')
+        await sendUserWebhook(userId, 'user_approved', {
+          approved_by: {
+            id: user.id,
+            email: adminUser.email,
+            name: adminUser.full_name
+          },
+          approved_at: new Date().toISOString()
+        })
+        console.log('User approval webhook sent successfully')
+      } catch (webhookError) {
+        console.error('Webhook error (non-blocking):', webhookError)
+      }
     } else if (action === 'reject') {
       const { error: updateError } = await supabase
         .from('users')
@@ -70,6 +87,23 @@ export async function POST(request: NextRequest) {
       if (updateError) {
         console.error('Reject user error:', updateError)
         return NextResponse.json({ error: 'Failed to reject user', details: updateError.message }, { status: 500 })
+      }
+
+      // Send webhook for user rejection
+      try {
+        console.log('Sending webhook for user rejection...')
+        await sendUserWebhook(userId, 'user_rejected', {
+          rejected_by: {
+            id: user.id,
+            email: adminUser.email,
+            name: adminUser.full_name
+          },
+          rejection_reason: reason || null,
+          rejected_at: new Date().toISOString()
+        })
+        console.log('User rejection webhook sent successfully')
+      } catch (webhookError) {
+        console.error('Webhook error (non-blocking):', webhookError)
       }
     }
 

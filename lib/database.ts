@@ -253,6 +253,89 @@ export async function sendTicketWebhook(ticketId: string, action: string) {
 }
 
 // Send webhook for workflow/prompt sharing events
+export async function sendUserWebhook(userId: string, action: string, additionalData?: any) {
+  try {
+    console.log('Sending user webhook for action:', action)
+    console.log('User ID:', userId)
+
+    // Get user details
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    if (userError || !user) {
+      console.error('Error fetching user for webhook:', userError)
+      return false
+    }
+
+    // Get system-wide webhook settings
+    const { data: webhookSettings, error: settingsError } = await supabaseAdmin
+      .from('system_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', ['webhook_base_url', 'webhook_users_path'])
+
+    if (settingsError) {
+      console.error('Error fetching webhook settings:', settingsError)
+      return false
+    }
+
+    // Parse webhook settings
+    const settings: any = {}
+    webhookSettings?.forEach(setting => {
+      settings[setting.setting_key] = setting.setting_value
+    })
+
+    // Build webhook URLs
+    const usersWebhookUrl = settings.webhook_base_url && settings.webhook_users_path
+      ? `${settings.webhook_base_url}${settings.webhook_users_path}`
+      : null
+
+    // Prepare webhook payload
+    const payload = {
+      action: action, // 'role_changed', 'user_created', 'user_approved', etc.
+      user_id: user.id,
+      user_email: user.email,
+      user_name: user.full_name,
+      user_role: user.role,
+      user_approval_status: user.approval_status,
+      user_created_at: user.created_at,
+      user_updated_at: user.updated_at,
+      ...additionalData // Include any additional data (like old_role, changed_by, etc.)
+    }
+
+    let success = true
+
+    console.log('System users webhook URL found:', usersWebhookUrl)
+
+    // Send to system webhook if available
+    if (usersWebhookUrl) {
+      console.log('Sending user webhook to system URL:', usersWebhookUrl)
+      console.log('Webhook payload:', JSON.stringify(payload, null, 2))
+      const webhookSuccess = await sendWebhook(usersWebhookUrl, payload)
+      console.log('User webhook send result:', webhookSuccess)
+      if (!webhookSuccess) success = false
+    } else {
+      console.log('No system users webhook URL configured')
+      
+      // FALLBACK: Try hardcoded webhook URL if system settings are not configured
+      const fallbackUrl = 'https://n8n.fluntstudios.com/webhook/users'
+      console.log('Attempting fallback users webhook URL:', fallbackUrl)
+      const fallbackSuccess = await sendWebhook(fallbackUrl, payload)
+      console.log('Fallback users webhook result:', fallbackSuccess)
+      if (!fallbackSuccess) success = false
+    }
+
+    console.log('User webhook sending result:', success)
+    return success
+
+  } catch (error) {
+    console.error('Error sending user webhook:', error)
+    return false
+  }
+}
+
 export async function sendSharingWebhook(shareData: any, action: string) {
   try {
     console.log('Sending sharing webhook for action:', action)
