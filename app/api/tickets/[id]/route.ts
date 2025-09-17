@@ -66,6 +66,8 @@ export async function PATCH(
         } else {
           console.log('Sending webhook for ticket update via API')
         }
+      } catch (webhookError) {
+        console.error('Webhook error (non-critical):', webhookError)
       }
     }
 
