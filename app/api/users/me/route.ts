@@ -77,8 +77,16 @@ export async function PATCH(request: NextRequest) {
         obj[key] = body[key]
         return obj
       }, {} as any)
+
+    // If no valid fields to update, return success
+    if (Object.keys(filteredBody).length === 0) {
+      return NextResponse.json({ 
+        user: { id: user.id },
+        message: 'No valid fields to update'
+      })
+    }
     
-    // Update user data in users table
+    // Try to update user data in users table
     const { data: updatedUser, error } = await supabaseAdmin
       .from('users')
       .update(filteredBody)
@@ -88,6 +96,16 @@ export async function PATCH(request: NextRequest) {
 
     if (error) {
       console.error('Error updating user data:', error)
+      
+      // If the error is about missing columns, provide a helpful message
+      if (error.message.includes('column') && error.message.includes('does not exist')) {
+        return NextResponse.json({ 
+          error: 'Database columns not found. Please run the database migration script first.',
+          details: error.message,
+          suggestion: 'Run add-notification-columns-to-users.sql in your Supabase SQL editor'
+        }, { status: 400 })
+      }
+      
       return NextResponse.json({ 
         error: 'Failed to update user data', 
         details: error.message 
@@ -98,6 +116,9 @@ export async function PATCH(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in users/me PATCH:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
