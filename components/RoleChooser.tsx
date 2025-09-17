@@ -19,9 +19,9 @@ export function RoleChooser({
   const [isOpen, setIsOpen] = useState(false)
 
   const sizeClasses = {
-    sm: 'text-xs px-3 py-2 min-w-32',
-    md: 'text-sm px-4 py-3 min-w-40',
-    lg: 'text-base px-5 py-4 min-w-48'
+    sm: 'text-xs px-3 py-2 min-w-48',
+    md: 'text-sm px-4 py-3 min-w-56',
+    lg: 'text-base px-5 py-4 min-w-64'
   }
 
   const roleConfig = {
