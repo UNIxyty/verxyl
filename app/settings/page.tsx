@@ -299,11 +299,11 @@ export default function SettingsPage() {
                     value={webhookBaseUrl}
                     onChange={(e) => setWebhookBaseUrl(e.target.value)}
                     placeholder="https://api.example.com"
-                    className="input w-full"
-                    disabled={isWebhookSaving}
+                    className="input w-full bg-gray-800 border-gray-600"
+                    disabled={true}
                   />
                   <p className="text-gray-400 text-xs mt-1">
-                    Base URL for your webhook endpoints (e.g., https://api.example.com)
+                    Base URL for your webhook endpoints (contact admin to change)
                   </p>
                 </div>
 
@@ -311,21 +311,14 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Tickets Path
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-gray-400 text-sm">
-                        {webhookBaseUrl || 'https://api.example.com'}
-                      </span>
-                    </div>
-                    <input
-                      type="text"
-                      value={webhookTicketsPath}
-                      onChange={(e) => setWebhookTicketsPath(e.target.value)}
-                      placeholder="/webhooks/tickets"
-                      className="input w-full pl-64"
-                      disabled={isWebhookSaving}
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    value={webhookTicketsPath}
+                    onChange={(e) => setWebhookTicketsPath(e.target.value)}
+                    placeholder="/webhooks/tickets"
+                    className="input w-full"
+                    disabled={isWebhookSaving}
+                  />
                   <p className="text-gray-400 text-xs mt-1">
                     Path for ticket webhook notifications (e.g., /webhooks/tickets)
                   </p>
@@ -335,21 +328,14 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Users Path
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-gray-400 text-sm">
-                        {webhookBaseUrl || 'https://api.example.com'}
-                      </span>
-                    </div>
-                    <input
-                      type="text"
-                      value={webhookUsersPath}
-                      onChange={(e) => setWebhookUsersPath(e.target.value)}
-                      placeholder="/webhooks/users"
-                      className="input w-full pl-64"
-                      disabled={isWebhookSaving}
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    value={webhookUsersPath}
+                    onChange={(e) => setWebhookUsersPath(e.target.value)}
+                    placeholder="/webhooks/users"
+                    className="input w-full"
+                    disabled={isWebhookSaving}
+                  />
                   <p className="text-gray-400 text-xs mt-1">
                     Path for user webhook notifications (e.g., /webhooks/users)
                   </p>

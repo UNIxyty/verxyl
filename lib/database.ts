@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from './supabase'
+import { supabase, supabaseAdmin, isSupabaseConfigured } from './supabase'
 import type { Database } from './supabase'
 import { extractDateTime, getUserFullName, getUserEmail } from './webhook-utils'
 
@@ -90,6 +90,9 @@ export const getAllUsers = async (): Promise<User[]> => {
 // Webhook sending function
 export async function sendWebhook(webhookUrl: string, payload: any) {
   try {
+    console.log('Sending webhook to:', webhookUrl)
+    console.log('Webhook payload:', JSON.stringify(payload, null, 2))
+    
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
@@ -100,6 +103,8 @@ export async function sendWebhook(webhookUrl: string, payload: any) {
 
     if (!response.ok) {
       console.error(`Webhook failed with status: ${response.status}`)
+      const errorText = await response.text()
+      console.error('Webhook error response:', errorText)
       return false
     }
 
@@ -115,13 +120,13 @@ export async function sendWebhook(webhookUrl: string, payload: any) {
 // Send webhook for ticket events
 export async function sendTicketWebhook(ticketId: string, action: string) {
   try {
-    // Get ticket details
-    const { data: ticket, error: ticketError } = await supabase
+    // Get ticket details with webhook information
+    const { data: ticket, error: ticketError } = await supabaseAdmin
       .from('tickets')
       .select(`
         *,
-        creator:created_by(id, email, full_name),
-        assignee:assigned_to(id, email, full_name)
+        creator:created_by(id, email, full_name, webhook_url, webhook_base_url, webhook_tickets_path, webhook_users_path),
+        assignee:assigned_to(id, email, full_name, webhook_url, webhook_base_url, webhook_tickets_path, webhook_users_path)
       `)
       .eq('id', ticketId)
       .single()
@@ -162,18 +167,30 @@ export async function sendTicketWebhook(ticketId: string, action: string) {
 
     let success = true
 
+    console.log('Webhook URLs found:')
+    console.log('- Creator legacy URL:', creatorWebhookUrl)
+    console.log('- Creator enhanced URL:', creatorTicketsWebhookUrl)
+    console.log('- Assignee legacy URL:', assigneeWebhookUrl)
+    console.log('- Assignee enhanced URL:', assigneeTicketsWebhookUrl)
+
     // Send to creator's webhook if available (prioritize enhanced webhook)
     const creatorUrl = creatorTicketsWebhookUrl || creatorWebhookUrl
     if (creatorUrl) {
+      console.log('Sending webhook to creator:', creatorUrl)
       const creatorSuccess = await sendWebhook(creatorUrl, payload)
       if (!creatorSuccess) success = false
+    } else {
+      console.log('No creator webhook URL found')
     }
 
     // Send to assignee's webhook if available and different from creator (prioritize enhanced webhook)
     const assigneeUrl = assigneeTicketsWebhookUrl || assigneeWebhookUrl
     if (assigneeUrl && assigneeUrl !== creatorUrl) {
+      console.log('Sending webhook to assignee:', assigneeUrl)
       const assigneeSuccess = await sendWebhook(assigneeUrl, payload)
       if (!assigneeSuccess) success = false
+    } else {
+      console.log('No assignee webhook URL found or same as creator')
     }
 
     return success
