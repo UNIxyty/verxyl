@@ -310,10 +310,13 @@ export async function sendSharingWebhook(shareData: any, action: string) {
     // Send to system webhook if available
     if (sharingWebhookUrl) {
       console.log('Sending sharing webhook to system URL:', sharingWebhookUrl)
+      console.log('Webhook payload:', JSON.stringify(payload, null, 2))
       const webhookSuccess = await sendWebhook(sharingWebhookUrl, payload)
+      console.log('Webhook send result:', webhookSuccess)
       if (!webhookSuccess) success = false
     } else {
-      console.log('No system webhook URL configured')
+      console.log('No system webhook URL configured - check admin settings')
+      console.log('Settings found:', settings)
     }
 
     // Create notification for recipient

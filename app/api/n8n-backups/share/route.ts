@@ -100,14 +100,16 @@ export async function POST(request: NextRequest) {
 
     // Send webhook for workflow sharing
     try {
+      console.log('=== N8N WORKFLOW SHARING WEBHOOK ===')
+      console.log('Share data:', { share, owner: user, recipient, backup })
       console.log('Sending webhook for N8N workflow sharing...')
-      await sendSharingWebhook({
+      const webhookResult = await sendSharingWebhook({
         share,
         owner: user,
         recipient,
         backup: backup
       }, 'workflowShared')
-      console.log('N8N workflow sharing webhook sent successfully')
+      console.log('N8N workflow sharing webhook result:', webhookResult)
     } catch (webhookError) {
       console.error('Webhook error (non-blocking):', webhookError)
     }

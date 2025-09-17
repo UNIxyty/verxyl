@@ -100,14 +100,16 @@ export async function POST(request: NextRequest) {
 
     // Send webhook for prompt sharing
     try {
+      console.log('=== AI PROMPT SHARING WEBHOOK ===')
+      console.log('Share data:', { share, owner: user, recipient, backup })
       console.log('Sending webhook for AI prompt sharing...')
-      await sendSharingWebhook({
+      const webhookResult = await sendSharingWebhook({
         share,
         owner: user,
         recipient,
         backup: backup
       }, 'promptShared')
-      console.log('AI prompt sharing webhook sent successfully')
+      console.log('AI prompt sharing webhook result:', webhookResult)
     } catch (webhookError) {
       console.error('Webhook error (non-blocking):', webhookError)
     }
