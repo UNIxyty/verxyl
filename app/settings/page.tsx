@@ -5,8 +5,9 @@ import { ThemePicker } from '@/components/ThemePicker'
 import { useTheme } from '@/components/ThemeProvider'
 import { useAuth } from '@/components/AuthProvider'
 import { ToggleSwitch } from '@/components/ToggleSwitch'
+import { RoleChooser } from '@/components/RoleChooser'
 import { useEffect, useState } from 'react'
-import { Cog6ToothIcon, PaintBrushIcon, ShieldCheckIcon, CheckCircleIcon, XCircleIcon, BellIcon } from '@heroicons/react/24/outline'
+import { Cog6ToothIcon, PaintBrushIcon, BellIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
 // Notification types - updated to match webhook structure
@@ -24,7 +25,6 @@ type NotificationSettings = Record<NotificationKey, boolean>
 export default function SettingsPage() {
   const { user } = useAuth()
   const { theme, setTheme } = useTheme()
-  const [userRole, setUserRole] = useState<string | null>(null)
   
   // Webhook settings
   const [webhookBaseUrl, setWebhookBaseUrl] = useState('')
@@ -46,21 +46,6 @@ export default function SettingsPage() {
   const [isNotificationLoading, setIsNotificationLoading] = useState(false)
   const [isNotificationSaving, setIsNotificationSaving] = useState(false)
 
-  // Check user role
-  useEffect(() => {
-    const checkUserRole = async () => {
-      if (user) {
-        try {
-          const response = await fetch('/api/user-status')
-          const data = await response.json()
-          setUserRole(data.role)
-        } catch (error) {
-          console.error('Error checking user role:', error)
-        }
-      }
-    }
-    checkUserRole()
-  }, [user])
 
   // Load webhook settings
   useEffect(() => {
@@ -186,9 +171,6 @@ export default function SettingsPage() {
   }
 
 
-  const isAdmin = userRole === 'admin'
-  const isWorker = userRole === 'worker'
-  const isViewer = userRole === 'viewer'
 
 
   return (
@@ -370,51 +352,6 @@ export default function SettingsPage() {
             )}
           </div>
 
-          {/* Admin Settings */}
-          <div className="card">
-            <div className="flex items-center mb-4 sm:mb-6">
-              <ShieldCheckIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400 mr-2 sm:mr-3" />
-              <div>
-                <h2 className="text-lg sm:text-xl font-semibold text-white">Admin Settings</h2>
-                <p className="text-gray-400 text-xs sm:text-sm">
-                  System administration and user management
-                </p>
-              </div>
-            </div>
-
-            {isAdmin ? (
-              <div className="space-y-4">
-                <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
-                  <p className="text-green-200 text-sm">
-                    <strong>Admin Access Granted</strong><br />
-                    You have administrative privileges.
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <button
-                    onClick={() => window.open('/admin/users', '_blank')}
-                    className="btn-secondary btn-mobile"
-                  >
-                    Manage Users
-                  </button>
-                  <button
-                    onClick={() => window.open('/admin/system-settings', '_blank')}
-                    className="btn-secondary btn-mobile"
-                  >
-                    System Settings
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
-                <p className="text-red-200 text-sm">
-                  <strong>Access Denied</strong><br />
-                  You are not an administrator. Contact your system administrator for access.
-                </p>
-              </div>
-            )}
-          </div>
 
           {/* Theme Settings */}
           <div className="card">
@@ -462,16 +399,14 @@ export default function SettingsPage() {
               </div>
               <div>
                 <h4 className="text-sm font-medium text-gray-300 mb-1">Role</h4>
-                <p className="text-gray-200 capitalize">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    isAdmin ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                    isWorker ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-                    isViewer ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                    'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                  }`}>
-                    {userRole || 'Unknown'}
-                  </span>
-                </p>
+                <RoleChooser
+                  value="admin"
+                  onChange={(role) => {
+                    // Role change functionality would go here
+                    console.log('Role changed to:', role)
+                  }}
+                  size="sm"
+                />
               </div>
             </div>
           </div>

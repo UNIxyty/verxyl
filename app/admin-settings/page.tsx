@@ -18,6 +18,7 @@ import {
 import toast from 'react-hot-toast'
 import { UserApprovalModal } from '@/components/UserApprovalModal'
 import { ToggleSwitch } from '@/components/ToggleSwitch'
+import { RoleChooser } from '@/components/RoleChooser'
 
 interface User {
   id: string
@@ -380,16 +381,12 @@ export default function AdminSettingsPage() {
                           {user.approval_status === 'approved' && (
                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                               <span className="text-xs sm:text-sm text-gray-400">Role:</span>
-                              <select
+                              <RoleChooser
                                 value={user.role}
-                                onChange={(e) => updateUserRole(user.id, e.target.value as any)}
+                                onChange={(role) => updateUserRole(user.id, role)}
                                 disabled={updating === user.id}
-                                className="bg-gray-700 border border-gray-600 rounded-md px-3 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500 min-w-0 w-full sm:w-auto"
-                              >
-                                <option value="admin">Admin</option>
-                                <option value="worker">Worker</option>
-                                <option value="viewer">Viewer</option>
-                              </select>
+                                size="sm"
+                              />
                               {updating === user.id && (
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500"></div>
                               )}

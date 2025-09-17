@@ -226,7 +226,7 @@ export async function sendSharingWebhook(shareData: any, action: string) {
     // Fetch recipient user data with webhook URLs
     const { data: recipientData, error: recipientError } = await supabaseAdmin
       .from('users')
-      .select('id, email, full_name, webhook_url, webhook_base_url, webhook_users_path')
+      .select('id, email, full_name, webhook_url, webhook_base_url, webhook_tickets_path, webhook_users_path')
       .eq('id', shareData.recipient.id)
       .single()
 
@@ -235,8 +235,11 @@ export async function sendSharingWebhook(shareData: any, action: string) {
       return false
     }
 
-    // Get recipient webhook URLs
+    // Get recipient webhook URLs (prioritize tickets webhook for sharing events)
     const recipientWebhookUrl = recipientData.webhook_url
+    const recipientTicketsWebhookUrl = recipientData.webhook_base_url && recipientData.webhook_tickets_path
+      ? `${recipientData.webhook_base_url}${recipientData.webhook_tickets_path}`
+      : null
     const recipientUsersWebhookUrl = recipientData.webhook_base_url && recipientData.webhook_users_path
       ? `${recipientData.webhook_base_url}${recipientData.webhook_users_path}`
       : null
@@ -262,10 +265,11 @@ export async function sendSharingWebhook(shareData: any, action: string) {
 
     console.log('Sharing webhook URLs found:')
     console.log('- Recipient legacy URL:', recipientWebhookUrl)
-    console.log('- Recipient enhanced URL:', recipientUsersWebhookUrl)
+    console.log('- Recipient tickets URL:', recipientTicketsWebhookUrl)
+    console.log('- Recipient users URL:', recipientUsersWebhookUrl)
 
-    // Send to recipient's webhook if available (prioritize enhanced webhook)
-    const recipientUrl = recipientUsersWebhookUrl || recipientWebhookUrl
+    // Send to recipient's tickets webhook first (prioritize tickets webhook for sharing events)
+    const recipientUrl = recipientTicketsWebhookUrl || recipientUsersWebhookUrl || recipientWebhookUrl
     if (recipientUrl) {
       console.log('Sending sharing webhook to recipient:', recipientUrl)
       const recipientSuccess = await sendWebhook(recipientUrl, payload)

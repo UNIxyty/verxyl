@@ -1,7 +1,8 @@
 'use client'
 
 import { useAuth } from './AuthProvider'
-import { Navigation } from './Navigation'
+import { NewNavigation } from './NewNavigation'
+import { NotificationProvider } from '@/contexts/NotificationContext'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -33,13 +34,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-dark-900 overflow-x-hidden">
-      <Navigation />
-      <main className="lg:ml-56 pt-16 lg:pt-0 max-w-full overflow-x-hidden">
-        <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-8 max-w-full">
-          {children}
-        </div>
-      </main>
-    </div>
+    <NotificationProvider>
+      <div className="min-h-screen bg-dark-900 overflow-x-hidden">
+        <NewNavigation />
+        <main className="lg:ml-56 pt-16 lg:pt-16 max-w-full overflow-x-hidden">
+          <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-8 max-w-full">
+            {children}
+          </div>
+        </main>
+      </div>
+    </NotificationProvider>
   )
 }
