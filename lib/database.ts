@@ -97,6 +97,11 @@ export async function sendWebhook(webhookUrl: string, payload: any) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'User-Agent': 'Verxyl-Ticket-System/1.0',
+        'Accept': '*/*',
+        'Accept-Encoding': 'br, gzip, deflate',
+        'Accept-Language': '*',
+        'Sec-Fetch-Mode': 'cors'
       },
       body: JSON.stringify(payload),
     })
@@ -148,21 +153,35 @@ export async function sendTicketWebhook(ticketId: string, action: string) {
       ? `${ticket.assignee.webhook_base_url}${ticket.assignee.webhook_tickets_path}`
       : null
 
-    // Prepare webhook payload
+    // Map action to legacy format
+    const actionMap: { [key: string]: string } = {
+      'created': 'ticket_created',
+      'updated': 'ticket_in_work',
+      'solved': 'ticket_solved',
+      'deleted': 'ticket_deleted'
+    }
+    const legacyAction = actionMap[action] || action
+
+    // Prepare webhook payload in legacy format
     const dateTimeInfo = ticket.deadline ? extractDateTime(ticket.deadline) : { dateTicket: null, timeTicket: null }
     const payload = {
-      ticketAction: action,
+      action: legacyAction,
+      timestamp: new Date().toISOString(),
       ticket_id: ticket.id,
-      urgency: ticket.urgency,
-      dateTicket: dateTimeInfo.dateTicket,
-      timeTicket: dateTimeInfo.timeTicket,
-      creatorName: getUserFullName(ticket.creator),
-      workerName: getUserFullName(ticket.assignee),
-      creatorEmail: getUserEmail(ticket.creator),
-      workerEmail: getUserEmail(ticket.assignee),
-      ticketTitle: ticket.title,
-      ticketDetails: ticket.details,
-      ticketStatus: ticket.status
+      ticket_title: ticket.title,
+      ticket_urgency: ticket.urgency,
+      ticket_deadline: ticket.deadline,
+      ticket_date: dateTimeInfo.dateTicket,
+      ticket_time: dateTimeInfo.timeTicket,
+      creator_id: ticket.creator?.id,
+      creator_email: ticket.creator?.email,
+      creator_name: getUserFullName(ticket.creator),
+      worker_id: ticket.assignee?.id,
+      worker_email: ticket.assignee?.email,
+      worker_name: getUserFullName(ticket.assignee),
+      admin_id: ticket.creator?.id, // Assuming creator is admin for now
+      admin_email: ticket.creator?.email,
+      admin_name: getUserFullName(ticket.creator)
     }
 
     let success = true
