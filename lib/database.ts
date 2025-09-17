@@ -153,22 +153,21 @@ export async function sendTicketWebhook(ticketId: string, action: string) {
       ? `${ticket.assignee.webhook_base_url}${ticket.assignee.webhook_tickets_path}`
       : null
 
-    // Map action to legacy format
+    // Map action to exact format
     const actionMap: { [key: string]: string } = {
       'created': 'ticket_created',
-      'updated': 'ticket_in_work',
+      'updated': 'ticket_updated',
+      'in_work': 'ticket_in_work',
       'solved': 'ticket_solved',
       'deleted': 'ticket_deleted'
     }
-    const legacyAction = actionMap[action] || action
+    const webhookAction = actionMap[action] || action
 
-    // Prepare webhook payload in legacy format
+    // Prepare webhook payload in exact format
     const dateTimeInfo = ticket.deadline ? extractDateTime(ticket.deadline) : { dateTicket: null, timeTicket: null }
     const payload = {
-      action: legacyAction,
-      timestamp: new Date().toISOString(),
+      action: webhookAction,
       ticket_id: ticket.id,
-      ticket_title: ticket.title,
       ticket_urgency: ticket.urgency,
       ticket_deadline: ticket.deadline,
       ticket_date: dateTimeInfo.dateTicket,
@@ -178,10 +177,7 @@ export async function sendTicketWebhook(ticketId: string, action: string) {
       creator_name: getUserFullName(ticket.creator),
       worker_id: ticket.assignee?.id,
       worker_email: ticket.assignee?.email,
-      worker_name: getUserFullName(ticket.assignee),
-      admin_id: ticket.creator?.id, // Assuming creator is admin for now
-      admin_email: ticket.creator?.email,
-      admin_name: getUserFullName(ticket.creator)
+      worker_name: getUserFullName(ticket.assignee)
     }
 
     let success = true
@@ -322,7 +318,7 @@ export const updateTicket = async (id: string, updates: TicketUpdate): Promise<T
     }
   } else if (updates.status === 'in_progress' && currentTicket.status !== 'in_progress') {
     try {
-      await sendTicketWebhook(id, 'updated')
+      await sendTicketWebhook(id, 'in_work')
     } catch (webhookError) {
       console.error('Webhook error (non-blocking):', webhookError)
     }
