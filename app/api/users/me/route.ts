@@ -65,11 +65,12 @@ export async function PATCH(request: NextRequest) {
 
     const body = await request.json()
     
-    // Filter out any invalid fields that might cause issues
-    const allowedFields = [
-      'new_ticket', 'deleted_ticket', 'in_work_ticket', 'updated_ticket', 
-      'solved_ticket', 'shared_workflow', 'shared_prompt', 'webhook_url'
-    ]
+        // Filter out any invalid fields that might cause issues
+        const allowedFields = [
+          'new_ticket', 'deleted_ticket', 'in_work_ticket', 'updated_ticket', 
+          'solved_ticket', 'shared_workflow', 'shared_prompt', 'webhook_url',
+          'webhook_base_url', 'webhook_tickets_path', 'webhook_users_path'
+        ]
     
     const filteredBody = Object.keys(body)
       .filter(key => allowedFields.includes(key))

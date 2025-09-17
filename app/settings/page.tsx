@@ -27,7 +27,9 @@ export default function SettingsPage() {
   const [userRole, setUserRole] = useState<string | null>(null)
   
   // Webhook settings
-  const [webhookUrl, setWebhookUrl] = useState('')
+  const [webhookBaseUrl, setWebhookBaseUrl] = useState('')
+  const [webhookTicketsPath, setWebhookTicketsPath] = useState('')
+  const [webhookUsersPath, setWebhookUsersPath] = useState('')
   const [isWebhookLoading, setIsWebhookLoading] = useState(false)
   const [isWebhookSaving, setIsWebhookSaving] = useState(false)
 
@@ -69,7 +71,10 @@ export default function SettingsPage() {
           const response = await fetch('/api/users/me')
           if (response.ok) {
             const data = await response.json()
-            setWebhookUrl(data.user.webhook_url || '')
+            const userData = data.user
+            setWebhookBaseUrl(userData.webhook_base_url || userData.webhook_url || '')
+            setWebhookTicketsPath(userData.webhook_tickets_path || '')
+            setWebhookUsersPath(userData.webhook_users_path || '')
           }
         } catch (error) {
           console.error('Error loading webhook settings:', error)
@@ -127,7 +132,11 @@ export default function SettingsPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          webhook_url: webhookUrl
+          webhook_base_url: webhookBaseUrl,
+          webhook_tickets_path: webhookTicketsPath,
+          webhook_users_path: webhookUsersPath,
+          // Keep legacy webhook_url for backward compatibility
+          webhook_url: webhookBaseUrl
         })
       })
 
@@ -273,28 +282,94 @@ export default function SettingsPage() {
             </div>
 
             {isWebhookLoading ? (
-              <div className="animate-pulse">
-                <div className="h-10 bg-dark-700 rounded mb-4"></div>
+              <div className="animate-pulse space-y-4">
+                <div className="h-10 bg-dark-700 rounded"></div>
+                <div className="h-10 bg-dark-700 rounded"></div>
+                <div className="h-10 bg-dark-700 rounded"></div>
                 <div className="h-10 bg-dark-700 rounded w-32"></div>
               </div>
             ) : (
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Webhook URL
+                    Base URL
                   </label>
                   <input
                     type="url"
-                    value={webhookUrl}
-                    onChange={(e) => setWebhookUrl(e.target.value)}
-                    placeholder="https://your-webhook-url.com/endpoint"
+                    value={webhookBaseUrl}
+                    onChange={(e) => setWebhookBaseUrl(e.target.value)}
+                    placeholder="https://api.example.com"
                     className="input w-full"
                     disabled={isWebhookSaving}
                   />
                   <p className="text-gray-400 text-xs mt-1">
-                    URL to receive ticket notifications (optional)
+                    Base URL for your webhook endpoints (e.g., https://api.example.com)
                   </p>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Tickets Path
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-400 text-sm">
+                        {webhookBaseUrl || 'https://api.example.com'}
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      value={webhookTicketsPath}
+                      onChange={(e) => setWebhookTicketsPath(e.target.value)}
+                      placeholder="/webhooks/tickets"
+                      className="input w-full pl-64"
+                      disabled={isWebhookSaving}
+                    />
+                  </div>
+                  <p className="text-gray-400 text-xs mt-1">
+                    Path for ticket webhook notifications (e.g., /webhooks/tickets)
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Users Path
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-400 text-sm">
+                        {webhookBaseUrl || 'https://api.example.com'}
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      value={webhookUsersPath}
+                      onChange={(e) => setWebhookUsersPath(e.target.value)}
+                      placeholder="/webhooks/users"
+                      className="input w-full pl-64"
+                      disabled={isWebhookSaving}
+                    />
+                  </div>
+                  <p className="text-gray-400 text-xs mt-1">
+                    Path for user webhook notifications (e.g., /webhooks/users)
+                  </p>
+                </div>
+
+                {webhookBaseUrl && (webhookTicketsPath || webhookUsersPath) && (
+                  <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                    <h4 className="text-blue-200 text-sm font-medium mb-2">Webhook URLs Preview:</h4>
+                    {webhookTicketsPath && (
+                      <p className="text-blue-100 text-xs mb-1">
+                        <strong>Tickets:</strong> {webhookBaseUrl}{webhookTicketsPath}
+                      </p>
+                    )}
+                    {webhookUsersPath && (
+                      <p className="text-blue-100 text-xs">
+                        <strong>Users:</strong> {webhookBaseUrl}{webhookUsersPath}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex flex-col sm:flex-row justify-end">
                   <button

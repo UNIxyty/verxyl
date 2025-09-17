@@ -50,6 +50,9 @@ export type Database = {
           shared_workflow: boolean
           shared_prompt: boolean
           webhook_url: string | null
+          webhook_base_url: string | null
+          webhook_tickets_path: string | null
+          webhook_users_path: string | null
           created_at: string
           updated_at: string
         }
@@ -74,6 +77,9 @@ export type Database = {
           shared_workflow?: boolean
           shared_prompt?: boolean
           webhook_url?: string | null
+          webhook_base_url?: string | null
+          webhook_tickets_path?: string | null
+          webhook_users_path?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -98,6 +104,9 @@ export type Database = {
           shared_workflow?: boolean
           shared_prompt?: boolean
           webhook_url?: string | null
+          webhook_base_url?: string | null
+          webhook_tickets_path?: string | null
+          webhook_users_path?: string | null
           created_at?: string
           updated_at?: string
         }

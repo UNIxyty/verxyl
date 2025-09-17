@@ -134,6 +134,14 @@ export async function sendTicketWebhook(ticketId: string, action: string) {
     // Get creator and assignee webhook URLs
     const creatorWebhookUrl = ticket.creator?.webhook_url
     const assigneeWebhookUrl = ticket.assignee?.webhook_url
+    
+    // Get enhanced webhook URLs for tickets
+    const creatorTicketsWebhookUrl = ticket.creator?.webhook_base_url && ticket.creator?.webhook_tickets_path 
+      ? `${ticket.creator.webhook_base_url}${ticket.creator.webhook_tickets_path}`
+      : null
+    const assigneeTicketsWebhookUrl = ticket.assignee?.webhook_base_url && ticket.assignee?.webhook_tickets_path
+      ? `${ticket.assignee.webhook_base_url}${ticket.assignee.webhook_tickets_path}`
+      : null
 
     // Prepare webhook payload
     const dateTimeInfo = ticket.deadline ? extractDateTime(ticket.deadline) : { dateTicket: null, timeTicket: null }
@@ -154,15 +162,17 @@ export async function sendTicketWebhook(ticketId: string, action: string) {
 
     let success = true
 
-    // Send to creator's webhook if available
-    if (creatorWebhookUrl) {
-      const creatorSuccess = await sendWebhook(creatorWebhookUrl, payload)
+    // Send to creator's webhook if available (prioritize enhanced webhook)
+    const creatorUrl = creatorTicketsWebhookUrl || creatorWebhookUrl
+    if (creatorUrl) {
+      const creatorSuccess = await sendWebhook(creatorUrl, payload)
       if (!creatorSuccess) success = false
     }
 
-    // Send to assignee's webhook if available and different from creator
-    if (assigneeWebhookUrl && assigneeWebhookUrl !== creatorWebhookUrl) {
-      const assigneeSuccess = await sendWebhook(assigneeWebhookUrl, payload)
+    // Send to assignee's webhook if available and different from creator (prioritize enhanced webhook)
+    const assigneeUrl = assigneeTicketsWebhookUrl || assigneeWebhookUrl
+    if (assigneeUrl && assigneeUrl !== creatorUrl) {
+      const assigneeSuccess = await sendWebhook(assigneeUrl, payload)
       if (!assigneeSuccess) success = false
     }
 
