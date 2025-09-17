@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { supabaseAdmin } from '@/lib/supabase'
-import { sendNewWebhook } from '@/lib/new-webhook'
 
 export async function PATCH(
   request: NextRequest,
@@ -124,33 +123,6 @@ export async function PATCH(
 
     const updatedUser = updatedUsers[0]
 
-    // Send new webhook for role change
-    try {
-      // Get user notification settings for the target user
-      const { getUserNotificationSettings } = await import('@/lib/new-webhook')
-      const notificationSettings = await getUserNotificationSettings(targetUserId)
-      
-      await sendNewWebhook({
-        action: 'role_changed',
-        timestamp: new Date().toISOString(),
-        admin_id: user.id,
-        admin_email: user.email || '',
-        admin_name: currentUserData.full_name || currentUserData.email || 'Admin User',
-        user_id: targetUserId,
-        user_email: updatedUser.email,
-        user_name: updatedUser.full_name || updatedUser.email,
-        roleChanged: true,
-        prevRole: targetUser.role,
-        currentRole: role,
-        // Add notifications object for user webhooks
-        notifications: {
-          rolechange: true
-        }
-      })
-    } catch (webhookError) {
-      console.error('New webhook error for role change:', webhookError)
-      // Don't fail the request if webhook fails
-    }
 
     return NextResponse.json({
       success: true,

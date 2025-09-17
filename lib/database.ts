@@ -1,6 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase'
 import type { Database } from './supabase'
-import { sendNewWebhook } from './new-webhook'
 import { extractDateTime, getUserFullName, getUserEmail } from './webhook-utils'
 
 type User = Database['public']['Tables']['users']['Row']

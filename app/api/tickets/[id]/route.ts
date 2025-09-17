@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase'
-import { sendNewWebhook } from '@/lib/new-webhook'
 import { extractDateTime, getUserFullName, getUserEmail } from '@/lib/webhook-utils'
 
 export async function PATCH(
@@ -68,36 +67,6 @@ export async function PATCH(
           console.log('Sending webhook for ticket update via API')
         }
         
-        if (!shouldSendWebhook) {
-          console.log('Skipping webhook - no status change detected')
-        } else {
-        
-        const webhookResult = await sendNewWebhook({
-          action: webhookAction === 'in_work' ? 'ticket_in_work' : 'ticket_updated',
-          timestamp: new Date().toISOString(),
-          ticket_id: ticket.id,
-          ticket_title: ticket.title,
-          ticket_urgency: ticket.urgency,
-          ticket_status: ticket.status,
-          ticket_deadline: ticket.deadline,
-          ticket_date: dateTicket,
-          ticket_time: timeTicket,
-          creator_id: ticket.created_by,
-          creator_email: getUserEmail(ticket.created_by_user),
-          creator_name: getUserFullName(ticket.created_by_user),
-          worker_id: ticket.assigned_to,
-          worker_email: getUserEmail(ticket.assigned_user),
-          worker_name: getUserFullName(ticket.assigned_user),
-          admin_id: ticket.assigned_to,
-          admin_email: getUserEmail(ticket.assigned_user),
-          admin_name: getUserFullName(ticket.assigned_user)
-        })
-
-        console.log('Webhook result:', webhookResult)
-        }
-      } catch (webhookError) {
-        console.error('Webhook error (non-critical):', webhookError)
-      }
     }
 
     return NextResponse.json(ticket)

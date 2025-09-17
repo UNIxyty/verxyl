@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase'
-import { sendNewWebhook } from '@/lib/new-webhook'
 import { extractDateTime, getUserFullName, getUserEmail } from '@/lib/webhook-utils'
 
 export async function DELETE(
