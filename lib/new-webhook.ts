@@ -207,6 +207,13 @@ export async function sendNewWebhook(payload: NewWebhookPayload): Promise<{ succ
     const webhookDomain = settings?.setting_value
     const webhookPath = pathSetting?.setting_value
     
+    console.log('Webhook configuration:', {
+      webhookDomain,
+      webhookPath,
+      pathKey,
+      action: payload.action
+    })
+    
     if (!webhookDomain) {
       console.log('No webhook domain configured')
       return { success: false, error: 'Webhook domain not configured' }
@@ -219,6 +226,8 @@ export async function sendNewWebhook(payload: NewWebhookPayload): Promise<{ succ
     
     // Construct full webhook URL
     const webhookUrl = `${webhookDomain}${webhookPath}`
+    
+    console.log('Constructed webhook URL:', webhookUrl)
     
     console.log('Sending new webhook to:', webhookUrl)
     console.log('Webhook payload:', payload)
@@ -254,6 +263,9 @@ export async function sendNewWebhook(payload: NewWebhookPayload): Promise<{ succ
     })
     
     // Send webhook request
+    console.log('Sending webhook request to:', webhookUrl)
+    console.log('Request body:', JSON.stringify(fullPayload, null, 2))
+    
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
@@ -262,6 +274,9 @@ export async function sendNewWebhook(payload: NewWebhookPayload): Promise<{ succ
       },
       body: JSON.stringify(fullPayload)
     })
+    
+    console.log('Webhook response status:', response.status)
+    console.log('Webhook response headers:', Object.fromEntries(response.headers.entries()))
     
     if (!response.ok) {
       const errorText = await response.text()

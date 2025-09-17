@@ -211,6 +211,8 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
         sharedWorkflow: webhookPayload.sharedWorkflow,
         sharedPrompt: webhookPayload.sharedPrompt
       })
+      console.log('Webhook payload keys:', Object.keys(webhookPayload))
+      console.log('Webhook payload JSON string:', JSON.stringify(webhookPayload, null, 2))
       
       const webhookResult = await sendNewWebhook(webhookPayload)
 
