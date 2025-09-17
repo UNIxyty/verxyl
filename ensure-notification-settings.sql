@@ -1,7 +1,7 @@
 -- Ensure all users have notification settings
 -- This script will create default notification settings for users who don't have them
 
-INSERT INTO notification_settings (user_id, newTicket, deleted_ticket, in_work_ticket, updatetTicket, solvedTicket, sharedWorkflow, sharedPrompt)
+INSERT INTO notification_settings (user_id, "newTicket", deleted_ticket, in_work_ticket, "updatetTicket", "solvedTicket", "sharedWorkflow", "sharedPrompt")
 SELECT 
     u.id,
     true,  -- newTicket
