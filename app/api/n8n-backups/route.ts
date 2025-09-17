@@ -85,7 +85,17 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error creating N8N project backup:', error)
-      return NextResponse.json({ error: 'Failed to create backup' }, { status: 500 })
+      console.error('Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
+      return NextResponse.json({ 
+        error: 'Failed to create backup',
+        details: error.message,
+        code: error.code
+      }, { status: 500 })
     }
 
     return NextResponse.json({ backup })
