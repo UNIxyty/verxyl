@@ -171,7 +171,7 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
       
       // Ensure notification settings are included in webhook
       const webhookPayload = {
-        action: 'ticket_created',
+        action: 'ticket_created' as const,
         timestamp: new Date().toISOString(),
         ticket_id: data.id,
         ticket_title: data.title,
@@ -284,7 +284,7 @@ export const updateTicket = async (id: string, updates: TicketUpdate): Promise<T
       }
       
       const webhookResult = await sendNewWebhook({
-        action: webhookAction === 'in_work' ? 'ticket_in_work' : 'ticket_updated',
+        action: webhookAction === 'in_work' ? 'ticket_in_work' as const : 'ticket_updated' as const,
         timestamp: new Date().toISOString(),
         ticket_id: data.id,
         ticket_title: data.title,
@@ -453,7 +453,7 @@ export const completeTicket = async (id: string, solutionData: any): Promise<Tic
       }
       
       const webhookResult = await sendNewWebhook({
-        action: 'ticket_solved',
+        action: 'ticket_solved' as const,
         timestamp: new Date().toISOString(),
         ticket_id: data.id,
         ticket_title: data.title,
@@ -552,7 +552,7 @@ export const editTicket = async (id: string, updates: TicketUpdate): Promise<Tic
       }
       
       const webhookResult = await sendNewWebhook({
-        action: 'ticket_updated',
+        action: 'ticket_updated' as const,
         timestamp: new Date().toISOString(),
         ticket_id: data.id,
         ticket_title: data.title,
@@ -645,7 +645,7 @@ export const deleteTicket = async (id: string): Promise<boolean> => {
       }
       
       const webhookResult = await sendNewWebhook({
-        action: 'ticket_deleted',
+        action: 'ticket_deleted' as const,
         timestamp: new Date().toISOString(),
         ticket_id: ticketData.id,
         ticket_title: ticketData.title,
