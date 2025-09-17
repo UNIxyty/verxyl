@@ -150,7 +150,6 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
       console.log('Sending webhook for ticket creation')
       
       // Get user notification settings for the ticket creator
-      const { getUserNotificationSettings } = await import('./new-webhook')
       const notificationSettings = await getUserNotificationSettings(data.created_by)
       
       console.log('Notification settings for user:', data.created_by, notificationSettings)
@@ -281,7 +280,6 @@ export const updateTicket = async (id: string, updates: TicketUpdate): Promise<T
       } else {
       
       // Get user notification settings for the ticket creator
-      const { getUserNotificationSettings } = await import('./new-webhook')
       const notificationSettings = await getUserNotificationSettings(data.created_by)
       
       // Fallback to default settings if none found
@@ -450,7 +448,6 @@ export const completeTicket = async (id: string, solutionData: any): Promise<Tic
       console.log('Sending webhook for ticket completion')
       
       // Get user notification settings for the ticket creator
-      const { getUserNotificationSettings } = await import('./new-webhook')
       const notificationSettings = await getUserNotificationSettings(data.created_by)
       
       // Fallback to default settings if none found
@@ -549,7 +546,6 @@ export const editTicket = async (id: string, updates: TicketUpdate): Promise<Tic
       console.log('Sending webhook for ticket update')
       
       // Get user notification settings for the ticket creator
-      const { getUserNotificationSettings } = await import('./new-webhook')
       const notificationSettings = await getUserNotificationSettings(data.created_by)
       
       // Fallback to default settings if none found
@@ -642,7 +638,6 @@ export const deleteTicket = async (id: string): Promise<boolean> => {
       console.log('Sending webhook for ticket deletion')
       
       // Get user notification settings for the ticket creator
-      const { getUserNotificationSettings } = await import('./new-webhook')
       const notificationSettings = await getUserNotificationSettings(ticketData.created_by)
       
       // Fallback to default settings if none found

@@ -66,7 +66,7 @@ export async function PATCH(
         } else {
           console.log('Sending webhook for ticket update via API')
         }
-        
+      }
     }
 
     return NextResponse.json(ticket)

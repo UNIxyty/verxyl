@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase'
-import { sendNewWebhook } from '@/lib/new-webhook'
 import { extractDateTime, getUserFullName, getUserEmail } from '@/lib/webhook-utils'
 
 export async function POST(request: NextRequest) {
@@ -93,36 +92,6 @@ export async function POST(request: NextRequest) {
     console.log('Ticket created successfully with bypass:', data)
     
     // Send webhook for ticket creation
-    if (data) {
-      try {
-        const { dateTicket, timeTicket } = extractDateTime(data.deadline)
-        
-        console.log('Sending webhook for ticket creation (bypass)')
-        const webhookResult = await sendNewWebhook({
-          action: 'ticket_created',
-          timestamp: new Date().toISOString(),
-          ticket_id: data.id,
-          ticket_title: data.title,
-          ticket_urgency: data.urgency,
-          ticket_deadline: data.deadline,
-          ticket_date: dateTicket,
-          ticket_time: timeTicket,
-          creator_id: data.created_by,
-          creator_email: getUserEmail(data.created_by_user),
-          creator_name: getUserFullName(data.created_by_user),
-          worker_id: data.assigned_to,
-          worker_email: getUserEmail(data.assigned_user),
-          worker_name: getUserFullName(data.assigned_user),
-          admin_id: data.assigned_to,
-          admin_email: getUserEmail(data.assigned_user),
-          admin_name: getUserFullName(data.assigned_user)
-        })
-
-        console.log('Webhook result:', webhookResult)
-      } catch (webhookError) {
-        console.error('Webhook error (non-critical):', webhookError)
-      }
-    }
     
     console.log('=== BYPASS TICKETS API SUCCESS ===')
     
