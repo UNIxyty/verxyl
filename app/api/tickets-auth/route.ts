@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { extractDateTime, getUserFullName, getUserEmail } from '@/lib/webhook-utils'
+import { sendTicketWebhook } from '@/lib/database'
 
 export async function POST(request: NextRequest) {
   try {
@@ -102,6 +103,13 @@ export async function POST(request: NextRequest) {
     console.log('Ticket created successfully:', data)
     
     // Send webhook for ticket creation
+    try {
+      console.log('Sending webhook for ticket creation...')
+      await sendTicketWebhook(data.id, 'created')
+      console.log('Webhook sent successfully')
+    } catch (webhookError) {
+      console.error('Webhook error (non-blocking):', webhookError)
+    }
     
     console.log('=== AUTH TICKETS API SUCCESS ===')
     
