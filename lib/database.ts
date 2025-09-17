@@ -87,6 +87,33 @@ export const getAllUsers = async (): Promise<User[]> => {
   return data || []
 }
 
+// Create notification for user
+export async function createNotification(userId: string, type: string, title: string, message: string, redirectPath?: string) {
+  try {
+    const { error } = await supabaseAdmin
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        type,
+        title,
+        message,
+        redirect_path: redirectPath,
+        is_read: false
+      })
+
+    if (error) {
+      console.error('Error creating notification:', error)
+      return false
+    }
+
+    console.log('Notification created successfully for user:', userId)
+    return true
+  } catch (error) {
+    console.error('Error in createNotification:', error)
+    return false
+  }
+}
+
 // Webhook sending function
 export async function sendWebhook(webhookUrl: string, payload: any) {
   try {
@@ -125,13 +152,13 @@ export async function sendWebhook(webhookUrl: string, payload: any) {
 // Send webhook for ticket events
 export async function sendTicketWebhook(ticketId: string, action: string) {
   try {
-    // Get ticket details with webhook information
+    // Get ticket details
     const { data: ticket, error: ticketError } = await supabaseAdmin
       .from('tickets')
       .select(`
         *,
-        creator:created_by(id, email, full_name, webhook_url, webhook_base_url, webhook_tickets_path, webhook_users_path),
-        assignee:assigned_to(id, email, full_name, webhook_url, webhook_base_url, webhook_tickets_path, webhook_users_path)
+        creator:created_by(id, email, full_name),
+        assignee:assigned_to(id, email, full_name)
       `)
       .eq('id', ticketId)
       .single()
@@ -141,16 +168,26 @@ export async function sendTicketWebhook(ticketId: string, action: string) {
       return false
     }
 
-    // Get creator and assignee webhook URLs
-    const creatorWebhookUrl = ticket.creator?.webhook_url
-    const assigneeWebhookUrl = ticket.assignee?.webhook_url
-    
-    // Get enhanced webhook URLs for tickets
-    const creatorTicketsWebhookUrl = ticket.creator?.webhook_base_url && ticket.creator?.webhook_tickets_path 
-      ? `${ticket.creator.webhook_base_url}${ticket.creator.webhook_tickets_path}`
-      : null
-    const assigneeTicketsWebhookUrl = ticket.assignee?.webhook_base_url && ticket.assignee?.webhook_tickets_path
-      ? `${ticket.assignee.webhook_base_url}${ticket.assignee.webhook_tickets_path}`
+    // Get system-wide webhook settings
+    const { data: webhookSettings, error: settingsError } = await supabaseAdmin
+      .from('system_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', ['webhook_base_url', 'webhook_tickets_path', 'webhook_users_path'])
+
+    if (settingsError) {
+      console.error('Error fetching webhook settings:', settingsError)
+      return false
+    }
+
+    // Parse webhook settings
+    const settings: any = {}
+    webhookSettings?.forEach(setting => {
+      settings[setting.setting_key] = setting.setting_value
+    })
+
+    // Build webhook URLs
+    const ticketsWebhookUrl = settings.webhook_base_url && settings.webhook_tickets_path
+      ? `${settings.webhook_base_url}${settings.webhook_tickets_path}`
       : null
 
     // Map action to exact format
@@ -183,33 +220,19 @@ export async function sendTicketWebhook(ticketId: string, action: string) {
 
     let success = true
 
-    console.log('Webhook URLs found:')
-    console.log('- Creator legacy URL:', creatorWebhookUrl)
-    console.log('- Creator enhanced URL:', creatorTicketsWebhookUrl)
-    console.log('- Assignee legacy URL:', assigneeWebhookUrl)
-    console.log('- Assignee enhanced URL:', assigneeTicketsWebhookUrl)
+    console.log('System webhook URL found:', ticketsWebhookUrl)
 
-    // Send to creator's webhook if available (prioritize enhanced webhook)
-    const creatorUrl = creatorTicketsWebhookUrl || creatorWebhookUrl
-    if (creatorUrl) {
-      console.log('Sending webhook to creator:', creatorUrl)
-      const creatorSuccess = await sendWebhook(creatorUrl, payload)
-      if (!creatorSuccess) success = false
+    // Send to system webhook if available
+    if (ticketsWebhookUrl) {
+      console.log('Sending ticket webhook to system URL:', ticketsWebhookUrl)
+      const webhookSuccess = await sendWebhook(ticketsWebhookUrl, payload)
+      if (!webhookSuccess) success = false
     } else {
-      console.log('No creator webhook URL found')
+      console.log('No system webhook URL configured')
     }
 
-    // Send to assignee's webhook if available and different from creator (prioritize enhanced webhook)
-    const assigneeUrl = assigneeTicketsWebhookUrl || assigneeWebhookUrl
-    if (assigneeUrl && assigneeUrl !== creatorUrl) {
-      console.log('Sending webhook to assignee:', assigneeUrl)
-      const assigneeSuccess = await sendWebhook(assigneeUrl, payload)
-      if (!assigneeSuccess) success = false
-    } else {
-      console.log('No assignee webhook URL found or same as creator')
-    }
-
-  return success
+    console.log('Ticket webhook sending result:', success)
+    return success
 
   } catch (error) {
     console.error('Error sending ticket webhook:', error)
@@ -223,25 +246,26 @@ export async function sendSharingWebhook(shareData: any, action: string) {
     console.log('Sending sharing webhook for action:', action)
     console.log('Share data:', shareData)
 
-    // Fetch recipient user data with webhook URLs
-    const { data: recipientData, error: recipientError } = await supabaseAdmin
-      .from('users')
-      .select('id, email, full_name, webhook_url, webhook_base_url, webhook_tickets_path, webhook_users_path')
-      .eq('id', shareData.recipient.id)
-      .single()
+    // Get system-wide webhook settings
+    const { data: webhookSettings, error: settingsError } = await supabaseAdmin
+      .from('system_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', ['webhook_base_url', 'webhook_tickets_path', 'webhook_users_path'])
 
-    if (recipientError || !recipientData) {
-      console.error('Error fetching recipient data for webhook:', recipientError)
+    if (settingsError) {
+      console.error('Error fetching webhook settings:', settingsError)
       return false
     }
 
-    // Get recipient webhook URLs (prioritize tickets webhook for sharing events)
-    const recipientWebhookUrl = recipientData.webhook_url
-    const recipientTicketsWebhookUrl = recipientData.webhook_base_url && recipientData.webhook_tickets_path
-      ? `${recipientData.webhook_base_url}${recipientData.webhook_tickets_path}`
-      : null
-    const recipientUsersWebhookUrl = recipientData.webhook_base_url && recipientData.webhook_users_path
-      ? `${recipientData.webhook_base_url}${recipientData.webhook_users_path}`
+    // Parse webhook settings
+    const settings: any = {}
+    webhookSettings?.forEach(setting => {
+      settings[setting.setting_key] = setting.setting_value
+    })
+
+    // Build webhook URLs (use tickets webhook for sharing events)
+    const sharingWebhookUrl = settings.webhook_base_url && settings.webhook_tickets_path
+      ? `${settings.webhook_base_url}${settings.webhook_tickets_path}`
       : null
 
     // Prepare webhook payload
@@ -253,9 +277,9 @@ export async function sendSharingWebhook(shareData: any, action: string) {
         name: getUserFullName(shareData.owner)
       },
       shared_to: {
-        id: recipientData.id,
-        email: recipientData.email,
-        name: getUserFullName(recipientData)
+        id: shareData.recipient.id,
+        email: shareData.recipient.email,
+        name: getUserFullName(shareData.recipient)
       },
       title: shareData.backup?.prompt_name || shareData.backup?.project_name || 'Unknown',
       date: shareData.share?.shared_at || new Date().toISOString()
@@ -263,19 +287,28 @@ export async function sendSharingWebhook(shareData: any, action: string) {
 
     let success = true
 
-    console.log('Sharing webhook URLs found:')
-    console.log('- Recipient legacy URL:', recipientWebhookUrl)
-    console.log('- Recipient tickets URL:', recipientTicketsWebhookUrl)
-    console.log('- Recipient users URL:', recipientUsersWebhookUrl)
+    console.log('System sharing webhook URL found:', sharingWebhookUrl)
 
-    // Send to recipient's tickets webhook first (prioritize tickets webhook for sharing events)
-    const recipientUrl = recipientTicketsWebhookUrl || recipientUsersWebhookUrl || recipientWebhookUrl
-    if (recipientUrl) {
-      console.log('Sending sharing webhook to recipient:', recipientUrl)
-      const recipientSuccess = await sendWebhook(recipientUrl, payload)
-      if (!recipientSuccess) success = false
+    // Send to system webhook if available
+    if (sharingWebhookUrl) {
+      console.log('Sending sharing webhook to system URL:', sharingWebhookUrl)
+      const webhookSuccess = await sendWebhook(sharingWebhookUrl, payload)
+      if (!webhookSuccess) success = false
     } else {
-      console.log('No recipient webhook URL found')
+      console.log('No system webhook URL configured')
+    }
+
+    // Create notification for recipient
+    try {
+      await createNotification(
+        shareData.recipient.id,
+        action,
+        action === 'workflowShared' ? 'Workflow Shared' : 'Prompt Shared',
+        `${shareData.owner.full_name || shareData.owner.email} shared ${action === 'workflowShared' ? 'a workflow' : 'a prompt'} with you: ${shareData.backup?.prompt_name || shareData.backup?.project_name || 'Unknown'}`,
+        action === 'workflowShared' ? '/n8n-backups' : '/ai-backups'
+      )
+    } catch (notificationError) {
+      console.error('Notification error (non-blocking):', notificationError)
     }
 
     console.log('Sharing webhook sending result:', success)
@@ -349,6 +382,21 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
     console.error('Webhook error (non-blocking):', webhookError)
   }
 
+  // Create notification for assigned user if different from creator
+  if (data.assigned_to && data.assigned_to !== data.created_by) {
+    try {
+      await createNotification(
+        data.assigned_to,
+        'ticket_assigned',
+        'New Ticket Assigned',
+        `You have been assigned to ticket: ${data.title}`,
+        `/my-tickets`
+      )
+    } catch (notificationError) {
+      console.error('Notification error (non-blocking):', notificationError)
+    }
+  }
+
   return data as Ticket
 }
 
@@ -381,16 +429,32 @@ export const updateTicket = async (id: string, updates: TicketUpdate): Promise<T
     return null
   }
 
-  // Send webhook for ticket update if status changed to completed
+  // Send webhook and create notifications for ticket update if status changed
   if (updates.status === 'completed' && currentTicket.status !== 'completed') {
     try {
       await sendTicketWebhook(id, 'solved')
+      // Notify creator that ticket is completed
+      await createNotification(
+        data.created_by,
+        'ticket_completed',
+        'Ticket Completed',
+        `Your ticket "${data.title}" has been completed`,
+        `/sent-tickets`
+      )
     } catch (webhookError) {
       console.error('Webhook error (non-blocking):', webhookError)
     }
   } else if (updates.status === 'in_progress' && currentTicket.status !== 'in_progress') {
     try {
       await sendTicketWebhook(id, 'in_work')
+      // Notify creator that ticket is in progress
+      await createNotification(
+        data.created_by,
+        'ticket_updated',
+        'Ticket In Progress',
+        `Your ticket "${data.title}" is now in progress`,
+        `/sent-tickets`
+      )
     } catch (webhookError) {
       console.error('Webhook error (non-blocking):', webhookError)
     }

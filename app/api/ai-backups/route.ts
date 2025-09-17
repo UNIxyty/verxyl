@@ -23,17 +23,41 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Fetch AI prompt backups for the current user
-    const { data: backups, error } = await supabaseAdmin
+    // Fetch AI prompt backups for the current user (owned + shared)
+    const { data: ownedBackups, error: ownedError } = await supabaseAdmin
       .from('ai_prompt_backups')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Error fetching AI prompt backups:', error)
-      return NextResponse.json({ error: 'Failed to fetch backups' }, { status: 500 })
+    if (ownedError) {
+      console.error('Error fetching owned AI prompt backups:', ownedError)
+      return NextResponse.json({ error: 'Failed to fetch owned backups' }, { status: 500 })
     }
+
+    // Fetch shared AI prompt backups
+    const { data: sharedBackups, error: sharedError } = await supabaseAdmin
+      .from('ai_prompt_backups')
+      .select(`
+        *,
+        ai_backup_shares!inner(access_role, shared_at)
+      `)
+      .eq('ai_backup_shares.recipient_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (sharedError) {
+      console.error('Error fetching shared AI prompt backups:', sharedError)
+      return NextResponse.json({ error: 'Failed to fetch shared backups' }, { status: 500 })
+    }
+
+    // Combine owned and shared backups
+    const allBackups = [
+      ...(ownedBackups || []).map(backup => ({ ...backup, is_shared: false })),
+      ...(sharedBackups || []).map(backup => ({ ...backup, is_shared: true }))
+    ]
+
+    // Sort by creation date
+    const backups = allBackups.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
     return NextResponse.json({ backups: backups || [] })
 

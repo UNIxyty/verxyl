@@ -43,6 +43,9 @@ interface SystemSettings {
   require_approval: boolean
   max_file_size: number
   webhook_timeout: number
+  webhook_base_url: string
+  webhook_tickets_path: string
+  webhook_users_path: string
 }
 
 export default function AdminSettingsPage() {
@@ -53,7 +56,10 @@ export default function AdminSettingsPage() {
     allow_registration: true,
     require_approval: true,
     max_file_size: 10,
-    webhook_timeout: 30
+    webhook_timeout: 30,
+    webhook_base_url: '',
+    webhook_tickets_path: '',
+    webhook_users_path: ''
   })
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState<string | null>(null)
@@ -85,7 +91,31 @@ export default function AdminSettingsPage() {
         const response = await fetch('/api/admin/system-settings')
         if (response.ok) {
           const data = await response.json()
-          setSystemSettings(data.settings || systemSettings)
+          // Convert array of settings to object
+          const settingsObj: any = {
+            maintenance_mode: false,
+            allow_registration: true,
+            require_approval: true,
+            max_file_size: 10,
+            webhook_timeout: 30,
+            webhook_base_url: '',
+            webhook_tickets_path: '',
+            webhook_users_path: ''
+          }
+          
+          if (data.settings) {
+            data.settings.forEach((setting: any) => {
+              if (setting.setting_key === 'maintenance_mode' || setting.setting_key === 'allow_registration' || setting.setting_key === 'require_approval') {
+                settingsObj[setting.setting_key] = setting.setting_value === 'true'
+              } else if (setting.setting_key === 'max_file_size' || setting.setting_key === 'webhook_timeout') {
+                settingsObj[setting.setting_key] = parseInt(setting.setting_value) || 10
+              } else {
+                settingsObj[setting.setting_key] = setting.setting_value || ''
+              }
+            })
+          }
+          
+          setSystemSettings(settingsObj)
         }
       } catch (error) {
         console.error('Error loading system settings:', error)
@@ -135,11 +165,15 @@ export default function AdminSettingsPage() {
   const updateSystemSetting = async (key: keyof SystemSettings, value: any) => {
     try {
       const response = await fetch('/api/admin/system-settings', {
-        method: 'PATCH',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ [key]: value })
+        body: JSON.stringify({ 
+          setting_key: key,
+          setting_value: value.toString(),
+          setting_type: typeof value === 'boolean' ? 'boolean' : typeof value === 'number' ? 'number' : 'string'
+        })
       })
 
       if (response.ok) {
@@ -485,6 +519,58 @@ export default function AdminSettingsPage() {
               </div>
               
               <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Base URL
+                  </label>
+                  <input
+                    type="url"
+                    value={systemSettings.webhook_base_url}
+                    onChange={(e) => updateSystemSetting('webhook_base_url', e.target.value)}
+                    className="input w-full"
+                    placeholder="https://your-domain.com"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Base URL for all webhooks</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Tickets Path
+                  </label>
+                  <input
+                    type="text"
+                    value={systemSettings.webhook_tickets_path}
+                    onChange={(e) => updateSystemSetting('webhook_tickets_path', e.target.value)}
+                    className="input w-full"
+                    placeholder="/webhook/tickets"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Path for ticket-related webhooks</p>
+                  {systemSettings.webhook_base_url && systemSettings.webhook_tickets_path && (
+                    <p className="text-xs text-green-400 mt-1 font-mono">
+                      Complete URL: {systemSettings.webhook_base_url}{systemSettings.webhook_tickets_path}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Users Path
+                  </label>
+                  <input
+                    type="text"
+                    value={systemSettings.webhook_users_path}
+                    onChange={(e) => updateSystemSetting('webhook_users_path', e.target.value)}
+                    className="input w-full"
+                    placeholder="/webhook/users"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Path for user-related webhooks</p>
+                  {systemSettings.webhook_base_url && systemSettings.webhook_users_path && (
+                    <p className="text-xs text-green-400 mt-1 font-mono">
+                      Complete URL: {systemSettings.webhook_base_url}{systemSettings.webhook_users_path}
+                    </p>
+                  )}
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Webhook Timeout (seconds)

@@ -197,7 +197,7 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
       {/* Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-400 hover:text-gray-200 transition-colors"
+        className="relative text-gray-400 hover:text-gray-200 transition-colors"
       >
         {unreadCount > 0 ? (
           <BellIconSolid className="h-6 w-6 text-primary-600" />
