@@ -337,7 +337,7 @@ export const editTicket = async (id: string, updates: TicketUpdate): Promise<Tic
       
       
       // Fallback to default settings if none found
-      const finalNotificationSettings = notificationSettings || {
+      const finalNotificationSettings = {
         newTicket: true,
         deleted_ticket: true,
         in_work_ticket: true,
@@ -429,7 +429,7 @@ export const deleteTicket = async (id: string): Promise<boolean> => {
       const notificationSettings = await getUserNotificationSettings(ticketData.created_by)
       
       // Fallback to default settings if none found
-      const finalNotificationSettings = notificationSettings || {
+      const finalNotificationSettings = {
         newTicket: true,
         deleted_ticket: true,
         in_work_ticket: true,
