@@ -120,6 +120,11 @@ export async function sendWebhook(webhookUrl: string, payload: any) {
     console.log('Sending webhook to:', webhookUrl)
     console.log('Webhook payload:', JSON.stringify(payload, null, 2))
     
+    if (!webhookUrl || webhookUrl.trim() === '') {
+      console.error('Webhook URL is empty or invalid')
+      return false
+    }
+    
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
