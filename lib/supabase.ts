@@ -42,6 +42,13 @@ export type Database = {
           approved_by: string | null
           approved_at: string | null
           rejection_reason: string | null
+          new_ticket: boolean
+          deleted_ticket: boolean
+          in_work_ticket: boolean
+          updated_ticket: boolean
+          solved_ticket: boolean
+          shared_workflow: boolean
+          shared_prompt: boolean
           created_at: string
           updated_at: string
         }
@@ -58,6 +65,13 @@ export type Database = {
           approved_by?: string | null
           approved_at?: string | null
           rejection_reason?: string | null
+          new_ticket?: boolean
+          deleted_ticket?: boolean
+          in_work_ticket?: boolean
+          updated_ticket?: boolean
+          solved_ticket?: boolean
+          shared_workflow?: boolean
+          shared_prompt?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -74,6 +88,13 @@ export type Database = {
           approved_by?: string | null
           approved_at?: string | null
           rejection_reason?: string | null
+          new_ticket?: boolean
+          deleted_ticket?: boolean
+          in_work_ticket?: boolean
+          updated_ticket?: boolean
+          solved_ticket?: boolean
+          shared_workflow?: boolean
+          shared_prompt?: boolean
           created_at?: string
           updated_at?: string
         }

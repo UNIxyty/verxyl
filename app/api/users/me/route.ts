@@ -65,17 +65,33 @@ export async function PATCH(request: NextRequest) {
 
     const body = await request.json()
     
+    // Filter out any invalid fields that might cause issues
+    const allowedFields = [
+      'new_ticket', 'deleted_ticket', 'in_work_ticket', 'updated_ticket', 
+      'solved_ticket', 'shared_workflow', 'shared_prompt'
+    ]
+    
+    const filteredBody = Object.keys(body)
+      .filter(key => allowedFields.includes(key))
+      .reduce((obj, key) => {
+        obj[key] = body[key]
+        return obj
+      }, {} as any)
+    
     // Update user data in users table
     const { data: updatedUser, error } = await supabaseAdmin
       .from('users')
-      .update(body)
+      .update(filteredBody)
       .eq('id', user.id)
       .select()
       .single()
 
     if (error) {
       console.error('Error updating user data:', error)
-      return NextResponse.json({ error: 'Failed to update user data' }, { status: 500 })
+      return NextResponse.json({ 
+        error: 'Failed to update user data', 
+        details: error.message 
+      }, { status: 500 })
     }
 
     return NextResponse.json({ user: updatedUser })
