@@ -115,6 +115,7 @@ export async function getUserNotificationSettings(userId: string): Promise<{
   sharedPrompt: boolean
 } | null> {
   try {
+    console.log('Getting notification settings for user:', userId)
     const { supabaseAdmin } = await import('./supabase')
     
     const { data: settings, error } = await supabaseAdmin
@@ -123,13 +124,15 @@ export async function getUserNotificationSettings(userId: string): Promise<{
       .eq('user_id', userId)
       .single()
     
+    console.log('Notification settings query result:', { settings, error })
+    
     if (error && error.code !== 'PGRST116') {
       console.error('Error fetching user notification settings:', error)
       return null
     }
     
     // Return default settings if none exist
-    return settings || {
+    const defaultSettings = {
       newTicket: true,
       deleted_ticket: true,
       in_work_ticket: true,
@@ -138,6 +141,10 @@ export async function getUserNotificationSettings(userId: string): Promise<{
       sharedWorkflow: true,
       sharedPrompt: true
     }
+    
+    const result = settings || defaultSettings
+    console.log('Returning notification settings:', result)
+    return result
   } catch (error) {
     console.error('Error in getUserNotificationSettings:', error)
     return null
