@@ -68,7 +68,7 @@ export async function PATCH(request: NextRequest) {
     // Filter out any invalid fields that might cause issues
     const allowedFields = [
       'new_ticket', 'deleted_ticket', 'in_work_ticket', 'updated_ticket', 
-      'solved_ticket', 'shared_workflow', 'shared_prompt'
+      'solved_ticket', 'shared_workflow', 'shared_prompt', 'webhook_url'
     ]
     
     const filteredBody = Object.keys(body)

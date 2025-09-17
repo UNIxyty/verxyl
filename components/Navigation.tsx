@@ -40,7 +40,6 @@ export function Navigation() {
     { name: 'Invoices', href: '/invoices', icon: DocumentTextIcon, roles: ['admin', 'worker'] },
     { name: 'AI Prompts', href: '/ai-backups', icon: LightBulbIcon, roles: ['admin', 'worker'] },
     { name: 'N8N Projects', href: '/n8n-backups', icon: CogIcon, roles: ['admin', 'worker'] },
-    { name: 'Admin', href: '/admin', icon: ShieldCheckIcon, roles: ['admin'] },
     { name: 'Profile', href: '/profile', icon: UserIcon, roles: ['admin', 'worker', 'viewer'] },
     { name: 'Settings', href: '/settings', icon: Cog6ToothIcon, roles: ['admin', 'worker', 'viewer'] },
   ]

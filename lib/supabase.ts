@@ -49,6 +49,7 @@ export type Database = {
           solved_ticket: boolean
           shared_workflow: boolean
           shared_prompt: boolean
+          webhook_url: string | null
           created_at: string
           updated_at: string
         }
@@ -72,6 +73,7 @@ export type Database = {
           solved_ticket?: boolean
           shared_workflow?: boolean
           shared_prompt?: boolean
+          webhook_url?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -95,6 +97,7 @@ export type Database = {
           solved_ticket?: boolean
           shared_workflow?: boolean
           shared_prompt?: boolean
+          webhook_url?: string | null
           created_at?: string
           updated_at?: string
         }

@@ -26,6 +26,10 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
   const [userRole, setUserRole] = useState<string | null>(null)
   
+  // Webhook settings
+  const [webhookUrl, setWebhookUrl] = useState('')
+  const [isWebhookLoading, setIsWebhookLoading] = useState(false)
+  const [isWebhookSaving, setIsWebhookSaving] = useState(false)
 
   // Notification settings
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
@@ -56,7 +60,26 @@ export default function SettingsPage() {
     checkUserRole()
   }, [user])
 
-
+  // Load webhook settings
+  useEffect(() => {
+    const loadWebhookSettings = async () => {
+      if (user) {
+        setIsWebhookLoading(true)
+        try {
+          const response = await fetch('/api/users/me')
+          if (response.ok) {
+            const data = await response.json()
+            setWebhookUrl(data.user.webhook_url || '')
+          }
+        } catch (error) {
+          console.error('Error loading webhook settings:', error)
+        } finally {
+          setIsWebhookLoading(false)
+        }
+      }
+    }
+    loadWebhookSettings()
+  }, [user])
 
   // Load notification settings from user profile
   useEffect(() => {
@@ -95,6 +118,31 @@ export default function SettingsPage() {
       ...prev,
       [key]: value
     }))
+  }
+
+  const handleWebhookSave = async () => {
+    setIsWebhookSaving(true)
+    try {
+      const response = await fetch('/api/users/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          webhook_url: webhookUrl
+        })
+      })
+
+      if (response.ok) {
+        toast.success('Webhook settings saved successfully!')
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.error || 'Failed to save webhook settings')
+      }
+    } catch (error) {
+      console.error('Error saving webhook settings:', error)
+      toast.error('Failed to save webhook settings')
+    } finally {
+      setIsWebhookSaving(false)
+    }
   }
 
   const handleNotificationSave = async () => {
@@ -208,6 +256,101 @@ export default function SettingsPage() {
                     {isNotificationSaving ? 'Saving...' : 'Save Notification Settings'}
                   </button>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Webhook Settings */}
+          <div className="card">
+            <div className="flex items-center mb-4 sm:mb-6">
+              <ShieldCheckIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400 mr-2 sm:mr-3" />
+              <div>
+                <h2 className="text-lg sm:text-xl font-semibold text-white">Webhook Settings</h2>
+                <p className="text-gray-400 text-xs sm:text-sm">
+                  Configure webhook URL for ticket notifications
+                </p>
+              </div>
+            </div>
+
+            {isWebhookLoading ? (
+              <div className="animate-pulse">
+                <div className="h-10 bg-dark-700 rounded mb-4"></div>
+                <div className="h-10 bg-dark-700 rounded w-32"></div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Webhook URL
+                  </label>
+                  <input
+                    type="url"
+                    value={webhookUrl}
+                    onChange={(e) => setWebhookUrl(e.target.value)}
+                    placeholder="https://your-webhook-url.com/endpoint"
+                    className="input w-full"
+                    disabled={isWebhookSaving}
+                  />
+                  <p className="text-gray-400 text-xs mt-1">
+                    URL to receive ticket notifications (optional)
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row justify-end">
+                  <button
+                    onClick={handleWebhookSave}
+                    disabled={isWebhookLoading || isWebhookSaving}
+                    className="btn-primary btn-mobile"
+                  >
+                    {isWebhookSaving ? 'Saving...' : 'Save Webhook Settings'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Admin Settings */}
+          <div className="card">
+            <div className="flex items-center mb-4 sm:mb-6">
+              <ShieldCheckIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400 mr-2 sm:mr-3" />
+              <div>
+                <h2 className="text-lg sm:text-xl font-semibold text-white">Admin Settings</h2>
+                <p className="text-gray-400 text-xs sm:text-sm">
+                  System administration and user management
+                </p>
+              </div>
+            </div>
+
+            {isAdmin ? (
+              <div className="space-y-4">
+                <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+                  <p className="text-green-200 text-sm">
+                    <strong>Admin Access Granted</strong><br />
+                    You have administrative privileges.
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <button
+                    onClick={() => window.open('/admin/users', '_blank')}
+                    className="btn-secondary btn-mobile"
+                  >
+                    Manage Users
+                  </button>
+                  <button
+                    onClick={() => window.open('/admin/system-settings', '_blank')}
+                    className="btn-secondary btn-mobile"
+                  >
+                    System Settings
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+                <p className="text-red-200 text-sm">
+                  <strong>Access Denied</strong><br />
+                  You are not an administrator. Contact your system administrator for access.
+                </p>
               </div>
             )}
           </div>
