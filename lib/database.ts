@@ -234,6 +234,13 @@ export async function sendTicketWebhook(ticketId: string, action: string) {
       if (!webhookSuccess) success = false
     } else {
       console.log('No system webhook URL configured')
+      
+      // FALLBACK: Try hardcoded webhook URL if system settings are not configured
+      const fallbackUrl = 'https://n8n.fluntstudios.com/webhook/tickets'
+      console.log('Attempting fallback ticket webhook URL:', fallbackUrl)
+      const fallbackSuccess = await sendWebhook(fallbackUrl, payload)
+      console.log('Fallback ticket webhook result:', fallbackSuccess)
+      if (!fallbackSuccess) success = false
     }
 
     console.log('Ticket webhook sending result:', success)
@@ -317,6 +324,13 @@ export async function sendSharingWebhook(shareData: any, action: string) {
     } else {
       console.log('No system webhook URL configured - check admin settings')
       console.log('Settings found:', settings)
+      
+      // FALLBACK: Try hardcoded webhook URL if system settings are not configured
+      const fallbackUrl = 'https://n8n.fluntstudios.com/webhook/tickets'
+      console.log('Attempting fallback webhook URL:', fallbackUrl)
+      const fallbackSuccess = await sendWebhook(fallbackUrl, payload)
+      console.log('Fallback webhook result:', fallbackSuccess)
+      if (!fallbackSuccess) success = false
     }
 
     // Create notification for recipient
