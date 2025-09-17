@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       existingColumns: existingColumns,
       missingColumns: missingColumns,
       allColumnsExist: missingColumns.length === 0,
-      columnsError: columnsError?.message
+      columnsError: columnsError instanceof Error ? columnsError.message : String(columnsError)
     })
 
   } catch (error) {
