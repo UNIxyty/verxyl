@@ -94,37 +94,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to share backup' }, { status: 500 })
     }
 
-    // Send webhook for shared N8N workflow
-    try {
-      const { sendNewWebhook, getUserNotificationSettings } = await import('@/lib/new-webhook')
-      const notificationSettings = await getUserNotificationSettings(recipient.id)
-      
-      await sendNewWebhook({
-        action: 'sharedWorkflow',
-        timestamp: new Date().toISOString(),
-        user_id: recipient.id,
-        user_email: recipient.email,
-        user_name: recipient.full_name || recipient.email,
-        backup_id: backup_id,
-        backup_title: backup.title,
-        backup_type: 'n8n_workflow',
-        shared_by_id: user.id,
-        shared_by_email: user.email || '',
-        shared_by_name: user.user_metadata?.full_name || user.email || 'User',
-        access_role: access_role,
-        // Add notification settings as direct parameters
-        newTicket: notificationSettings?.newTicket,
-        deleted_ticket: notificationSettings?.deleted_ticket,
-        in_work_ticket: notificationSettings?.in_work_ticket,
-        updatetTicket: notificationSettings?.updatetTicket,
-        solvedTicket: notificationSettings?.solvedTicket,
-        sharedWorkflow: notificationSettings?.sharedWorkflow,
-        sharedPrompt: notificationSettings?.sharedPrompt
-      })
-    } catch (webhookError) {
-      console.error('Webhook error for shared N8N workflow:', webhookError)
-      // Don't fail the request if webhook fails
-    }
 
     // Create notification for the recipient
     const { error: notificationError } = await supabaseAdmin

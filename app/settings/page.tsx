@@ -89,16 +89,27 @@ export default function SettingsPage() {
     loadNewWebhookSettings()
   }, [userRole])
 
-  // Load notification settings
+  // Load notification settings from user profile
   useEffect(() => {
     const loadNotificationSettings = async () => {
       if (user) {
         setIsNotificationLoading(true)
         try {
-          const response = await fetch('/api/notification-settings')
+          const response = await fetch('/api/users/me')
           if (response.ok) {
             const data = await response.json()
-            setNotificationSettings(data.settings)
+            const userData = data.user
+            if (userData) {
+              setNotificationSettings({
+                newTicket: userData.new_ticket ?? true,
+                deleted_ticket: userData.deleted_ticket ?? true,
+                in_work_ticket: userData.in_work_ticket ?? true,
+                updatetTicket: userData.updated_ticket ?? true,
+                solvedTicket: userData.solved_ticket ?? true,
+                sharedWorkflow: userData.shared_workflow ?? true,
+                sharedPrompt: userData.shared_prompt ?? true
+              })
+            }
           }
         } catch (error) {
           console.error('Error loading notification settings:', error)
@@ -120,10 +131,18 @@ export default function SettingsPage() {
   const handleNotificationSave = async () => {
     setIsNotificationSaving(true)
     try {
-      const response = await fetch('/api/notification-settings', {
-        method: 'POST',
+      const response = await fetch('/api/users/me', {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(notificationSettings)
+        body: JSON.stringify({
+          new_ticket: notificationSettings.newTicket,
+          deleted_ticket: notificationSettings.deleted_ticket,
+          in_work_ticket: notificationSettings.in_work_ticket,
+          updated_ticket: notificationSettings.updatetTicket,
+          solved_ticket: notificationSettings.solvedTicket,
+          shared_workflow: notificationSettings.sharedWorkflow,
+          shared_prompt: notificationSettings.sharedPrompt
+        })
       })
 
       if (response.ok) {
