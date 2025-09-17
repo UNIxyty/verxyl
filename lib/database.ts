@@ -250,7 +250,7 @@ export async function sendSharingWebhook(shareData: any, action: string) {
     const { data: webhookSettings, error: settingsError } = await supabaseAdmin
       .from('system_settings')
       .select('setting_key, setting_value')
-      .in('setting_key', ['webhook_base_url', 'webhook_tickets_path', 'webhook_users_path'])
+      .in('setting_key', ['webhook_base_url', 'webhook_tickets_path'])
 
     if (settingsError) {
       console.error('Error fetching webhook settings:', settingsError)
@@ -268,9 +268,22 @@ export async function sendSharingWebhook(shareData: any, action: string) {
       ? `${settings.webhook_base_url}${settings.webhook_tickets_path}`
       : null
 
-    // Prepare webhook payload
+    // Prepare webhook payload using existing ticket webhook schema + sharing fields
     const payload = {
-      action: action,
+      action: action, // 'workflowShared' or 'promptShared'
+      ticket_id: null, // Not applicable for sharing events
+      ticket_title: shareData.backup?.prompt_name || shareData.backup?.project_name || 'Unknown',
+      ticket_urgency: null, // Not applicable for sharing events
+      ticket_deadline: null, // Not applicable for sharing events
+      ticket_date: null, // Not applicable for sharing events
+      ticket_time: null, // Not applicable for sharing events
+      creator_id: shareData.owner.id,
+      creator_email: shareData.owner.email,
+      creator_name: getUserFullName(shareData.owner),
+      worker_id: shareData.recipient.id,
+      worker_email: shareData.recipient.email,
+      worker_name: getUserFullName(shareData.recipient),
+      // Additional sharing-specific fields
       shared_from: {
         id: shareData.owner.id,
         email: shareData.owner.email,
@@ -281,8 +294,8 @@ export async function sendSharingWebhook(shareData: any, action: string) {
         email: shareData.recipient.email,
         name: getUserFullName(shareData.recipient)
       },
-      title: shareData.backup?.prompt_name || shareData.backup?.project_name || 'Unknown',
-      date: shareData.share?.shared_at || new Date().toISOString()
+      workflow_prompt_title: shareData.backup?.prompt_name || shareData.backup?.project_name || 'Unknown',
+      date_of_share: shareData.share?.shared_at || new Date().toISOString()
     }
 
     let success = true

@@ -96,22 +96,7 @@ export async function POST(request: NextRequest) {
     }
 
 
-    // Create notification for the recipient
-    const { error: notificationError } = await supabaseAdmin
-      .from('notifications')
-      .insert({
-        user_id: recipient.id,
-        title: 'AI Prompt Backup Shared',
-        message: `${user.user_metadata?.full_name || user.email} shared an AI prompt backup with you`,
-        type: 'shared_ai_backup',
-        redirect_path: '/ai-backups',
-        is_read: false
-      })
-
-    if (notificationError) {
-      console.error('Error creating notification:', notificationError)
-      // Don't fail the request if notification creation fails
-    }
+    // Notification will be created by sendSharingWebhook function
 
     // Send webhook for prompt sharing
     try {
