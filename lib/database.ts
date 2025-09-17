@@ -209,9 +209,76 @@ export async function sendTicketWebhook(ticketId: string, action: string) {
       console.log('No assignee webhook URL found or same as creator')
     }
 
-    return success
+  return success
+
   } catch (error) {
     console.error('Error sending ticket webhook:', error)
+    return false
+  }
+}
+
+// Send webhook for workflow/prompt sharing events
+export async function sendSharingWebhook(shareData: any, action: string) {
+  try {
+    console.log('Sending sharing webhook for action:', action)
+    console.log('Share data:', shareData)
+
+    // Fetch recipient user data with webhook URLs
+    const { data: recipientData, error: recipientError } = await supabaseAdmin
+      .from('users')
+      .select('id, email, full_name, webhook_url, webhook_base_url, webhook_users_path')
+      .eq('id', shareData.recipient.id)
+      .single()
+
+    if (recipientError || !recipientData) {
+      console.error('Error fetching recipient data for webhook:', recipientError)
+      return false
+    }
+
+    // Get recipient webhook URLs
+    const recipientWebhookUrl = recipientData.webhook_url
+    const recipientUsersWebhookUrl = recipientData.webhook_base_url && recipientData.webhook_users_path
+      ? `${recipientData.webhook_base_url}${recipientData.webhook_users_path}`
+      : null
+
+    // Prepare webhook payload
+    const payload = {
+      action: action,
+      shared_from: {
+        id: shareData.owner.id,
+        email: shareData.owner.email,
+        name: getUserFullName(shareData.owner)
+      },
+      shared_to: {
+        id: recipientData.id,
+        email: recipientData.email,
+        name: getUserFullName(recipientData)
+      },
+      title: shareData.backup?.prompt_name || shareData.backup?.project_name || 'Unknown',
+      date: shareData.share?.shared_at || new Date().toISOString()
+    }
+
+    let success = true
+
+    console.log('Sharing webhook URLs found:')
+    console.log('- Recipient legacy URL:', recipientWebhookUrl)
+    console.log('- Recipient enhanced URL:', recipientUsersWebhookUrl)
+
+    // Send to recipient's webhook if available (prioritize enhanced webhook)
+    const recipientUrl = recipientUsersWebhookUrl || recipientWebhookUrl
+    if (recipientUrl) {
+      console.log('Sending sharing webhook to recipient:', recipientUrl)
+      const recipientSuccess = await sendWebhook(recipientUrl, payload)
+      if (!recipientSuccess) success = false
+    } else {
+      console.log('No recipient webhook URL found')
+    }
+
+    console.log('Sharing webhook sending result:', success)
+    return success
+
+  } catch (error) {
+    console.error('Error in sendSharingWebhook:', error)
     return false
   }
 }

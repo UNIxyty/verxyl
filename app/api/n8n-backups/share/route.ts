@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
+import { sendSharingWebhook } from '@/lib/database'
 
 // Use service role for admin operations
 const supabaseAdmin = createClient(
@@ -110,6 +111,20 @@ export async function POST(request: NextRequest) {
     if (notificationError) {
       console.error('Error creating notification:', notificationError)
       // Don't fail the request if notification creation fails
+    }
+
+    // Send webhook for workflow sharing
+    try {
+      console.log('Sending webhook for N8N workflow sharing...')
+      await sendSharingWebhook({
+        share,
+        owner: user,
+        recipient,
+        backup: backup
+      }, 'workflowShared')
+      console.log('N8N workflow sharing webhook sent successfully')
+    } catch (webhookError) {
+      console.error('Webhook error (non-blocking):', webhookError)
     }
 
     return NextResponse.json({ 
