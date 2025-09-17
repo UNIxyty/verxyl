@@ -142,7 +142,17 @@ export async function getUserNotificationSettings(userId: string): Promise<{
       sharedPrompt: true
     }
     
-    const result = settings || defaultSettings
+    // If settings exist, use them but ensure all required fields are present
+    const result = settings ? {
+      newTicket: settings.newTicket ?? settings.new_ticket ?? true,
+      deleted_ticket: settings.deleted_ticket ?? true,
+      in_work_ticket: settings.in_work_ticket ?? true,
+      updatetTicket: settings.updatetTicket ?? settings.updated_ticket ?? true,
+      solvedTicket: settings.solvedTicket ?? settings.solved_ticket ?? true,
+      sharedWorkflow: settings.sharedWorkflow ?? settings.shared_n8n_workflow ?? true,
+      sharedPrompt: settings.sharedPrompt ?? settings.shared_ai_backup ?? true
+    } : defaultSettings
+    
     console.log('Returning notification settings:', result)
     return result
   } catch (error) {
