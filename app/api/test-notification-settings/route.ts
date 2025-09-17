@@ -4,13 +4,17 @@ import { getUserNotificationSettings } from '@/lib/new-webhook'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('user_id')
+    let userId = searchParams.get('user_id')
 
     if (!userId) {
       return NextResponse.json({ error: 'user_id parameter is required' }, { status: 400 })
     }
 
+    // Clean the user ID - remove any extra characters
+    userId = userId.trim().replace(/["\s]+$/, '').replace(/^["\s]+/, '')
+    
     console.log('Testing notification settings for user:', userId)
+    console.log('Cleaned user ID:', userId)
     
     // Test the getUserNotificationSettings function
     const notificationSettings = await getUserNotificationSettings(userId)
@@ -37,11 +41,21 @@ export async function GET(request: NextRequest) {
 
     console.log('Table exists check:', { tableCheck, tableError })
 
+    // Test if user exists
+    const { data: userExists, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('id, email, full_name')
+      .eq('id', userId)
+      .single()
+
+    console.log('User exists check:', { userExists, userError })
+
     return NextResponse.json({ 
       userId,
       functionResult: notificationSettings,
       directQuery: { data: directQuery, error: directError },
       tableExists: tableCheck && tableCheck.length > 0,
+      userExists: { data: userExists, error: userError },
       timestamp: new Date().toISOString()
     })
 
