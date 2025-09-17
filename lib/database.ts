@@ -328,58 +328,6 @@ export const editTicket = async (id: string, updates: TicketUpdate): Promise<Tic
     return null
   }
 
-  // Send webhook for ticket update
-  if (data) {
-    try {
-      const { dateTicket, timeTicket } = extractDateTime(data.deadline)
-      
-      console.log('Sending webhook for ticket update')
-      
-      
-      // Fallback to default settings if none found
-      const finalNotificationSettings = {
-        newTicket: true,
-        deleted_ticket: true,
-        in_work_ticket: true,
-        updatetTicket: true,
-        solvedTicket: true,
-        sharedWorkflow: true,
-        sharedPrompt: true
-      }
-      
-      const webhookResult = await sendNewWebhook({
-        action: 'ticket_updated' as const,
-        timestamp: new Date().toISOString(),
-        ticket_id: data.id,
-        ticket_title: data.title,
-        ticket_urgency: data.urgency,
-        ticket_status: data.status,
-        ticket_deadline: data.deadline,
-        creator_id: data.created_by,
-        creator_email: getUserEmail(data.created_by_user),
-        creator_name: getUserFullName(data.created_by_user),
-        worker_id: data.assigned_to,
-        worker_email: getUserEmail(data.assigned_user),
-        worker_name: getUserFullName(data.assigned_user),
-        admin_id: data.assigned_to,
-        admin_email: getUserEmail(data.assigned_user),
-        admin_name: getUserFullName(data.assigned_user),
-        user_id: data.created_by,
-        // Add notification settings as direct parameters
-        newTicket: finalNotificationSettings.newTicket,
-        deleted_ticket: finalNotificationSettings.deleted_ticket,
-        in_work_ticket: finalNotificationSettings.in_work_ticket,
-        updatetTicket: finalNotificationSettings.updatetTicket,
-        solvedTicket: finalNotificationSettings.solvedTicket,
-        sharedWorkflow: finalNotificationSettings.sharedWorkflow,
-        sharedPrompt: finalNotificationSettings.sharedPrompt
-      })
-
-      console.log('Webhook result:', webhookResult)
-    } catch (webhookError) {
-      console.error('Webhook error (non-critical):', webhookError)
-    }
-  }
 
   return data as Ticket
 }
@@ -418,61 +366,6 @@ export const deleteTicket = async (id: string): Promise<boolean> => {
 
   console.log('Ticket deleted successfully')
 
-  // Send webhook for ticket deletion
-  if (ticketData) {
-    try {
-      const { dateTicket, timeTicket } = extractDateTime(ticketData.deadline)
-      
-      console.log('Sending webhook for ticket deletion')
-      
-      // Get user notification settings for the ticket creator
-      const notificationSettings = await getUserNotificationSettings(ticketData.created_by)
-      
-      // Fallback to default settings if none found
-      const finalNotificationSettings = {
-        newTicket: true,
-        deleted_ticket: true,
-        in_work_ticket: true,
-        updatetTicket: true,
-        solvedTicket: true,
-        sharedWorkflow: true,
-        sharedPrompt: true
-      }
-      
-      const webhookResult = await sendNewWebhook({
-        action: 'ticket_deleted' as const,
-        timestamp: new Date().toISOString(),
-        ticket_id: ticketData.id,
-        ticket_title: ticketData.title,
-        ticket_urgency: ticketData.urgency,
-        ticket_deadline: ticketData.deadline,
-        ticket_date: dateTicket,
-        ticket_time: timeTicket,
-        creator_id: ticketData.created_by,
-        creator_email: getUserEmail(ticketData.created_by_user),
-        creator_name: getUserFullName(ticketData.created_by_user),
-        worker_id: ticketData.assigned_to,
-        worker_email: getUserEmail(ticketData.assigned_user),
-        worker_name: getUserFullName(ticketData.assigned_user),
-        admin_id: ticketData.assigned_to,
-        admin_email: getUserEmail(ticketData.assigned_user),
-        admin_name: getUserFullName(ticketData.assigned_user),
-        user_id: ticketData.created_by,
-        // Add notification settings as direct parameters
-        newTicket: finalNotificationSettings.newTicket,
-        deleted_ticket: finalNotificationSettings.deleted_ticket,
-        in_work_ticket: finalNotificationSettings.in_work_ticket,
-        updatetTicket: finalNotificationSettings.updatetTicket,
-        solvedTicket: finalNotificationSettings.solvedTicket,
-        sharedWorkflow: finalNotificationSettings.sharedWorkflow,
-        sharedPrompt: finalNotificationSettings.sharedPrompt
-      })
-
-      console.log('Webhook result:', webhookResult)
-    } catch (webhookError) {
-      console.error('Webhook error (non-critical):', webhookError)
-    }
-  }
 
   return true
 }
