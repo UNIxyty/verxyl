@@ -233,6 +233,15 @@ export async function sendNewWebhook(payload: NewWebhookPayload): Promise<{ succ
     // Note: Ticket webhooks already include notification settings from database.ts
     
     console.log('Full payload being sent:', fullPayload)
+    console.log('Full payload notification settings:', {
+      newTicket: fullPayload.newTicket,
+      deleted_ticket: fullPayload.deleted_ticket,
+      in_work_ticket: fullPayload.in_work_ticket,
+      updatetTicket: fullPayload.updatetTicket,
+      solvedTicket: fullPayload.solvedTicket,
+      sharedWorkflow: fullPayload.sharedWorkflow,
+      sharedPrompt: fullPayload.sharedPrompt
+    })
     
     // Send webhook request
     const response = await fetch(webhookUrl, {

@@ -168,6 +168,8 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
       }
       
       console.log('Final notification settings being used:', finalNotificationSettings)
+      console.log('Notification settings type:', typeof finalNotificationSettings)
+      console.log('Notification settings keys:', Object.keys(finalNotificationSettings))
       
       // Ensure notification settings are included in webhook
       const webhookPayload = {
@@ -200,6 +202,15 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
       }
       
       console.log('Webhook payload being sent:', webhookPayload)
+      console.log('Webhook payload notification settings:', {
+        newTicket: webhookPayload.newTicket,
+        deleted_ticket: webhookPayload.deleted_ticket,
+        in_work_ticket: webhookPayload.in_work_ticket,
+        updatetTicket: webhookPayload.updatetTicket,
+        solvedTicket: webhookPayload.solvedTicket,
+        sharedWorkflow: webhookPayload.sharedWorkflow,
+        sharedPrompt: webhookPayload.sharedPrompt
+      })
       
       const webhookResult = await sendNewWebhook(webhookPayload)
 
