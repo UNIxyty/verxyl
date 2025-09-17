@@ -299,11 +299,11 @@ export default function SettingsPage() {
                     value={webhookBaseUrl}
                     onChange={(e) => setWebhookBaseUrl(e.target.value)}
                     placeholder="https://api.example.com"
-                    className="input w-full bg-gray-800 border-gray-600"
-                    disabled={true}
+                    className="input w-full"
+                    disabled={isWebhookSaving}
                   />
                   <p className="text-gray-400 text-xs mt-1">
-                    Base URL for your webhook endpoints (contact admin to change)
+                    Base URL for your webhook endpoints (e.g., https://api.example.com)
                   </p>
                 </div>
 
