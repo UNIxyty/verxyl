@@ -104,37 +104,6 @@ export async function DELETE(
     
     console.log('Ticket deleted successfully')
     
-    // Send webhook for ticket deletion
-    if (ticketData) {
-      try {
-        const { dateTicket, timeTicket } = extractDateTime(ticketData.deadline)
-        
-        console.log('Sending webhook for ticket deletion')
-        const webhookResult = await sendNewWebhook({
-          action: 'ticket_deleted',
-          timestamp: new Date().toISOString(),
-          ticket_id: ticketData.id,
-          ticket_title: ticketData.title,
-          ticket_urgency: ticketData.urgency,
-          ticket_deadline: ticketData.deadline,
-          ticket_date: dateTicket,
-          ticket_time: timeTicket,
-          creator_id: ticketData.created_by,
-          creator_email: getUserEmail(ticketData.created_by_user),
-          creator_name: getUserFullName(ticketData.created_by_user),
-          worker_id: ticketData.assigned_to,
-          worker_email: getUserEmail(ticketData.assigned_user),
-          worker_name: getUserFullName(ticketData.assigned_user),
-          admin_id: ticketData.assigned_to,
-          admin_email: getUserEmail(ticketData.assigned_user),
-          admin_name: getUserFullName(ticketData.assigned_user)
-        })
-
-        console.log('Webhook result:', webhookResult)
-      } catch (webhookError) {
-        console.error('Webhook error (non-critical):', webhookError)
-      }
-    }
     
     return NextResponse.json({
       success: true,
