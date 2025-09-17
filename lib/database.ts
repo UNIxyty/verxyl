@@ -175,79 +175,6 @@ export const updateTicket = async (id: string, updates: TicketUpdate): Promise<T
     return null
   }
 
-  // Send webhook for ticket update ONLY if status actually changed
-  if (data) {
-    try {
-      const { dateTicket, timeTicket } = extractDateTime(data.deadline)
-      
-      // Determine webhook action based on what was updated
-      let webhookAction: 'updated' | 'in_work' = 'updated'
-      let shouldSendWebhook = true
-      
-      if (updates.status === 'in_progress' && currentTicket.status !== 'in_progress') {
-        webhookAction = 'in_work'
-        console.log('Sending webhook for ticket work started (status changed from', currentTicket.status, 'to in_progress)')
-      } else if (updates.status === 'in_progress' && currentTicket.status === 'in_progress') {
-        console.log('Ticket is already in_progress, skipping webhook')
-        shouldSendWebhook = false
-      } else {
-        console.log('Sending webhook for ticket update')
-      }
-      
-      if (!shouldSendWebhook) {
-        console.log('Skipping webhook - no status change detected')
-      } else {
-      
-      // Get user notification settings for the ticket creator
-      const notificationSettings = await getUserNotificationSettings(data.created_by)
-      
-      // Fallback to default settings if none found
-      const finalNotificationSettings = notificationSettings || {
-        newTicket: true,
-        deleted_ticket: true,
-        in_work_ticket: true,
-        updatetTicket: true,
-        solvedTicket: true,
-        sharedWorkflow: true,
-        sharedPrompt: true
-      }
-      
-      const webhookResult = await sendNewWebhook({
-        action: webhookAction === 'in_work' ? 'ticket_in_work' as const : 'ticket_updated' as const,
-        timestamp: new Date().toISOString(),
-        ticket_id: data.id,
-        ticket_title: data.title,
-        ticket_urgency: data.urgency,
-        ticket_status: data.status,
-        ticket_deadline: data.deadline,
-        ticket_date: dateTicket,
-        ticket_time: timeTicket,
-        creator_id: data.created_by,
-        creator_email: getUserEmail(data.created_by_user),
-        creator_name: getUserFullName(data.created_by_user),
-        worker_id: data.assigned_to,
-        worker_email: getUserEmail(data.assigned_user),
-        worker_name: getUserFullName(data.assigned_user),
-        admin_id: data.assigned_to,
-        admin_email: getUserEmail(data.assigned_user),
-        admin_name: getUserFullName(data.assigned_user),
-        user_id: data.created_by,
-        // Add notification settings as direct parameters
-        newTicket: finalNotificationSettings.newTicket,
-        deleted_ticket: finalNotificationSettings.deleted_ticket,
-        in_work_ticket: finalNotificationSettings.in_work_ticket,
-        updatetTicket: finalNotificationSettings.updatetTicket,
-        solvedTicket: finalNotificationSettings.solvedTicket,
-        sharedWorkflow: finalNotificationSettings.sharedWorkflow,
-        sharedPrompt: finalNotificationSettings.sharedPrompt
-      })
-
-      console.log('Webhook result:', webhookResult)
-      }
-    } catch (webhookError) {
-      console.error('Webhook error (non-critical):', webhookError)
-    }
-  }
 
   return data as Ticket
 }
@@ -359,62 +286,6 @@ export const completeTicket = async (id: string, solutionData: any): Promise<Tic
     return null
   }
 
-  // Send webhook for ticket completion
-  if (data) {
-    try {
-      const { dateTicket, timeTicket } = extractDateTime(data.deadline)
-      
-      console.log('Sending webhook for ticket completion')
-      
-      // Get user notification settings for the ticket creator
-      const notificationSettings = await getUserNotificationSettings(data.created_by)
-      
-      // Fallback to default settings if none found
-      const finalNotificationSettings = notificationSettings || {
-        newTicket: true,
-        deleted_ticket: true,
-        in_work_ticket: true,
-        updatetTicket: true,
-        solvedTicket: true,
-        sharedWorkflow: true,
-        sharedPrompt: true
-      }
-      
-      const webhookResult = await sendNewWebhook({
-        action: 'ticket_solved' as const,
-        timestamp: new Date().toISOString(),
-        ticket_id: data.id,
-        ticket_title: data.title,
-        ticket_urgency: data.urgency,
-        ticket_status: 'completed',
-        ticket_deadline: data.deadline,
-        ticket_date: dateTicket,
-        ticket_time: timeTicket,
-        creator_id: data.created_by,
-        creator_email: getUserEmail(data.created_by_user),
-        creator_name: getUserFullName(data.created_by_user),
-        worker_id: data.assigned_to,
-        worker_email: getUserEmail(data.assigned_user),
-        worker_name: getUserFullName(data.assigned_user),
-        admin_id: data.assigned_to,
-        admin_email: getUserEmail(data.assigned_user),
-        admin_name: getUserFullName(data.assigned_user),
-        user_id: data.created_by,
-        // Add notification settings as direct parameters
-        newTicket: finalNotificationSettings.newTicket,
-        deleted_ticket: finalNotificationSettings.deleted_ticket,
-        in_work_ticket: finalNotificationSettings.in_work_ticket,
-        updatetTicket: finalNotificationSettings.updatetTicket,
-        solvedTicket: finalNotificationSettings.solvedTicket,
-        sharedWorkflow: finalNotificationSettings.sharedWorkflow,
-        sharedPrompt: finalNotificationSettings.sharedPrompt
-      })
-
-      console.log('Webhook result:', webhookResult)
-    } catch (webhookError) {
-      console.error('Webhook error (non-critical):', webhookError)
-    }
-  }
 
   return data as Ticket
 }
@@ -464,8 +335,6 @@ export const editTicket = async (id: string, updates: TicketUpdate): Promise<Tic
       
       console.log('Sending webhook for ticket update')
       
-      // Get user notification settings for the ticket creator
-      const notificationSettings = await getUserNotificationSettings(data.created_by)
       
       // Fallback to default settings if none found
       const finalNotificationSettings = notificationSettings || {
