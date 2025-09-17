@@ -26,13 +26,6 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
   const [userRole, setUserRole] = useState<string | null>(null)
   
-  // New webhook settings
-  const [newWebhookDomain, setNewWebhookDomain] = useState('')
-  const [newWebhookPathTickets, setNewWebhookPathTickets] = useState('')
-  const [newWebhookPathUsers, setNewWebhookPathUsers] = useState('')
-  const [isNewWebhookLoading, setIsNewWebhookLoading] = useState(false)
-  const [isNewWebhookSaving, setIsNewWebhookSaving] = useState(false)
-  const [showDomainEdit, setShowDomainEdit] = useState(false)
 
   // Notification settings
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
@@ -64,30 +57,6 @@ export default function SettingsPage() {
   }, [user])
 
 
-  // Load new webhook settings for admins
-  useEffect(() => {
-    const loadNewWebhookSettings = async () => {
-      if (userRole === 'admin') {
-        setIsNewWebhookLoading(true)
-        try {
-          const response = await fetch('/api/admin/new-webhook')
-          if (response.ok) {
-            const data = await response.json()
-            setNewWebhookDomain(data.webhook_domain || '')
-            setNewWebhookPathTickets(data.webhook_path_tickets || '')
-            setNewWebhookPathUsers(data.webhook_path_users || '')
-          } else {
-            console.error('Failed to load new webhook settings')
-          }
-        } catch (error) {
-          console.error('Error loading new webhook settings:', error)
-        } finally {
-          setIsNewWebhookLoading(false)
-        }
-      }
-    }
-    loadNewWebhookSettings()
-  }, [userRole])
 
   // Load notification settings from user profile
   useEffect(() => {
@@ -159,49 +128,6 @@ export default function SettingsPage() {
     }
   }
 
-  const handleNewWebhookSave = async () => {
-    if (!newWebhookDomain.trim()) {
-      toast.error('Please enter a webhook domain')
-      return
-    }
-
-    if (!newWebhookPathTickets.trim()) {
-      toast.error('Please select a tickets webhook path')
-      return
-    }
-
-    if (!newWebhookPathUsers.trim()) {
-      toast.error('Please select a users webhook path')
-      return
-    }
-
-    setIsNewWebhookSaving(true)
-    try {
-      const response = await fetch('/api/admin/new-webhook', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          webhook_domain: newWebhookDomain.trim(),
-          webhook_path_tickets: newWebhookPathTickets.trim(),
-          webhook_path_users: newWebhookPathUsers.trim()
-        })
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        toast.success(data.message || 'New webhook settings saved successfully!')
-        setShowDomainEdit(false)
-      } else {
-        const errorData = await response.json()
-        toast.error(errorData.error || 'Failed to save new webhook settings')
-      }
-    } catch (error) {
-      console.error('Error saving new webhook settings:', error)
-      toast.error('Failed to save new webhook settings')
-    } finally {
-      setIsNewWebhookSaving(false)
-    }
-  }
 
   const isAdmin = userRole === 'admin'
   const isWorker = userRole === 'worker'
