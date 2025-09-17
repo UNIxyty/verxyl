@@ -156,7 +156,21 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
       
       console.log('Notification settings for user:', data.created_by, notificationSettings)
       
-      const webhookResult = await sendNewWebhook({
+      // Fallback to default settings if none found
+      const finalNotificationSettings = notificationSettings || {
+        newTicket: true,
+        deleted_ticket: true,
+        in_work_ticket: true,
+        updatetTicket: true,
+        solvedTicket: true,
+        sharedWorkflow: true,
+        sharedPrompt: true
+      }
+      
+      console.log('Final notification settings being used:', finalNotificationSettings)
+      
+      // Ensure notification settings are included in webhook
+      const webhookPayload = {
         action: 'ticket_created',
         timestamp: new Date().toISOString(),
         ticket_id: data.id,
@@ -176,14 +190,18 @@ export const createTicket = async (ticketData: TicketInsert): Promise<Ticket | n
         admin_name: getUserFullName(data.assigned_user),
         user_id: data.created_by,
         // Add notification settings as direct parameters
-        newTicket: notificationSettings?.newTicket,
-        deleted_ticket: notificationSettings?.deleted_ticket,
-        in_work_ticket: notificationSettings?.in_work_ticket,
-        updatetTicket: notificationSettings?.updatetTicket,
-        solvedTicket: notificationSettings?.solvedTicket,
-        sharedWorkflow: notificationSettings?.sharedWorkflow,
-        sharedPrompt: notificationSettings?.sharedPrompt
-      })
+        newTicket: finalNotificationSettings.newTicket,
+        deleted_ticket: finalNotificationSettings.deleted_ticket,
+        in_work_ticket: finalNotificationSettings.in_work_ticket,
+        updatetTicket: finalNotificationSettings.updatetTicket,
+        solvedTicket: finalNotificationSettings.solvedTicket,
+        sharedWorkflow: finalNotificationSettings.sharedWorkflow,
+        sharedPrompt: finalNotificationSettings.sharedPrompt
+      }
+      
+      console.log('Webhook payload being sent:', webhookPayload)
+      
+      const webhookResult = await sendNewWebhook(webhookPayload)
 
       console.log('Webhook result:', webhookResult)
 
@@ -254,6 +272,17 @@ export const updateTicket = async (id: string, updates: TicketUpdate): Promise<T
       const { getUserNotificationSettings } = await import('./new-webhook')
       const notificationSettings = await getUserNotificationSettings(data.created_by)
       
+      // Fallback to default settings if none found
+      const finalNotificationSettings = notificationSettings || {
+        newTicket: true,
+        deleted_ticket: true,
+        in_work_ticket: true,
+        updatetTicket: true,
+        solvedTicket: true,
+        sharedWorkflow: true,
+        sharedPrompt: true
+      }
+      
       const webhookResult = await sendNewWebhook({
         action: webhookAction === 'in_work' ? 'ticket_in_work' : 'ticket_updated',
         timestamp: new Date().toISOString(),
@@ -275,13 +304,13 @@ export const updateTicket = async (id: string, updates: TicketUpdate): Promise<T
         admin_name: getUserFullName(data.assigned_user),
         user_id: data.created_by,
         // Add notification settings as direct parameters
-        newTicket: notificationSettings?.newTicket,
-        deleted_ticket: notificationSettings?.deleted_ticket,
-        in_work_ticket: notificationSettings?.in_work_ticket,
-        updatetTicket: notificationSettings?.updatetTicket,
-        solvedTicket: notificationSettings?.solvedTicket,
-        sharedWorkflow: notificationSettings?.sharedWorkflow,
-        sharedPrompt: notificationSettings?.sharedPrompt
+        newTicket: finalNotificationSettings.newTicket,
+        deleted_ticket: finalNotificationSettings.deleted_ticket,
+        in_work_ticket: finalNotificationSettings.in_work_ticket,
+        updatetTicket: finalNotificationSettings.updatetTicket,
+        solvedTicket: finalNotificationSettings.solvedTicket,
+        sharedWorkflow: finalNotificationSettings.sharedWorkflow,
+        sharedPrompt: finalNotificationSettings.sharedPrompt
       })
 
       console.log('Webhook result:', webhookResult)
@@ -412,6 +441,17 @@ export const completeTicket = async (id: string, solutionData: any): Promise<Tic
       const { getUserNotificationSettings } = await import('./new-webhook')
       const notificationSettings = await getUserNotificationSettings(data.created_by)
       
+      // Fallback to default settings if none found
+      const finalNotificationSettings = notificationSettings || {
+        newTicket: true,
+        deleted_ticket: true,
+        in_work_ticket: true,
+        updatetTicket: true,
+        solvedTicket: true,
+        sharedWorkflow: true,
+        sharedPrompt: true
+      }
+      
       const webhookResult = await sendNewWebhook({
         action: 'ticket_solved',
         timestamp: new Date().toISOString(),
@@ -433,13 +473,13 @@ export const completeTicket = async (id: string, solutionData: any): Promise<Tic
         admin_name: getUserFullName(data.assigned_user),
         user_id: data.created_by,
         // Add notification settings as direct parameters
-        newTicket: notificationSettings?.newTicket,
-        deleted_ticket: notificationSettings?.deleted_ticket,
-        in_work_ticket: notificationSettings?.in_work_ticket,
-        updatetTicket: notificationSettings?.updatetTicket,
-        solvedTicket: notificationSettings?.solvedTicket,
-        sharedWorkflow: notificationSettings?.sharedWorkflow,
-        sharedPrompt: notificationSettings?.sharedPrompt
+        newTicket: finalNotificationSettings.newTicket,
+        deleted_ticket: finalNotificationSettings.deleted_ticket,
+        in_work_ticket: finalNotificationSettings.in_work_ticket,
+        updatetTicket: finalNotificationSettings.updatetTicket,
+        solvedTicket: finalNotificationSettings.solvedTicket,
+        sharedWorkflow: finalNotificationSettings.sharedWorkflow,
+        sharedPrompt: finalNotificationSettings.sharedPrompt
       })
 
       console.log('Webhook result:', webhookResult)
@@ -500,6 +540,17 @@ export const editTicket = async (id: string, updates: TicketUpdate): Promise<Tic
       const { getUserNotificationSettings } = await import('./new-webhook')
       const notificationSettings = await getUserNotificationSettings(data.created_by)
       
+      // Fallback to default settings if none found
+      const finalNotificationSettings = notificationSettings || {
+        newTicket: true,
+        deleted_ticket: true,
+        in_work_ticket: true,
+        updatetTicket: true,
+        solvedTicket: true,
+        sharedWorkflow: true,
+        sharedPrompt: true
+      }
+      
       const webhookResult = await sendNewWebhook({
         action: 'ticket_updated',
         timestamp: new Date().toISOString(),
@@ -519,13 +570,13 @@ export const editTicket = async (id: string, updates: TicketUpdate): Promise<Tic
         admin_name: getUserFullName(data.assigned_user),
         user_id: data.created_by,
         // Add notification settings as direct parameters
-        newTicket: notificationSettings?.newTicket,
-        deleted_ticket: notificationSettings?.deleted_ticket,
-        in_work_ticket: notificationSettings?.in_work_ticket,
-        updatetTicket: notificationSettings?.updatetTicket,
-        solvedTicket: notificationSettings?.solvedTicket,
-        sharedWorkflow: notificationSettings?.sharedWorkflow,
-        sharedPrompt: notificationSettings?.sharedPrompt
+        newTicket: finalNotificationSettings.newTicket,
+        deleted_ticket: finalNotificationSettings.deleted_ticket,
+        in_work_ticket: finalNotificationSettings.in_work_ticket,
+        updatetTicket: finalNotificationSettings.updatetTicket,
+        solvedTicket: finalNotificationSettings.solvedTicket,
+        sharedWorkflow: finalNotificationSettings.sharedWorkflow,
+        sharedPrompt: finalNotificationSettings.sharedPrompt
       })
 
       console.log('Webhook result:', webhookResult)
@@ -582,6 +633,17 @@ export const deleteTicket = async (id: string): Promise<boolean> => {
       const { getUserNotificationSettings } = await import('./new-webhook')
       const notificationSettings = await getUserNotificationSettings(ticketData.created_by)
       
+      // Fallback to default settings if none found
+      const finalNotificationSettings = notificationSettings || {
+        newTicket: true,
+        deleted_ticket: true,
+        in_work_ticket: true,
+        updatetTicket: true,
+        solvedTicket: true,
+        sharedWorkflow: true,
+        sharedPrompt: true
+      }
+      
       const webhookResult = await sendNewWebhook({
         action: 'ticket_deleted',
         timestamp: new Date().toISOString(),
@@ -602,13 +664,13 @@ export const deleteTicket = async (id: string): Promise<boolean> => {
         admin_name: getUserFullName(ticketData.assigned_user),
         user_id: ticketData.created_by,
         // Add notification settings as direct parameters
-        newTicket: notificationSettings?.newTicket,
-        deleted_ticket: notificationSettings?.deleted_ticket,
-        in_work_ticket: notificationSettings?.in_work_ticket,
-        updatetTicket: notificationSettings?.updatetTicket,
-        solvedTicket: notificationSettings?.solvedTicket,
-        sharedWorkflow: notificationSettings?.sharedWorkflow,
-        sharedPrompt: notificationSettings?.sharedPrompt
+        newTicket: finalNotificationSettings.newTicket,
+        deleted_ticket: finalNotificationSettings.deleted_ticket,
+        in_work_ticket: finalNotificationSettings.in_work_ticket,
+        updatetTicket: finalNotificationSettings.updatetTicket,
+        solvedTicket: finalNotificationSettings.solvedTicket,
+        sharedWorkflow: finalNotificationSettings.sharedWorkflow,
+        sharedPrompt: finalNotificationSettings.sharedPrompt
       })
 
       console.log('Webhook result:', webhookResult)
