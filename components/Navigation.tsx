@@ -42,6 +42,7 @@ export function Navigation() {
     { name: 'N8N Projects', href: '/n8n-backups', icon: CogIcon, roles: ['admin', 'worker'] },
     { name: 'Profile', href: '/profile', icon: UserIcon, roles: ['admin', 'worker', 'viewer'] },
     { name: 'Settings', href: '/settings', icon: Cog6ToothIcon, roles: ['admin', 'worker', 'viewer'] },
+    { name: 'Admin Settings', href: '/admin-settings', icon: ShieldCheckIcon, roles: ['admin'] },
   ]
 
   useEffect(() => {
