@@ -25,18 +25,24 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     
-    // First, let's check what columns exist in the users table
-    const { data: columns, error: columnsError } = await supabaseAdmin
-      .rpc('get_table_columns', { table_name: 'users' })
-      .catch(async () => {
-        // Fallback: try to get user data to see what columns are available
-        const { data: userData, error } = await supabaseAdmin
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single()
-        return { data: userData ? Object.keys(userData) : null, error }
-      })
+    // First, let's try to get user data to see what columns are available
+    let columns = null
+    let columnsError = null
+    
+    try {
+      const { data: userData, error } = await supabaseAdmin
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+      
+      if (userData) {
+        columns = Object.keys(userData)
+      }
+      columnsError = error
+    } catch (err) {
+      columnsError = err
+    }
 
     // Check if notification columns exist
     const notificationColumns = [
