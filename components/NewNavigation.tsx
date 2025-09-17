@@ -276,8 +276,7 @@ export function NewNavigation() {
         </div>
         
         <div className="p-3 border-t border-dark-700">
-          <div className="flex items-center justify-between mb-2">
-            <NotificationBell onNavigate={router.push} />
+          <div className="flex items-center justify-end mb-2">
             <button
               onClick={signOut}
               className="p-1 text-gray-400 hover:text-gray-200 transition-colors"

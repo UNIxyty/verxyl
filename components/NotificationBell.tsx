@@ -98,6 +98,25 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
     }
   }
 
+  const deleteNotification = async (notificationId: string, event: React.MouseEvent) => {
+    event.stopPropagation() // Prevent triggering the notification click
+    
+    try {
+      const response = await fetch('/api/notifications', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notification_id: notificationId })
+      })
+
+      if (response.ok) {
+        setNotifications(notifications.filter(notif => notif.id !== notificationId))
+        setUnreadCount(Math.max(0, unreadCount - (notifications.find(notif => notif.id === notificationId)?.is_read ? 0 : 1)))
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error)
+    }
+  }
+
   const handleNotificationClick = async (notification: Notification) => {
     // Mark as read if not already read
     if (!notification.is_read) {
@@ -117,6 +136,8 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
     switch (type) {
       case 'ticket_created':
       case 'ticket_assigned':
+      case 'ticket_updated':
+      case 'ticket_completed':
         return '🎫'
       case 'role_changed':
         return '👤'
@@ -124,6 +145,12 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
         return '📁'
       case 'invoice_created':
         return '💰'
+      case 'workflow_shared':
+      case 'prompt_shared':
+        return '🤝'
+      case 'user_approved':
+      case 'user_rejected':
+        return '✅'
       default:
         return '🔔'
     }
@@ -133,6 +160,8 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
     switch (type) {
       case 'ticket_created':
       case 'ticket_assigned':
+      case 'ticket_updated':
+      case 'ticket_completed':
         return 'text-blue-600'
       case 'role_changed':
         return 'text-purple-600'
@@ -140,6 +169,13 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
         return 'text-orange-600'
       case 'invoice_created':
         return 'text-yellow-600'
+      case 'workflow_shared':
+      case 'prompt_shared':
+        return 'text-green-600'
+      case 'user_approved':
+        return 'text-green-600'
+      case 'user_rejected':
+        return 'text-red-600'
       default:
         return 'text-gray-600'
     }
@@ -161,7 +197,7 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
       {/* Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-400 hover:text-gray-200 hover:bg-dark-700 rounded-lg transition-colors"
+        className="relative p-2 text-gray-400 hover:text-gray-200 transition-colors"
       >
         {unreadCount > 0 ? (
           <BellIconSolid className="h-6 w-6 text-primary-600" />
@@ -209,38 +245,53 @@ export default function NotificationBell({ onNavigate }: NotificationBellProps) 
             ) : (
               <div className="divide-y divide-dark-700">
                 {notifications.map((notification) => (
-                  <button
+                  <div
                     key={notification.id}
-                    onClick={() => handleNotificationClick(notification)}
-                    className={`w-full p-4 text-left hover:bg-dark-700 transition-colors ${
+                    className={`relative p-4 hover:bg-dark-700 transition-colors ${
                       !notification.is_read ? 'bg-dark-700 border-l-4 border-l-primary-500' : ''
                     }`}
                   >
-                    <div className="flex items-start gap-3">
-                      {/* Icon */}
-                      <div className={`text-lg ${getNotificationColor(notification.type)}`}>
-                        {getNotificationIcon(notification.type)}
+                    <button
+                      onClick={() => handleNotificationClick(notification)}
+                      className="w-full text-left"
+                    >
+                      <div className="flex items-start gap-3 pr-8">
+                        {/* Icon */}
+                        <div className={`text-lg ${getNotificationColor(notification.type)}`}>
+                          {getNotificationIcon(notification.type)}
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <p className={`font-medium text-sm ${!notification.is_read ? 'text-white' : 'text-gray-300'}`}>
+                            {notification.title}
+                          </p>
+                          <p className="text-sm text-gray-400 mt-1 line-clamp-2">
+                            {notification.message}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {formatTimeAgo(notification.created_at)}
+                          </p>
+                        </div>
+                        
+                        {/* Unread indicator */}
+                        {!notification.is_read && (
+                          <div className="w-2 h-2 bg-primary-500 rounded-full mt-2"></div>
+                        )}
                       </div>
-                      
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <p className={`font-medium text-sm ${!notification.is_read ? 'text-white' : 'text-gray-300'}`}>
-                          {notification.title}
-                        </p>
-                        <p className="text-sm text-gray-400 mt-1 line-clamp-2">
-                          {notification.message}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {formatTimeAgo(notification.created_at)}
-                        </p>
-                      </div>
-                      
-                      {/* Unread indicator */}
-                      {!notification.is_read && (
-                        <div className="w-2 h-2 bg-primary-500 rounded-full mt-2"></div>
-                      )}
-                    </div>
-                  </button>
+                    </button>
+                    
+                    {/* Delete button */}
+                    <button
+                      onClick={(e) => deleteNotification(notification.id, e)}
+                      className="absolute top-2 right-2 p-1 text-gray-400 hover:text-red-400 transition-colors"
+                      title="Delete notification"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
