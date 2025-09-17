@@ -43,7 +43,7 @@ export function NewNavigation() {
       items: [
         { name: 'My Tickets', href: '/my-tickets', icon: TicketIcon, roles: ['admin', 'worker', 'viewer'], notificationKey: 'myTickets' },
         { name: 'Sent Tickets', href: '/sent-tickets', icon: PaperAirplaneIcon, roles: ['admin', 'worker'], notificationKey: 'sentTickets' },
-        { name: 'Completed Tickets', href: '/completed', icon: CheckCircleIcon, roles: ['admin', 'worker', 'viewer'], notificationKey: 'completedTickets' },
+        { name: 'Completed', href: '/completed', icon: CheckCircleIcon, roles: ['admin', 'worker', 'viewer'], notificationKey: 'completedTickets' },
         { name: 'Create Ticket', href: '/create-ticket', icon: PlusIcon, roles: ['admin', 'worker'], notificationKey: null },
       ]
     },
