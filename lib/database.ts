@@ -168,6 +168,7 @@ export async function sendTicketWebhook(ticketId: string, action: string) {
     const payload = {
       action: webhookAction,
       ticket_id: ticket.id,
+      ticket_title: ticket.title,
       ticket_urgency: ticket.urgency,
       ticket_deadline: ticket.deadline,
       ticket_date: dateTimeInfo.dateTicket,
@@ -514,6 +515,13 @@ export const deleteTicket = async (id: string): Promise<boolean> => {
 
   console.log('Ticket data fetched successfully:', ticketData)
 
+  // Send webhook for ticket deletion BEFORE deleting
+  try {
+    await sendTicketWebhook(id, 'deleted')
+  } catch (webhookError) {
+    console.error('Webhook error (non-blocking):', webhookError)
+  }
+
   const { error } = await supabase
     .from('tickets')
     .delete()
@@ -525,13 +533,6 @@ export const deleteTicket = async (id: string): Promise<boolean> => {
   }
 
   console.log('Ticket deleted successfully')
-
-  // Send webhook for ticket deletion
-  try {
-    await sendTicketWebhook(id, 'deleted')
-  } catch (webhookError) {
-    console.error('Webhook error (non-blocking):', webhookError)
-  }
 
   return true
 }
