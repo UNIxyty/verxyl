@@ -43,7 +43,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   // Load notifications from localStorage on mount
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       const savedNotifications = localStorage.getItem(`notifications_${user.id}`)
       if (savedNotifications) {
         try {
@@ -53,14 +53,14 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         }
       }
     }
-  }, [user])
+  }, [user?.id])
 
   // Save notifications to localStorage whenever they change
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       localStorage.setItem(`notifications_${user.id}`, JSON.stringify(notifications))
     }
-  }, [notifications, user])
+  }, [notifications, user?.id])
 
   const clearNotification = (key: keyof NotificationState) => {
     setNotifications(prev => ({
@@ -116,7 +116,26 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 export function useNotifications() {
   const context = useContext(NotificationContext)
   if (context === undefined) {
-    throw new Error('useNotifications must be used within a NotificationProvider')
+    // Return a default context instead of throwing an error to prevent crashes
+    console.warn('useNotifications called outside of NotificationProvider, returning default values')
+    return {
+      notifications: {
+        newTickets: 0,
+        myTickets: 0,
+        sentTickets: 0,
+        completedTickets: 0,
+        projects: 0,
+        invoices: 0,
+        aiPrompts: 0,
+        n8nProjects: 0,
+        sharedWorkflows: 0,
+        sharedPrompts: 0
+      },
+      clearNotification: () => {},
+      clearAllNotifications: () => {},
+      incrementNotification: () => {},
+      setNotification: () => {}
+    }
   }
   return context
 }
