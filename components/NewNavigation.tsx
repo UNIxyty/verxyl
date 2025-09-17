@@ -162,7 +162,7 @@ export function NewNavigation() {
                   <button
                     key={item.name}
                     onClick={() => handleNavClick(item.href)}
-                    className={`nav-link w-full justify-start relative ${
+                    className={`nav-link w-full justify-start relative py-3 px-3 ${
                       isActive ? 'nav-link-active' : 'nav-link-inactive'
                     }`}
                   >
@@ -248,7 +248,7 @@ export function NewNavigation() {
               <button
                 key={item.name}
                 onClick={() => router.push(item.href)}
-                className={`nav-link w-full justify-start relative ${
+                className={`nav-link w-full justify-start relative py-3 px-3 ${
                   isActive ? 'nav-link-active' : 'nav-link-inactive'
                 }`}
               >

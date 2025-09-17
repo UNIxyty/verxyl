@@ -70,7 +70,7 @@ export function NavigationDropdown({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`nav-link w-full justify-start relative ${
+        className={`nav-link w-full justify-start relative py-3 px-3 ${
           hasActiveItem ? 'nav-link-active' : 'nav-link-inactive'
         }`}
       >
@@ -89,7 +89,7 @@ export function NavigationDropdown({
       </button>
 
       {isOpen && (
-        <div className="ml-4 mt-1 space-y-1 border-l border-gray-600 pl-4">
+        <div className="ml-4 mt-2 space-y-1 border-l border-gray-600 pl-4">
           {filteredItems.map((item) => {
             const isActive = pathname === item.href
             return (
@@ -99,7 +99,7 @@ export function NavigationDropdown({
                   onNavigate(item.href)
                   setIsOpen(false)
                 }}
-                className={`nav-link w-full justify-start relative text-sm ${
+                className={`nav-link w-full justify-start relative text-sm py-2 px-3 ${
                   isActive ? 'nav-link-active' : 'nav-link-inactive'
                 }`}
               >

@@ -19,9 +19,9 @@ export function RoleChooser({
   const [isOpen, setIsOpen] = useState(false)
 
   const sizeClasses = {
-    sm: 'text-xs px-2 py-1 min-w-20',
-    md: 'text-sm px-3 py-2 min-w-24',
-    lg: 'text-base px-4 py-3 min-w-28'
+    sm: 'text-xs px-3 py-2 min-w-24',
+    md: 'text-sm px-4 py-3 min-w-28',
+    lg: 'text-base px-5 py-4 min-w-32'
   }
 
   const roleConfig = {
@@ -70,7 +70,7 @@ export function RoleChooser({
         aria-expanded={isOpen}
       >
         <div className="flex items-center space-x-2">
-          <span className="text-sm">{currentRole.icon}</span>
+          <span className="text-base">{currentRole.icon}</span>
           <span className="text-white font-medium">{currentRole.label}</span>
         </div>
         <ChevronDownIcon 
@@ -96,15 +96,15 @@ export function RoleChooser({
                 type="button"
                 onClick={() => handleSelect(role as any)}
                 className={`
-                  w-full flex items-center space-x-3 px-3 py-2 text-left
+                  w-full flex items-center space-x-3 px-4 py-3 text-left
                   hover:bg-gray-600 transition-colors duration-150
                   ${value === role ? 'bg-gray-600' : ''}
                 `}
               >
-                <span className="text-sm">{config.icon}</span>
+                <span className="text-base">{config.icon}</span>
                 <div className="flex-1">
-                  <div className="text-white font-medium">{config.label}</div>
-                  <div className="text-xs text-gray-400">
+                  <div className="text-white font-medium text-sm">{config.label}</div>
+                  <div className="text-xs text-gray-400 mt-1">
                     {role === 'admin' && 'Full system access'}
                     {role === 'worker' && 'Create and manage tickets'}
                     {role === 'viewer' && 'View tickets only'}
