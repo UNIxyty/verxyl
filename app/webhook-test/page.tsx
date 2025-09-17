@@ -157,6 +157,17 @@ export default function WebhookTestPage() {
             <p><strong>404 Error:</strong> Webhook URL is incorrect or endpoint doesn't exist</p>
             <p><strong>500 Error:</strong> Server error on your webhook endpoint</p>
             <p><strong>Network Error:</strong> Can't reach the webhook URL (check if it's accessible)</p>
+            
+            <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-500/30 rounded">
+              <p className="font-semibold text-yellow-200">n8n Webhook Issues:</p>
+              <ul className="list-disc list-inside ml-4 space-y-1 mt-2">
+                <li><strong>404 "not registered":</strong> Activate your n8n workflow (toggle in top-right)</li>
+                <li><strong>Use production URL:</strong> Not test URL (production = /webhook/, test = /webhook-test/)</li>
+                <li><strong>Check webhook path:</strong> Must match n8n webhook node configuration</li>
+                <li><strong>Workflow must be active:</strong> Only active workflows accept production webhooks</li>
+              </ul>
+            </div>
+            
             <p><strong>Common Issues:</strong></p>
             <ul className="list-disc list-inside ml-4 space-y-1">
               <li>Make sure your webhook endpoint accepts POST requests</li>
