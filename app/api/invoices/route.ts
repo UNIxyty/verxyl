@@ -3,58 +3,82 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 
-// GET - Fetch invoices
+// GET - Fetch invoices (supports both admin and public access)
 export async function GET(request: NextRequest) {
   try {
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
     }
 
-    const cookieStore = cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value
-          },
-        },
-      }
-    )
+    const url = new URL(request.url)
+    const invoice_id = url.searchParams.get('id')
+    const limit = parseInt(url.searchParams.get('limit') || '50')
+    const offset = parseInt(url.searchParams.get('offset') || '0')
 
+    // For public access (individual invoice viewing), we don't require authentication
+    // For admin operations, we check authentication
+    let supabase
+    const cookieStore = cookies()
+    
+    try {
+      supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        {
+          cookies: {
+            get(name: string) {
+              return cookieStore.get(name)?.value
+            },
+          },
+        }
+      )
+    } catch {
+      // Fallback to admin client if cookie-based auth fails
+      supabase = supabaseAdmin
+    }
+
+    // If requesting a specific invoice by ID, allow public access
+    if (invoice_id) {
+      const { data: invoice, error } = await supabaseAdmin
+        .from('invoices')
+        .select('*')
+        .eq('id', invoice_id)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+        }
+        console.error('Error fetching invoice:', error)
+        return NextResponse.json({ error: 'Failed to fetch invoice', details: error.message }, { status: 500 })
+      }
+
+      return NextResponse.json({ invoice })
+    }
+
+    // For listing invoices, require authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    const url = new URL(request.url)
-    const status = url.searchParams.get('status')
-    const client_id = url.searchParams.get('client_id')
-    const limit = parseInt(url.searchParams.get('limit') || '50')
-    const offset = parseInt(url.searchParams.get('offset') || '0')
+    // Check if user is admin
+    const { data: userData, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('role, approval_status')
+      .eq('id', user.id)
+      .single()
 
-    let query = supabase
+    if (userError || !userData || userData.role !== 'admin' || userData.approval_status !== 'approved') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
+
+    const { data: invoices, error } = await supabaseAdmin
       .from('invoices')
-      .select(`
-        *,
-        created_by_user:users!invoices_created_by_fkey(id, email, full_name, role),
-        client:users!invoices_client_id_fkey(id, email, full_name, role),
-        project:projects!invoices_project_id_fkey(id, title, status)
-      `)
+      .select('*')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
-
-    if (status) {
-      query = query.eq('status', status)
-    }
-
-    if (client_id) {
-      query = query.eq('client_id', client_id)
-    }
-
-    const { data: invoices, error } = await query
 
     if (error) {
       console.error('Error fetching invoices:', error)
@@ -68,7 +92,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create a new invoice
+// POST - Create a new invoice (admin only)
 export async function POST(request: NextRequest) {
   try {
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -94,57 +118,53 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    const {
-      title,
-      description,
-      amount,
-      currency = 'USD',
-      client_id,
-      project_id,
-      due_date
-    } = await request.json()
-
-    if (!title || title.trim().length === 0) {
-      return NextResponse.json({ error: 'Invoice title is required' }, { status: 400 })
-    }
-
-    if (!amount || amount <= 0) {
-      return NextResponse.json({ error: 'Valid amount is required' }, { status: 400 })
-    }
-
-    // Generate invoice number
-    const { data: lastInvoice } = await supabaseAdmin
-      .from('invoices')
-      .select('invoice_number')
-      .order('created_at', { ascending: false })
-      .limit(1)
+    // Check if user is admin
+    const { data: userData, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('role, approval_status')
+      .eq('id', user.id)
       .single()
 
-    let invoiceNumber = 'INV-001'
-    if (lastInvoice?.invoice_number) {
-      const lastNumber = parseInt(lastInvoice.invoice_number.split('-')[1])
-      invoiceNumber = `INV-${String(lastNumber + 1).padStart(3, '0')}`
+    if (userError || !userData || userData.role !== 'admin' || userData.approval_status !== 'approved') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    const { data: invoice, error: insertError } = await supabase
+    const {
+      client_name,
+      client_company,
+      project_description,
+      project_points_problems,
+      invoice_pdf,
+      payment_link
+    } = await request.json()
+
+    if (!client_name || client_name.trim().length === 0) {
+      return NextResponse.json({ error: 'Client name is required' }, { status: 400 })
+    }
+
+    if (!project_description || project_description.trim().length === 0) {
+      return NextResponse.json({ error: 'Project description is required' }, { status: 400 })
+    }
+
+    if (!project_points_problems || project_points_problems.trim().length === 0) {
+      return NextResponse.json({ error: 'Project points and problems are required' }, { status: 400 })
+    }
+
+    if (!payment_link || payment_link.trim().length === 0) {
+      return NextResponse.json({ error: 'Payment link is required' }, { status: 400 })
+    }
+
+    const { data: invoice, error: insertError } = await supabaseAdmin
       .from('invoices')
       .insert({
-        invoice_number: invoiceNumber,
-        title: title.trim(),
-        description,
-        amount,
-        currency,
-        client_id,
-        project_id,
-        due_date,
-        created_by: user.id
+        client_name: client_name.trim(),
+        client_company: client_company?.trim() || null,
+        project_description: project_description.trim(),
+        project_points_problems: project_points_problems.trim(),
+        invoice_pdf: invoice_pdf || null,
+        payment_link: payment_link.trim()
       })
-      .select(`
-        *,
-        created_by_user:users!invoices_created_by_fkey(id, email, full_name, role),
-        client:users!invoices_client_id_fkey(id, email, full_name, role),
-        project:projects!invoices_project_id_fkey(id, title, status)
-      `)
+      .select('*')
       .single()
 
     if (insertError) {

@@ -231,6 +231,41 @@ export type Database = {
           updated_at?: string
         }
       }
+      invoices: {
+        Row: {
+          id: string
+          client_name: string
+          client_company: string | null
+          project_description: string
+          project_points_problems: string
+          invoice_pdf: string | null
+          payment_link: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          client_name: string
+          client_company?: string | null
+          project_description: string
+          project_points_problems: string
+          invoice_pdf?: string | null
+          payment_link: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          client_name?: string
+          client_company?: string | null
+          project_description?: string
+          project_points_problems?: string
+          invoice_pdf?: string | null
+          payment_link?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }
