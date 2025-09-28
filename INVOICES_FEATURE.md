@@ -114,12 +114,26 @@ app/
 4. Use the download button to get the PDF
 5. Click "Pay Now" to proceed to payment
 
-### PDF Integration
+### PDF Storage & Integration
 
-The invoice PDF should be uploaded to Supabase Storage and the public URL should be used in the `invoice_pdf` field. The system will:
+**Recommended Setup: Supabase Storage**
+
+1. **Storage Bucket**: Create an `invoices` bucket in Supabase Storage
+2. **File Naming**: Files stored as `invoice-{uuid}.pdf`
+3. **Public Access**: Configured for client viewing
+4. **Admin Upload**: Drag-and-drop interface for PDF uploads
+
+**Storage Features:**
+- 10MB file size limit
+- PDF-only file type restriction
+- Automatic public URL generation
+- Secure admin-only upload permissions
+
+**Integration:**
 - Display a preview modal with the PDF
 - Provide a download button
 - Handle cases where no PDF is available
+- Drag-and-drop upload component for admins
 
 ### Payment Integration
 
@@ -138,10 +152,13 @@ Access `/invoices/template` to see a fully functional template with placeholder 
 - Demonstrating functionality to stakeholders
 
 ### Database Setup
-Run the SQL migration:
+Run the SQL migrations:
 ```bash
-# Execute the SQL file in Supabase SQL Editor
-psql -f create-invoices-table.sql
+# 1. Execute the main table migration in Supabase SQL Editor
+# Run: create-invoices-table.sql
+
+# 2. Execute the storage setup in Supabase SQL Editor  
+# Run: setup-invoice-storage.sql
 ```
 
 ### Environment Variables
