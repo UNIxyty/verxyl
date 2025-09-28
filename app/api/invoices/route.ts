@@ -132,6 +132,7 @@ export async function POST(request: NextRequest) {
     const {
       client_name,
       client_company,
+      project_title,
       project_description,
       project_points_problems,
       invoice_pdf,
@@ -140,6 +141,10 @@ export async function POST(request: NextRequest) {
 
     if (!client_name || client_name.trim().length === 0) {
       return NextResponse.json({ error: 'Client name is required' }, { status: 400 })
+    }
+
+    if (!project_title || project_title.trim().length === 0) {
+      return NextResponse.json({ error: 'Project title is required' }, { status: 400 })
     }
 
     if (!project_description || project_description.trim().length === 0) {
@@ -159,6 +164,7 @@ export async function POST(request: NextRequest) {
       .insert({
         client_name: client_name.trim(),
         client_company: client_company?.trim() || null,
+        project_title: project_title.trim(),
         project_description: project_description.trim(),
         project_points_problems: project_points_problems.trim(),
         invoice_pdf: invoice_pdf || null,

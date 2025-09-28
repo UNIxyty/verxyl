@@ -16,6 +16,7 @@ interface Invoice {
   id: string
   client_name: string
   client_company: string | null
+  project_title: string
   project_description: string
   project_points_problems: string
   invoice_pdf: string | null
@@ -148,7 +149,7 @@ export default function InvoicePage() {
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Invoice Details</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">{invoice.project_title || 'Invoice Details'}</h1>
           <p className="text-gray-400">Invoice ID: {invoice.id}</p>
         </div>
 
@@ -164,6 +165,12 @@ export default function InvoicePage() {
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">Company</label>
                 <p className="text-white">{invoice.client_company}</p>
+              </div>
+            )}
+            {invoice.project_title && (
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Project Title</label>
+                <p className="text-white">{invoice.project_title}</p>
               </div>
             )}
           </div>

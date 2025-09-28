@@ -21,6 +21,7 @@ interface Invoice {
   id: string
   client_name: string
   client_company: string | null
+  project_title: string
   project_description: string
   project_points_problems: string
   invoice_pdf: string | null
@@ -40,6 +41,7 @@ function CreateInvoiceModal({ isOpen, onClose, onCreated }: CreateInvoiceModalPr
   const [formData, setFormData] = useState({
     client_name: '',
     client_company: '',
+    project_title: '',
     project_description: '',
     project_points_problems: '',
     invoice_pdf: '',
@@ -49,6 +51,11 @@ function CreateInvoiceModal({ isOpen, onClose, onCreated }: CreateInvoiceModalPr
   const handleCreate = async () => {
     if (!formData.client_name.trim()) {
       toast.error('Client name is required')
+      return
+    }
+
+    if (!formData.project_title.trim()) {
+      toast.error('Project title is required')
       return
     }
 
@@ -80,6 +87,7 @@ function CreateInvoiceModal({ isOpen, onClose, onCreated }: CreateInvoiceModalPr
         setFormData({
           client_name: '',
           client_company: '',
+          project_title: '',
           project_description: '',
           project_points_problems: '',
           invoice_pdf: '',
@@ -130,6 +138,20 @@ function CreateInvoiceModal({ isOpen, onClose, onCreated }: CreateInvoiceModalPr
               disabled={loading}
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Project Title *
+          </label>
+          <input
+            type="text"
+            value={formData.project_title}
+            onChange={(e) => setFormData({ ...formData, project_title: e.target.value })}
+            className="input w-full"
+            placeholder="Enter project title..."
+            disabled={loading}
+          />
         </div>
 
         <div>
@@ -316,7 +338,7 @@ export default function InvoicesPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                           <h3 className="text-lg font-semibold text-white truncate">
-                            {invoice.client_name}
+                            {invoice.project_title || invoice.client_name}
                             {invoice.client_company && ` - ${invoice.client_company}`}
                           </h3>
                           <div className="flex flex-wrap gap-2">
@@ -336,6 +358,9 @@ export default function InvoicesPage() {
                           </div>
                           <div>
                             <span className="font-medium">Company:</span> {invoice.client_company || 'N/A'}
+                          </div>
+                          <div>
+                            <span className="font-medium">Project:</span> {invoice.project_title || 'N/A'}
                           </div>
                           <div>
                             <span className="font-medium">Created:</span> {formatDate(invoice.created_at)}
